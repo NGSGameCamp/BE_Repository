@@ -2,7 +2,9 @@ package com.imfine.ngs.community.service;
 
 import com.imfine.ngs.community.CommunityComment;
 import com.imfine.ngs.community.User;
+import org.springframework.stereotype.Service;
 
+@Service
 public class CommunityCommentService {
   void addComment(User user, CommunityComment comment) { }
   int count() { return 0; }

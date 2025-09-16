@@ -3,12 +3,11 @@ package com.imfine.ngs.community;
 import lombok.Builder;
 import lombok.Getter;
 
-@Getter
 @Builder
-public class CommunityPost {
+@Getter
+public class CommunityBoard {
   int id;
-  int boardId;
-  int authorId;
   String title;
-  String content;
+  String description;
+  @Builder.Default boolean isActive = true;
 }
