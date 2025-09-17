@@ -1,4 +1,4 @@
-package com.imfine.ngs.community;
+package com.imfine.ngs.community.dto;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -7,6 +7,7 @@ import lombok.Getter;
 @Getter
 public class CommunityBoard {
   int id;
+  int manager_id;
   String title;
   String description;
   @Builder.Default boolean isActive = true;

@@ -1,7 +1,10 @@
 package com.imfine.ngs.community.service;
 
-import com.imfine.ngs.community.CommunityPost;
-import com.imfine.ngs.community.User;
+import com.imfine.ngs.community.dto.CommunityBoard;
+import com.imfine.ngs.community.dto.CommunityPost;
+import com.imfine.ngs.community.dto.CommunityTag;
+import com.imfine.ngs.community.dto.User;
+import com.imfine.ngs.community.enums.SearchType;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -10,6 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Transactional
@@ -17,35 +24,65 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 public class CommunityPostServiceTest {
   CommunityPostService postService;
-  TestUserService userService;
   CommunityBoardService boardService;
+  CommunityTagService tagService;
+  TestUserService userService;
 
   @Autowired
   CommunityPostServiceTest(
           CommunityPostService postService,
-          TestUserService userService,
-          CommunityBoardService boardService) {
+          CommunityBoardService boardService,
+          CommunityTagService tagService,
+          TestUserService userService) {
     this.postService = postService;
-    this.userService = userService;
     this.boardService = boardService;
+    this.tagService = tagService;
+    this.userService = userService;
   }
 
   @BeforeEach
   void setUp() {
+    // 매니저 생성
+    User manager = User.builder()
+            .id(427)
+            .name("Manager")
+            .role("MANAGER")
+            .build();
+    userService.addUser(manager);
     // 보드 생성
+    for (int i = 0; i < 5; ++i) {
+      CommunityBoard board = CommunityBoard.builder()
+              .title("This is test board for post test" + i)
+              .build();
+
+      boardService.addBoard(board);
+    }
     // 유저 생성
     for (int i = 0; i < 5; ++i) {
       User user = User.builder()
               .name("postTest"+i)
               .build();
+
+      userService.addUser(user);
     }
     // 포스트 생성
     for (int i = 0; i < 10; ++i) {
-      CommunityPost post = CommunityPost.builder()
-              .boardId(1)
-              .title("this is test post for post test" + i)
-              .content("this is test post for post test" + i +"\n yes.")
-              .build();
+      for (int j = 0; j < 5; ++j) {
+        CommunityPost post = CommunityPost.builder()
+                .boardId(j)
+                .title("this is test post for post test" + i + " " + j)
+                .content("this is test post for post test" + i + "\n yes.")
+                .build();
+
+        ArrayList<CommunityTag> tags = new ArrayList<>();
+        tags.add(tagService.getTagByName("test"));
+        if (j == 4)
+          tags.add(tagService.getTagByName("abc"));
+
+        post.setTags(tags);
+
+        postService.addPost((int)(Math.random() * 5), post);
+      }
     }
   }
 
@@ -70,8 +107,8 @@ public class CommunityPostServiceTest {
     int postCnt = postService.count();
 
     // When: 실행
-    postService.addPost(user, contentlessPost);
-    postService.addPost(user, titlelessPost);
+    postService.addPost(user.getId(), contentlessPost);
+    postService.addPost(user.getId(), titlelessPost);
 
     // Then: 검증
     assertThat(postService.count()).isEqualTo(postCnt);
@@ -92,7 +129,7 @@ public class CommunityPostServiceTest {
     int postCnt = postService.count();
 
     // When
-    postService.addPost(user, post);
+    postService.addPost(user.getId(), post);
 
     // Then
     assertThat(postService.count()).isEqualTo(postCnt);
@@ -111,7 +148,7 @@ public class CommunityPostServiceTest {
     int postCnt = postService.count();
 
     // When
-    postService.addPost(user, post);
+    postService.addPost(user.getId(), post);
 
     // Then
     assertThat(postService.count()).isEqualTo(postCnt+1);
@@ -130,15 +167,11 @@ public class CommunityPostServiceTest {
     int postCnt = postService.count();
 
     // When
-    postService.addPost(user, post);
+    postService.addPost(user.getId(), post);
 
     // Then
     assertThat(postService.count()).isEqualTo(postCnt+1);
   }
-
-    // TODO: 태그가 유효한지 체크???????????????????????????????????
-      // 근데 태그는 없으면 추가하게 하고싶은데..
-      // 아예 서비스로 빼놔야 하나
 
   // 게시글 삭제 파트
   // ============================================================
@@ -152,7 +185,7 @@ public class CommunityPostServiceTest {
     int postCnt = postService.count();
 
     // When
-    postService.deletePost(user, post);
+    postService.deletePost(user.getId(), post.getId());
 
     // Then
     assertThat(postService.count()).isEqualTo(postCnt);
@@ -167,23 +200,20 @@ public class CommunityPostServiceTest {
     int postCnt = postService.count();
 
     // When
-    postService.deletePost(user, post);
+    postService.deletePost(user.getId(), post.getId());
 
     // Then
     assertThat(postService.count()).isEqualTo(postCnt-1);
   }
 
-    // TODO: 관리자가 게시글을 지울 수 있는지 확인?
+  @Test
+  @DisplayName("MANAGER는 게시글을 삭제할 경우 항상 글의 개수가 줄어들어야 함")
   void deletePostWithManagerRole() {
-    User user = User.builder()
-            .name("Manager")
-            .role("MANAGER")
-            .build();
+    User user = userService.getUserByName("Manager");
     CommunityPost post = postService.getPostById(2);
 
-
     // When
-    postService.deletePostById(user, post.getId());
+    postService.deletePost(user.getId(), post.getId());
 
     // Then
     assertThat(postService.getPostById(post.getId())).isNull();
@@ -205,7 +235,7 @@ public class CommunityPostServiceTest {
             .content("새로운 내용")
             .build();
     // When
-    postService.editPost(user, fromPost, toPost);
+    postService.editPost(user.getId(), fromPost.getId(), toPost);
 
     // Then
     assertThat(postService.getPostById(fromPost.getId())).isEqualTo(fromPost);
@@ -225,10 +255,18 @@ public class CommunityPostServiceTest {
             .title("")
             .content("NoTitle")
             .build();
+    CommunityPost toPost3 = CommunityPost.builder()
+            .title("NullContent")
+            .build();
+    CommunityPost toPost4 = CommunityPost.builder()
+            .content("NullTitle")
+            .build();
 
     // When
-    postService.editPost(user, fromPost, toPost1);
-    postService.editPost(user, fromPost, toPost2);
+    postService.editPost(user.getId(), fromPost.getId(), toPost1);
+    postService.editPost(user.getId(), fromPost.getId(), toPost2);
+    postService.editPost(user.getId(), fromPost.getId(), toPost3);
+    postService.editPost(user.getId(), fromPost.getId(), toPost4);
 
     // Then
     assertThat(postService.getPostById(fromPost.getId())).isEqualTo(fromPost);
@@ -249,7 +287,7 @@ public class CommunityPostServiceTest {
             .build();
 
     // When
-    postService.editPost(user, fromPost, toPost);
+    postService.editPost(user.getId(), fromPost.getId(), toPost);
 
     // Then
     assertThat(postService.getPostById(fromPost.getId())).isEqualTo(toPost);
@@ -268,17 +306,51 @@ public class CommunityPostServiceTest {
   }
 
 
-    // TODO: 게시글의 게시판이 유효하지 않으면 null이 출력되어야 함
+  @Test
+  @DisplayName("게시글의 게시판이 유효하지 않으면 null이 출력되어야 함")
   void getPostWithWrongBoardId() {
     // Given
+    CommunityBoard deletedBoard = CommunityBoard.builder()
+            .id(50)
+            .title("This Board will be deleted.")
+            .description("yes")
+            .build();
+    CommunityBoard noActiveBoard = CommunityBoard.builder()
+            .id(51)
+            .title("This Board will be unactivated.")
+            .description("yes")
+            .build();
+    User user = userService.getUserById(2);
+    User manager = userService.getUserByName("Manager");
+    CommunityPost postOfNoActivated = CommunityPost.builder()
+            .title("BoardDeletedPost")
+            .content("The board of this post will gbe deleted.")
+            .boardId(50)
+            .authorId(user.getId())
+            .build();
+    CommunityPost postOfDeleted = CommunityPost.builder()
+            .title("BoardDeletedPost")
+            .content("The board of this post will gbe deleted.")
+            .boardId(51)
+            .authorId(user.getId())
+            .build();
 
+    boardService.addBoard(deletedBoard);
+    boardService.addBoard(noActiveBoard);
+    postService.addPost(user.getId(), postOfNoActivated);
+    postService.addPost(user.getId(), postOfDeleted);
+
+    boardService.setActive(manager.getId(), noActiveBoard.getId(), false);
+    boardService.deletePost(manager.getId(), deletedBoard.getId(), false);
 
     // When
-
+    CommunityPost tmp1 = postService.getPostById(postOfDeleted.getId());
+    CommunityPost tmp2 = postService.getPostById(postOfNoActivated.getId());
 
     // Then
+    assertThat(tmp1).isNull();
+    assertThat(tmp2).isNull();
   }
-
 
   @Test
   @DisplayName("올바른 게시글을 조회할 경우 원하는 게시판을 출력해야 함")
@@ -292,6 +364,91 @@ public class CommunityPostServiceTest {
     // Then
     assertThat(result).isEqualTo(target);
   }
-    // TODO: 여러개의 개시글을 조회하는 케이스는 뭘 어떻게 검사해야 할까?
-      // 여러개 미리 올려두고
+
+
+  @Test
+  @DisplayName("조회된 모든 게시글의 제목에 검색어와 일치하는 단어가 있는가?")
+  void getPostsWithTitleSearch() {
+    // Given
+    SearchType type = SearchType.TITLE_ONLY;
+    String keyword = "test";
+
+    // When
+    List<CommunityPost> result = postService.getPostsWithSearch(type, keyword);
+
+    // Then
+    assertThat(result).allMatch(post -> post.getTitle().contains(keyword));
+  }
+
+  @Test
+  @DisplayName("조회된 모든 게시글의 작성자에 검색어와 일치하는 단어가 있는가?")
+  void getPostsWithAuthorSearch() {
+    // Given
+    SearchType type = SearchType.AUTHOR_ONLY;
+    String keyword = "test";
+
+    // When
+    List<CommunityPost> result = postService.getPostsWithSearch(type, keyword);
+
+    // Then
+    assertThat(result).allMatch(
+            post -> userService.getUserById(post.getAuthorId()).getName().contains(keyword));
+  }
+
+  // 조회된 모든 게시글의 내용에 검색어와 일치하는 단어가 있는가?
+  @Test
+  @DisplayName("조회된 모든 게시글의 제목에 검색어와 일치하는 단어가 있는가?")
+  void getPostsWithContentSearch() {
+    // Given
+    SearchType type = SearchType.CONTENT_ONLY;
+    String keyword = "test";
+
+    // When
+    List<CommunityPost> result = postService.getPostsWithSearch(type, keyword);
+
+    // Then
+    assertThat(result).allMatch(post -> post.getContent().contains(keyword));
+  }
+
+  @Test
+  @DisplayName("조회된 모든 게시글의 제목 또는 내용에 검색어와 일치하는 단어가 있는가?")
+  void getPostsWithTitleAndContentSearch() {
+    // Given
+    SearchType type = SearchType.TITLE_AND_CONTENT;
+    String keyword = "test";
+
+    // When
+    List<CommunityPost> result = postService.getPostsWithSearch(type, keyword);
+
+    // Then
+    assertThat(result).allMatch(post ->
+            post.getContent().contains(keyword)
+            || post.getTitle().contains(keyword)
+    );
+  }
+
+  //
+  @Test
+  @DisplayName("조회된 모든 게시글의 태그에 목표 태그와 일치하는 요소가 있는가?")
+  void getPostsWithTag() {
+    // Given
+    SearchType type = SearchType.TITLE_AND_CONTENT;
+    String keyword = "test";
+            CommunityTag[] tags = {
+            tagService.getTagByName("test"),
+            tagService.getTagByName("abc"),
+    };
+
+    // When
+    List<CommunityPost> result = postService.getPostsWithSearch(type, Arrays.asList(tags), keyword);
+
+    // Then
+//    assertThat(result).allMatch(post ->
+//            post.getContent().contains(keyword)
+//            || post.getTitle().contains(keyword)
+//    );
+    assertThat(result).allMatch(post ->
+            post.getTags().containsAll(Arrays.asList(tags))
+    );
+  }
 }

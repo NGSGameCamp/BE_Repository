@@ -1,8 +1,9 @@
 package com.imfine.ngs.community.service;
 
-import com.imfine.ngs.community.CommunityComment;
-import com.imfine.ngs.community.CommunityPost;
-import com.imfine.ngs.community.User;
+import com.imfine.ngs.community.dto.CommunityBoard;
+import com.imfine.ngs.community.dto.CommunityComment;
+import com.imfine.ngs.community.dto.CommunityPost;
+import com.imfine.ngs.community.dto.User;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,6 +13,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Transactional
@@ -20,25 +23,44 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class CommunityCommentServiceTest {
   CommunityCommentService commentService;
   CommunityPostService postService;
+  CommunityBoardService boardService;
   TestUserService userService;
 
   @Autowired
   public CommunityCommentServiceTest(
           CommunityCommentService commentService,
-          TestUserService userService,
-          CommunityPostService postService) {
+          CommunityPostService postService,
+          CommunityBoardService boardService,
+          TestUserService userService) {
+
     this.commentService = commentService;
-    this.userService = userService;
     this.postService = postService;
+    this.boardService = boardService;
+    this.userService = userService;
   }
 
   // 테스트 전 준비해야하는 데이터들 나열
   @BeforeEach
   void setUp() {
+    // 매니저 생성
+    User manager = User.builder()
+            .id(427)
+            .name("Manager")
+            .role("MANAGER")
+            .build();
+    userService.addUser(manager);
+    // 보드 생성
+    for (int i = 0; i < 5; ++i) {
+      CommunityBoard board = CommunityBoard.builder()
+              .title("This is test board for post test" + i)
+              .build();
+
+      boardService.addBoard(board);
+    }
     // 유저 5명 생성
     for (int i = 0 ; i < 5; ++i) {
       User user = User.builder()
-              .id(i + 11)
+              .id(i)
               .name("communityTest"+i)
               .build();
 
@@ -51,14 +73,17 @@ public class CommunityCommentServiceTest {
               .title("commentTestPost"+1)
               .content("this is test post for comment test" + i)
               .build();
+
+      postService.addPost((int)(Math.random() * 5), post);
     }
-    // 댓글 15개 생성
-    for (int i = 0 ; i < 15; ++i) {
+    // 댓글 30개 생성
+    for (int i = 0 ; i < 30; ++i) {
       CommunityComment comment = CommunityComment.builder()
               .postId((int)(Math.random() * 5))
-              .authorId((int)(Math.random() * 5))
               .content("this is test comment for comment test" + i)
               .build();
+
+      commentService.addComment((int)(Math.random() * 5), comment);
     }
   }
 
@@ -79,7 +104,7 @@ public class CommunityCommentServiceTest {
     int commentCnt = commentService.count();
 
     // When
-    commentService.addComment(user, comment);
+    commentService.addComment(user.getId(), comment);
 
     // Then
     assertThat(commentService.count()).isEqualTo(commentCnt);
@@ -98,7 +123,7 @@ public class CommunityCommentServiceTest {
     int commentCnt = commentService.count();
 
     // When
-    commentService.addComment(user, comment);
+    commentService.addComment(user.getId(), comment);
 
     // Then
     assertThat(commentService.count()).isEqualTo(commentCnt);
@@ -117,7 +142,7 @@ public class CommunityCommentServiceTest {
     int commentCnt = commentService.count();
 
     // When
-    commentService.addComment(user, comment);
+    commentService.addComment(user.getId(), comment);
 
     // Then
     assertThat(commentService.count()).isEqualTo(commentCnt);
@@ -135,7 +160,7 @@ public class CommunityCommentServiceTest {
     int commentCnt = commentService.count();
 
     // When
-    commentService.addComment(user, comment);
+    commentService.addComment(user.getId(), comment);
 
     // Then
     assertThat(commentService.count()).isEqualTo(commentCnt);
@@ -152,7 +177,7 @@ public class CommunityCommentServiceTest {
     int commentCnt = commentService.count();
 
     // When
-    commentService.addComment(user, comment);
+    commentService.addComment(user.getId(), comment);
 
     // Then
     assertThat(commentService.count()).isEqualTo(commentCnt+1);
@@ -172,7 +197,7 @@ public class CommunityCommentServiceTest {
     int tmpId = comment.getId();
 
     // When
-    commentService.editComment(user, comment, toContent);
+    commentService.editComment(user.getId(), comment.getId(), toContent);
 
     // Then
     assertThat(commentService.getCommentById(tmpId))
@@ -190,7 +215,7 @@ public class CommunityCommentServiceTest {
     int tmpId = comment.getId();
 
     // When
-    commentService.editComment(user, comment, toContent);
+    commentService.editComment(user.getId(), comment.getId(), toContent);
 
     // Then
     assertThat(commentService.getCommentById(tmpId))
@@ -212,7 +237,7 @@ public class CommunityCommentServiceTest {
 
 
     // When
-    commentService.deleteComment(user, comment);
+    commentService.deleteComment(user.getId(), comment.getId());
 
     // Then
     // assertThat(commentService.getCommentById(tmpId)).isEqualTo(comment);
@@ -228,7 +253,7 @@ public class CommunityCommentServiceTest {
     int tmp = commentService.count();
 
     // When
-    commentService.deleteComment(user, comment);
+    commentService.deleteComment(user.getId(), comment.getId());
 
     // Then
     assertThat(commentService.count()).isEqualTo(tmp -1);
@@ -266,9 +291,9 @@ public class CommunityCommentServiceTest {
             .authorId(user.getId())
             .content("테스트용 댓글이에요")
             .build();
-    postService.addPost(user, post);
-    commentService.addComment(user, comment);
-    postService.deletePost(user, post);
+    postService.addPost(user.getId(), post);
+    commentService.addComment(user.getId(), comment);
+    postService.deletePost(user.getId(), post.getId());
 
     // When
     CommunityComment tmp = commentService.getCommentById(comment.getId());
@@ -285,5 +310,63 @@ public class CommunityCommentServiceTest {
 
     // Then
     assertThat(comment).isNotNull();
+  }
+
+  @Test
+  @DisplayName("관리자가 댓글 조회 할 경우 유효하지 않은 게시글의 댓글도 조회함")
+  void getCommentWithManager() {
+    // Given
+    User user = userService.getUserById(1);
+    CommunityPost post = CommunityPost.builder()
+            .id(100)
+            .boardId(1)
+            .authorId(user.getId())
+            .title("댓글 테스트용 포스트")
+            .content("댓글 테스트용 포스트 입니다.")
+            .build();
+    CommunityComment comment = CommunityComment.builder()
+            .id(500)
+            .postId(post.getId())
+            .authorId(user.getId())
+            .content("테스트용 댓글이에요")
+            .build();
+    postService.addPost(user.getId(), post);
+    commentService.addComment(user.getId(), comment);
+    postService.deletePost(user.getId(), post.getId());
+
+    User manager = userService.getUserByName("Manager");
+
+    // When
+    CommunityComment tmp = commentService.getCommentById(manager, comment.getId());
+
+    // Then
+    assertThat(tmp).isNull();
+  }
+    // 여러 개 조회
+      //
+  @Test
+  @DisplayName("원하는 Post의 모든 Comment 가져오게 하기")
+  void getCommentsOnSpecificPost() {
+    // Given
+    CommunityPost post = postService.getPostById(1);
+
+    // When
+    List<CommunityComment> comments = commentService.getCommentsByPostId(post.getId());
+
+    // Then
+    assertThat(comments).allMatch(comment -> comment.getPostId() == post.getId());
+  }
+      //
+  @Test
+  @DisplayName("원하는 Author의 모든 Comment 가져오게 하기")
+  void getCommentsOnSpecificAuthor() {
+    // Given
+    User user = userService.getUserById(1);
+
+    // When
+    List<CommunityComment> comments = commentService.getCommentsByAuthorId(user.getId());
+
+    // Then
+    assertThat(comments).allMatch(comment -> comment.getAuthorId() == user.getId());
   }
 }
