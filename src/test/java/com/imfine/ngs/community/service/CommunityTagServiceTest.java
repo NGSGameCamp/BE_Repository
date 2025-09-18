@@ -1,9 +1,7 @@
 package com.imfine.ngs.community.service;
 
-import com.imfine.ngs.community.dto.CommunityTag;
+import com.imfine.ngs.community.entity.CommunityTag;
 import jakarta.transaction.Transactional;
-import org.aspectj.lang.annotation.Before;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -9,7 +9,6 @@ import com.imfine.ngs.support.repository.SupportRepo;
 import com.imfine.ngs.support.service.SupportAnswerService;
 import com.imfine.ngs.support.service.SupportCategoryService;
 import com.imfine.ngs.support.service.SupportService;
-import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

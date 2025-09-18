@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 public class PaymentService {
 
     private final OrderService orderService;
-    private final PortOneClient portOneClient;
+    private PortOneClient portOneClient;
 
     public void verifyPayment(PaymentRequest request) {
         Order order = orderService.findByOrderId(request.getOrderId());
