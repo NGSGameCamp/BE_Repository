@@ -1,8 +1,14 @@
 package com.imfine.ngs.game;
 
 import com.imfine.ngs.game.entity.Game;
+import com.imfine.ngs.game.entity.env.Env;
+import com.imfine.ngs.game.entity.env.LinkedEnv;
+import com.imfine.ngs.game.entity.env.util.LinkedEnvId;
+import com.imfine.ngs.game.enums.EnvType;
 import com.imfine.ngs.game.enums.SortType;
 import com.imfine.ngs.game.repository.GameRepository;
+import com.imfine.ngs.game.repository.env.EnvRepository;
+import com.imfine.ngs.game.repository.env.LinkedEnvRepository;
 import com.imfine.ngs.game.service.search.GameSearchService;
 import jakarta.transaction.Transactional;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -39,48 +45,99 @@ public class GameSearchTest {
 
     @Autowired
     GameSearchService gameSearchService;
+    @Autowired
+    private LinkedEnvRepository linkedEnvRepository;
+    @Autowired
+    private EnvRepository envRepository;
 
     // 게임을 생성하는 테스트 코드
     @BeforeEach
     void dataInitializer() {
 
+        Env macEnv = new Env();
+        macEnv.setEnvType(EnvType.MAC);
+        Env savedMac = envRepository.save(macEnv);
+
+        Env windowsEnv = new Env();
+        windowsEnv.setEnvType(EnvType.WINDOWS);
+        Env savedWindows = envRepository.save(windowsEnv);
+
+        Env linuxEnv = new Env();
+        linuxEnv.setEnvType(EnvType.LINUX);
+        Env savedLinux = envRepository.save(linuxEnv);
+
         for (int i = 0; i < 10; i++) {
             Game macGame = Game.builder()
                     .name("TestGame" + i)
                     .price(10000L + i)
-                    .env("Mac")
                     .tag("Action")
                     .isActive(true)
                     .createdAt(LocalDateTime.now())
                     .build();
 
-            gameRepository.save(macGame);
+            Game saved = gameRepository.save(macGame);
+
+            // linkedEvn 생성
+            LinkedEnv linkedEnv = new LinkedEnv();
+            LinkedEnvId id = new LinkedEnvId();
+
+            linkedEnv.setId(id);
+            id.setEnvId(macGame.getId());
+            linkedEnv.setId(id);
+            linkedEnv.setGame(saved);
+            linkedEnv.setEnv(savedMac);
+
+            linkedEnvRepository.save(linkedEnv);
         }
 
         for (int i = 10; i < 15; i++) {
             Game windGame = Game.builder()
                     .name("TestGame" + i)
                     .price(20000L + i)
-                    .env("Window")
                     .tag("RPG")
                     .isActive(false)
                     .createdAt(LocalDateTime.now())
                     .build();
 
-            gameRepository.save(windGame);
+            Game saved = gameRepository.save(windGame);
+
+            // env 적용
+            LinkedEnv windowsLinkedEnv = new LinkedEnv();
+            LinkedEnvId id = new LinkedEnvId();
+
+            id.setGameId(saved.getId());
+            id.setEnvId(windGame.getId());
+
+            windowsLinkedEnv.setId(id);
+            windowsLinkedEnv.setGame(saved);
+            windowsLinkedEnv.setEnv(savedMac);
+
+            linkedEnvRepository.save(windowsLinkedEnv);
+
         }
 
         for (int i = 15; i < 20; i++) {
             Game game = Game.builder()
                     .name("TestGame" + i)
                     .price(30000L + i)
-                    .env("Linux")
                     .tag("RPG")
                     .isActive(true)
                     .createdAt(LocalDateTime.now())
                     .build();
 
-            gameRepository.save(game);
+            Game saved = gameRepository.save(game);
+
+            LinkedEnv linuxLinkedEnv = new LinkedEnv();
+            LinkedEnvId id = new LinkedEnvId();
+
+            id.setGameId(saved.getId());
+            id.setEnvId(linuxEnv.getId());
+
+            linuxLinkedEnv.setId(id);
+            linuxLinkedEnv.setGame(saved);
+            linuxLinkedEnv.setEnv(savedLinux);
+
+            linkedEnvRepository.save(linuxLinkedEnv);
         }
     }
 
@@ -199,7 +256,6 @@ public class GameSearchTest {
         Game newGame1 = Game.builder()
                 .name("NewGame1")
                 .price(5000L)
-                .env("Mac")
                 .tag("Action")
                 .isActive(true)
                 .createdAt(LocalDateTime.now())
@@ -212,7 +268,6 @@ public class GameSearchTest {
         Game newGame2 = Game.builder()
                 .name("NewGame2")
                 .price(5000L)
-                .env("Windows")
                 .tag("RPG")
                 .isActive(true)
                 .createdAt(LocalDateTime.now())
@@ -266,9 +321,22 @@ public class GameSearchTest {
         // Linux 게임 5개 생성
 
         // when
-        List<Game> macGames = gameSearchService.findByEnv("Mac", SortType.NAME_ASC);
-        List<Game> windowGames = gameSearchService.findByEnv("Window", SortType.NAME_ASC);
-        List<Game> linuxGames = gameSearchService.findByEnv("Linux", SortType.NAME_ASC);
+        List<Game> macGames = gameSearchService.findByEnv(EnvType.MAC, SortType.NAME_ASC);
+        List<Game> windowGames = gameSearchService.findByEnv(EnvType.WINDOWS, SortType.NAME_ASC);
+        List<Game> linuxGames = gameSearchService.findByEnv(EnvType.LINUX, SortType.NAME_ASC);
+
+
+        for (int i = 0; i < macGames.size(); i++) {
+            System.out.println("================" + macGames.get(i).getEnv() + "================");
+        }
+
+        for (int i = 0; i < windowGames.size(); i++) {
+            System.out.println("================" + windowGames.get(i).getEnv() + "================");
+        }
+
+        for (int i = 0; i < linuxGames.size(); i++) {
+            System.out.println("================" + linuxGames.get(i).getEnv() + "================");
+        }
 
         // then
         // null인가요?
@@ -282,9 +350,40 @@ public class GameSearchTest {
         assertEquals(5, linuxGames.size());
 
         // 리스트의 모든 OS환경이 일치하나요?
-        assertTrue(macGames.stream().allMatch(game -> game.isActive() && "Mac".equals(game.getEnv())));
-        assertTrue(windowGames.isEmpty()); // 조회되지 않아야하기 때문에 리스트에 담기면 안된다.
-        assertTrue(linuxGames.stream().allMatch(game -> game.isActive() && "Linux".equals(game.getEnv())));
+
+        // MAC 환경 검증
+        assertThat(macGames).allSatisfy(game -> {
+            assertThat(game.isActive()).isTrue();
+
+            List<LinkedEnv> envs = linkedEnvRepository.findByGame_Id(game.getId());
+            assertThat(envs)
+                    .isNotEmpty()
+                    .anyMatch(le -> le.getEnv().getEnvType() == EnvType.MAC);
+        });
+
+        // Window 환경 검증
+        assertThat(windowGames).allSatisfy(game -> {
+            assertThat(game.isActive()).isTrue();
+
+            List<LinkedEnv> envs = linkedEnvRepository.findByGame_Id(game.getId());
+            assertThat(envs)
+                    .isNotEmpty()
+                    .anyMatch(le -> le.getEnv().getEnvType() == EnvType.WINDOWS);
+        });
+
+        // Linux 환경 검증
+        assertThat(linuxGames).allSatisfy(game -> {
+
+            // isActive 인가요?
+            assertThat(game.isActive()).isTrue();
+
+            // 데이터베이스에서 env 조회
+            List<LinkedEnv> envs = linkedEnvRepository.findByGame_Id(game.getId());
+
+            assertThat(envs)
+                    .isNotEmpty()
+                    .anyMatch(le -> le.getEnv().getEnvType() == EnvType.LINUX);
+        });
     }
 
     // 태그별 검색
