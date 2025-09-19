@@ -1,6 +1,6 @@
-package com.imfine.ngs.game.repository;
+package com.imfine.ngs.game.repository.env;
 
-import com.imfine.ngs.game.entity.Env;
+import com.imfine.ngs.game.entity.env.Env;
 import com.imfine.ngs.game.enums.EnvType;
 import org.springframework.data.jpa.repository.JpaRepository;
 

@@ -2,8 +2,14 @@ package com.imfine.ngs.publisher;
 
 import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.entity.GameNotice;
+import com.imfine.ngs.game.entity.env.Env;
+import com.imfine.ngs.game.entity.env.LinkedEnv;
+import com.imfine.ngs.game.entity.env.util.LinkedEnvId;
+import com.imfine.ngs.game.enums.EnvType;
 import com.imfine.ngs.game.repository.GameRepository;
 import com.imfine.ngs.game.repository.NoticeRepository;
+import com.imfine.ngs.game.repository.env.EnvRepository;
+import com.imfine.ngs.game.repository.env.LinkedEnvRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -24,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class PublisherRegistrationTest {
 
     // 게임 등록 서비스
-    PublisherService publisherService;
+//    PublisherService publisherService;
 
     // 게임 공지 등록 서비스
     @Autowired
@@ -34,23 +41,44 @@ public class PublisherRegistrationTest {
     @Autowired
     GameRepository gameRepository;
 
+    @Autowired
+    private EnvRepository envRepository;
+    @Autowired
+    private LinkedEnvRepository linkedEnvRepository;
+
     // 게임 등록 메서드
     @DisplayName("게임 등록 테스트")
     @Test
     public void registrationGame() {
 
         // given
-        // 게임을 등록한다.
+
+        // Env(OS) 데이터 준비
+        Env macEnv = new Env();
+        macEnv.setEnvType(EnvType.MAC);
+        Env savedEnv = envRepository.save(macEnv);
+
+        // 게임 생성
         Game testGame = Game.builder()
                 .name("Zelda")
                 .price(100000L)
-                .env("Mac")
                 .tag("Action")
                 .isActive(true)
                 .createdAt(LocalDateTime.now())
                 .build();
 
         gameRepository.save(testGame);
+
+        LinkedEnv linkedEnv = new LinkedEnv();
+        LinkedEnvId linkedEnvId = new LinkedEnvId();
+        linkedEnvId.setGameId(testGame.getId());
+        linkedEnvId.setEnvId(savedEnv.getId());
+
+        linkedEnv.setId(linkedEnvId);
+        linkedEnv.setGame(testGame);
+        linkedEnv.setEnv(savedEnv);
+
+        linkedEnvRepository.save(linkedEnv);
 
         // when && then
         // 리포지토리가 null인가요?
@@ -62,10 +90,13 @@ public class PublisherRegistrationTest {
         // 리포지토리에 저장된 정보가 일치하는가요?
         assertEquals("Zelda", testGame.getName());
         assertEquals(100000L, testGame.getPrice());
-        assertEquals("Mac", testGame.getEnv());
         assertEquals("Action", testGame.getTag());
         assertTrue(testGame.isActive());
 
+        // LinkedEnv에 생성한 게임이 잘 저장되어있나요?
+        List<LinkedEnv> linkedEnvs = linkedEnvRepository.findByGame_Id(testGame.getId());
+        assertThat(linkedEnvs).hasSize(1);
+        assertThat(linkedEnvs.get(0).getEnv().getEnvType()).isEqualTo(EnvType.MAC);
     }
 
     // 잘못된 입력값 테스트
@@ -78,8 +109,7 @@ public class PublisherRegistrationTest {
         Game inValidGame = Game.builder()
                 .name("")
                 .price(-10000L)
-                .env("Mac")
-                .env("TestTag")
+                .tag("TestTag")
                 .isActive(true)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -106,7 +136,6 @@ public class PublisherRegistrationTest {
         Game testGame = Game.builder()
                 .name("Zelda")
                 .price(10000L)
-                .env("Mac")
                 .tag("Action")
                 .isActive(true)
                 .createdAt(LocalDateTime.now())

@@ -1,6 +1,8 @@
 package com.imfine.ngs.game.repository;
 
 import com.imfine.ngs.game.entity.Game;
+import com.imfine.ngs.game.enums.EnvType;
+import org.hibernate.metamodel.mapping.WhereRestrictable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -33,8 +35,12 @@ public interface GameRepository extends JpaRepository<Game, Long> {
 
     // TODO: String env를 EnvType
     // 게임 env로 조회
-    @Query("SELECT g FROM Game g WHERE g.isActive = true AND g.env = :env")
-    List<Game> findActiveByEnvType(@Param("env") String env, Sort sort);
+    @Query("SELECT DISTINCT g FROM Game g " +
+            "JOIN g.env le " +
+            "JOIN le.env e " +
+            "WHERE g.isActive = true AND e.envType = :envType"
+    )
+    List<Game> findActiveByEnvType(@Param("envType") EnvType env, Sort sort);
 
     // 게임 범위로 조회
     @Query("SELECT g FROM Game g WHERE g.isActive = true AND g.price BETWEEN  :minPrice AND :maxPrice")

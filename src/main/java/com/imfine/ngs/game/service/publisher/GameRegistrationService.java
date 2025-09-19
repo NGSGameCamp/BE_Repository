@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 public class GameRegistrationService {
 
     // 게임 저장소
-    private final GameRepository gameRepository;
+//    private final GameRepository gameRepository;
 
     // 게임 등록
     public Game registration() {

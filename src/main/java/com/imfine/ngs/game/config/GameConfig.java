@@ -1,8 +1,8 @@
 package com.imfine.ngs.game.config;
 
-import com.imfine.ngs.game.entity.Env;
+import com.imfine.ngs.game.entity.env.Env;
 import com.imfine.ngs.game.enums.EnvType;
-import com.imfine.ngs.game.repository.EnvRepository;
+import com.imfine.ngs.game.repository.env.EnvRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
