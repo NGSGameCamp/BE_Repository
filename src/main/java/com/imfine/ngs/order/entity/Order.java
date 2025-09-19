@@ -1,68 +1,64 @@
 package com.imfine.ngs.order.entity;
 
-import com.imfine.ngs.game.entity.Game;
+import com.imfine.ngs._global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "orders")
 @Getter
-@Setter
-@ToString
-@AllArgsConstructor
-@NoArgsConstructor
-public class Order {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Order extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long orderId;
-    private long userId;
+    private Long orderId;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
-    @JoinTable(
-            name = "order_items",
-            joinColumns = @JoinColumn(name = "order_id"),
-            inverseJoinColumns = @JoinColumn(name = "game_id")
-    )
-    private List<Game> orderItems = new ArrayList<>();
+    private Long userId;
 
-    private long totalPrice;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderDetails> orderDetails = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
-    private OrderStatus orderStatus;
+    private OrderStatus status;
 
-    public Order(long orderId, long totalPrice) {
-        this.orderId = orderId;
-        this.totalPrice = totalPrice;
+    private String merchantUid; // 주문 고유 ID
+
+    public Order(Long userId) {
+        this.userId = userId;
+        this.status = OrderStatus.PENDING;
+        this.merchantUid = UUID.randomUUID().toString();
     }
 
-    public int getOrderItemCount() {
-        if (orderItems == null) {
-            return 0;
-        }
-        return orderItems.size();
+    public void addOrderDetail(OrderDetails detail) {
+        this.orderDetails.add(detail);
     }
 
-    // PaymentService에서 가정한 메소드들 추가
+    public long getTotalPrice() {
+        return this.orderDetails.stream()
+                .mapToLong(OrderDetails::getPriceSnapshot)
+                .sum();
+    }
+
+    public void setStatus(OrderStatus status) {
+        this.status = status;
+    }
+
     public boolean isPaid() {
-        return this.orderStatus == OrderStatus.PAYMENT_COMPLETED;
-    }
-
-    public long getTotalAmount() {
-        return this.totalPrice;
+        return this.status == OrderStatus.PAYMENT_COMPLETED;
     }
 
     public void paymentCompleted() {
-        this.orderStatus = OrderStatus.PAYMENT_COMPLETED;
+        this.status = OrderStatus.PAYMENT_COMPLETED;
     }
 
     public void paymentFailed() {
-        this.orderStatus = OrderStatus.PAYMENT_FAILED;
+        this.status = OrderStatus.PAYMENT_FAILED;
     }
-
-    // merchantUid 필드 (PortOne의 merchant_uid와 매핑)
-    private String merchantUid;
 }
