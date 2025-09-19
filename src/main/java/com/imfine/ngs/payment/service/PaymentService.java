@@ -1,6 +1,8 @@
 package com.imfine.ngs.payment.service;
 
 import com.imfine.ngs.order.entity.Order;
+import com.imfine.ngs.order.entity.OrderHistory;
+import com.imfine.ngs.order.repository.OrderHistoryRepository;
 import com.imfine.ngs.order.repository.OrderRepository;
 import com.imfine.ngs.payment.client.PortOneApiClient;
 import com.imfine.ngs.payment.client.PortOnePaymentData;
@@ -20,7 +22,8 @@ public class PaymentService {
     private static final Logger logger = LoggerFactory.getLogger(PaymentService.class);
     private final OrderRepository orderRepository;
     private final PortOneApiClient portOneApiClient;
-    private final PaymentRepository paymentRepository; // PaymentRepository 주입
+    private final PaymentRepository paymentRepository;
+    private final OrderHistoryRepository orderHistoryRepository;
 
     @Transactional
     public PaymentCompleteResponse completePayment(String paymentId) {
@@ -39,28 +42,30 @@ public class PaymentService {
                 throw new RuntimeException("결제가 완료되지 않았습니다. 상태: " + portOnePayment.getStatus());
             }
 
-            // 3. 우리 DB에서 주문 정보 조회 (PortOne의 merchantUid는 우리 시스템의 주문 ID)
+            // 3. 우리 DB에서 주문 정보 조회
             final Order order = orderRepository.findByMerchantUid(portOnePayment.getMerchantUid())
                     .orElseThrow(() -> new IllegalArgumentException("일치하는 주문을 찾을 수 없습니다. merchantUid=" + portOnePayment.getMerchantUid()));
 
             // 4. 이미 처리된 주문인지 확인
-            if (order.isPaid()) { // Order 엔티티에 isPaid()와 같은 상태 확인 메소드가 있다고 가정합니다.
+            if (order.isPaid()) {
                 logger.warn("이미 결제 처리된 주문입니다. (orderId: {})", order.getOrderId());
                 return new PaymentCompleteResponse("PAID", "이미 처리된 주문입니다.");
             }
 
             // 5. 결제 금액 검증
             final long paidAmount = portOnePayment.getAmount().getTotal();
-            final long expectedAmount = order.getTotalAmount(); // Order 엔티티에 getTotalAmount()가 있다고 가정
+            final long expectedAmount = order.getTotalPrice();
 
             if (paidAmount != expectedAmount) {
-                order.paymentFailed(); // 주문 상태를 '결제 실패'로 변경
+                order.paymentFailed();
+                orderHistoryRepository.save(new OrderHistory(order, order.getStatus())); // 히스토리 기록
                 portOneApiClient.cancelPayment(paymentId); // PortOne API를 통한 결제 취소 호출
                 throw new RuntimeException("결제 금액(" + paidAmount + ")이 주문 금액(" + expectedAmount + ")과 일치하지 않습니다.");
             }
 
             // 6. 모든 검증 통과 -> 주문 상태를 '결제 완료'로 변경
             order.paymentCompleted();
+            orderHistoryRepository.save(new OrderHistory(order, order.getStatus())); // 히스토리 기록
 
             // 7. Payment 객체 생성 및 저장
             Payment payment = new Payment(order, paidAmount, paymentId);
@@ -70,7 +75,19 @@ public class PaymentService {
 
         } catch (Exception e) {
             logger.error("결제 검증 처리 중 심각한 오류 발생 (paymentId: {})", paymentId, e);
+            // 결제 실패 시 주문 상태 변경 및 히스토리 기록
+            // 이 로직은 특정 주문을 식별할 수 있을 때만 실행해야 함
+            // portOnePayment에서 merchantUid를 가져올 수 있는 경우
+            if (e.getMessage().contains("merchantUid")) {
+                String merchantUid = e.getMessage().split("merchantUid=")[1].split(" ")[0];
+                orderRepository.findByMerchantUid(merchantUid).ifPresent(order -> {
+                    if (!order.isPaid()) { // 아직 결제 완료되지 않은 경우에만 실패 처리
+                        order.paymentFailed();
+                        orderHistoryRepository.save(new OrderHistory(order, order.getStatus()));
+                    }
+                });
+            }
             throw new RuntimeException("결제 검증 중 오류 발생: " + e.getMessage(), e);
-        } 
+        }
     }
 }
