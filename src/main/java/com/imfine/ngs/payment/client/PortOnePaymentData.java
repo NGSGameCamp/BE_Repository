@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.AllArgsConstructor;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -12,7 +13,8 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
-@JsonIgnoreProperties(ignoreUnknown = true) // 알려지지 않은 속성은 무시
+@AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PortOnePaymentData {
 
     private String id; // 포트원 결제 ID (imp_uid)
@@ -22,25 +24,12 @@ public class PortOnePaymentData {
     private String merchantUid; // 가맹점 주문 ID
 
     private String orderName;
-    private Amount amount;
+    private PortOneAmount amount;
     private Customer customer;
     private List<Cancellation> cancellations;
     private ZonedDateTime paidAt;
     private ZonedDateTime cancelledAt;
 
-    @Getter
-    @Setter
-    @ToString
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class Amount {
-        private long total; // 총 결제 금액
-        private long taxFree; // 비과세 금액
-        private long vat; // 부가세
-        private long supply; // 공급가액
-        private long discount; // 할인 금액
-        private long paid; // 실제 결제된 금액
-        private long cancelled; // 취소된 금액
-    }
 
     @Getter
     @Setter
