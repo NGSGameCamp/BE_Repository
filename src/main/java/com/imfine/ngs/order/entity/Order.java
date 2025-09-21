@@ -61,4 +61,8 @@ public class Order extends BaseTimeEntity {
     public void paymentFailed() {
         this.status = OrderStatus.PAYMENT_FAILED;
     }
+
+    public void setMerchantUid(String merchantUid) {
+        this.merchantUid = merchantUid;
+    }
 }
