@@ -66,6 +66,8 @@ public class User {
         this.nickname = newNickname;
     }
 
+    public void updateProfileUrl(String newProfileUrl) {this.profileUrl = newProfileUrl;}
+
     public void softDelete() {
         this.deletedAt = LocalDateTime.now();
     }

@@ -13,8 +13,12 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "follow",
         uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"user_id", "target_type", "target_id"})
-        })
+                @UniqueConstraint(columnNames = {"user_id", "target_type", "target_id"})
+        },
+        indexes = {
+                @Index(name = "idx_follow_target", columnList = "target_type, target_id")
+        }
+)
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -25,8 +29,9 @@ public class Follow {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "target_type", nullable = false)
