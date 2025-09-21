@@ -5,28 +5,19 @@ import com.imfine.ngs.community.entity.TestUser;
 import com.imfine.ngs.community.repository.CommunityCommentRepository;
 import com.imfine.ngs.community.repository.TestUserRepository;
 import com.imfine.ngs.user.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CommunityCommentService {
-  CommunityCommentRepository commentRepo;
-  CommunityPostService postService;
-  TestUserRepository userRepo;
-  ValidationService valid;
-
-  @Autowired
-  CommunityCommentService(
-          CommunityCommentRepository communityCommentRepository,
-          CommunityPostService postService,
-          TestUserRepository userRepository) {
-    this.commentRepo = communityCommentRepository;
-    this.postService = postService;
-    this.userRepo = userRepository;
-    this.valid = new ValidationService();
-  }
+  private final CommunityCommentRepository commentRepo;
+  private final CommunityPostService postService;
+  private final TestUserRepository userRepo;
+  private final ValidationService valid;
 
   Long addComment(Long userId, CommunityComment comment) {
     comment.setAuthorId(userId);

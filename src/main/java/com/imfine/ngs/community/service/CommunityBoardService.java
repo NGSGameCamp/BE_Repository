@@ -5,23 +5,17 @@ import com.imfine.ngs.community.entity.TestUser;
 import com.imfine.ngs.community.repository.CommunityBoardRepository;
 import com.imfine.ngs.community.repository.CommunityTagRepository;
 import com.imfine.ngs.community.repository.TestUserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CommunityBoardService {
-  CommunityBoardRepository boardRepo;
-  TestUserRepository userRepo;
-
-  @Autowired
-  CommunityBoardService(
-          CommunityBoardRepository boardRepo,
-          TestUserRepository userRepo) {
-    this.boardRepo = boardRepo;
-    this.userRepo = userRepo;
-  }
+  private final CommunityBoardRepository boardRepo;
+  private final TestUserRepository userRepo;
 
   // Create
   public Long addBoard(CommunityBoard board) {

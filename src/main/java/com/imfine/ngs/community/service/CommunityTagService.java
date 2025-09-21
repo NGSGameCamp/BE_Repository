@@ -2,19 +2,16 @@ package com.imfine.ngs.community.service;
 
 import com.imfine.ngs.community.entity.CommunityTag;
 import com.imfine.ngs.community.repository.CommunityTagRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CommunityTagService {
-  CommunityTagRepository tagRepository;
-
-  @Autowired
-  CommunityTagService(CommunityTagRepository tagRepository) {
-    this.tagRepository = tagRepository;
-  }
+  private final CommunityTagRepository tagRepository;
 
   public CommunityTag addTag(String tagName) {
     CommunityTag tag = CommunityTag.builder()

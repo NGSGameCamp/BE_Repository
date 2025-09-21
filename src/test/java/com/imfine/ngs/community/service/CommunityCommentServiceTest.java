@@ -32,7 +32,6 @@ public class CommunityCommentServiceTest {
           CommunityPostService postService,
           CommunityBoardService boardService,
           TestUserService userService) {
-
     this.commentService = commentService;
     this.postService = postService;
     this.boardService = boardService;
@@ -249,6 +248,7 @@ public class CommunityCommentServiceTest {
   }
 
     // TODO: 관리자가 댓글 제거하는 경우?
+    // TODO: 이건 @PreAuthorize 도입할 때 같이하기
 
   // 댓글 조회 파트
   // ============================================================

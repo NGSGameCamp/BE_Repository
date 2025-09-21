@@ -17,7 +17,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CommunityPostService {
-
   private final ValidationService validate;
   private final CommunityPostRepository postRepo;
   private final TestUserRepository userRepo;

@@ -2,19 +2,16 @@ package com.imfine.ngs.community.service;
 
 import com.imfine.ngs.community.entity.TestUser;
 import com.imfine.ngs.community.repository.TestUserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class TestUserService {
-  TestUserRepository userRepo;
-
-  @Autowired
-  TestUserService(TestUserRepository userRepo) {
-    this.userRepo = userRepo;
-  }
+  private final TestUserRepository userRepo;
 
   public Long addUser(TestUser user) { return userRepo.save(user).getId(); }
 
