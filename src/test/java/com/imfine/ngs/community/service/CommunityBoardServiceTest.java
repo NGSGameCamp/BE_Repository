@@ -8,11 +8,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Transactional
 @ActiveProfiles("test")
@@ -29,6 +31,9 @@ public class CommunityBoardServiceTest {
     this.userService = testUserService;
   }
 
+  Long managerId;
+  Long boardId;
+
   @BeforeEach
   public void setup() {
     // 매니저 생성
@@ -36,7 +41,7 @@ public class CommunityBoardServiceTest {
             .name("Manager")
             .role("MANAGER")
             .build();
-    userService.addUser(manager);
+    managerId = userService.addUser(manager);
 
     // 유저 생성
     for (int i = 0; i < 10; ++i) {
@@ -52,12 +57,14 @@ public class CommunityBoardServiceTest {
     for (int i = 0; i < 10; ++i) {
       CommunityBoard board = CommunityBoard.builder()
               .title("board" + i)
-              .gameId(5L)
-              .managerId(manager.getId())
+              .gameId((long) i)
+              .managerId(managerId)
               .description("this is test board for board test" + i)
               .build();
 
-      boardService.addBoard(board);
+      Long tmp = boardService.addBoard(board);
+      if (i == 2)
+        boardId = tmp;
     }
   }
 
@@ -70,11 +77,9 @@ public class CommunityBoardServiceTest {
     CommunityBoard board = CommunityBoard.builder().build();
     Long boardCnt = boardService.count();
 
-    // When
-    boardService.addBoard(board);
-
-    // Then
-    assertThat(boardService.count());
+    // When & Then
+    assertThatThrownBy(() -> boardService.addBoard(board))
+            .isInstanceOf(DataIntegrityViolationException.class);
   }
 
   @Test
@@ -83,7 +88,7 @@ public class CommunityBoardServiceTest {
     // Given
     CommunityBoard board = CommunityBoard.builder()
             .title("RightBoard")
-            .gameId(5L)
+            .gameId(100L)
             .managerId(1L)
             .build();
     Long boardCnt = boardService.count();
@@ -102,24 +107,26 @@ public class CommunityBoardServiceTest {
   @DisplayName("관리자가 아닌 사람이 isDeleted를 변경시키는 경우 변경되면 안됨")
   void changeIsActiveWithWrongUser() {
     // Given
-    CommunityBoard board = boardService.getBoardById(2L);
-    TestUser user = userService.getUserById(
-            board.getManagerId() > 1 ? board.getManagerId() - 1 : board.getManagerId()+1);
+    CommunityBoard board = boardService.getBoardById(boardId);
+    TestUser user = TestUser.builder()
+            .id(15123L)
+            .name("asdf")
+            .role("USER")
+            .build();
 
     // When
-    boardService.setIsDeleted(user.getId(), board.getId(), false);
+    boardService.setIsDeleted(user.getId(), board.getId(), true);
 
     // Then
-    assertThat(boardService.getBoardById(board.getId()).getIsDeleted()).isTrue();
+    assertThat(boardService.getBoardById(board.getId()).getIsDeleted()).isFalse();
   }
     //
   @Test
   @DisplayName("담당자나 관리자가 아닌 사람이 description을 변경시키는 경우 변경되면 안 됨")
   void changeDescriptionWithWrongUser() {
     // Given
-    CommunityBoard board = boardService.getBoardById(2L);
-    TestUser user = userService.getUserById(
-            board.getManagerId() > 1 ? board.getManagerId() - 1 : board.getManagerId()+1);
+    CommunityBoard board = boardService.getBoardById(boardId);
+    TestUser user = userService.getUserById(board.getManagerId()+1);
     String desc = "바뀔 내용입니다.";
 
     // When
@@ -133,10 +140,11 @@ public class CommunityBoardServiceTest {
   @DisplayName("관리자가 isDeleted를 변경시키는 경우 변경되어야 함")
   void changeIsActiveWithManager() {
     // Given
+
     CommunityBoard board = CommunityBoard.builder()
             .title("test")
-            .managerId(1L)
-            .gameId(2L)
+            .managerId(managerId)
+            .gameId(101L)
             .description("teasdfasd")
             .build();
     boardService.addBoard(board);
@@ -155,7 +163,7 @@ public class CommunityBoardServiceTest {
   void changeDescriptionWithManager() {
 
     // Given
-    CommunityBoard board = boardService.getBoardById(2L);
+    CommunityBoard board = boardService.getBoardById(boardId);
     TestUser user = userService.getUserById(board.getManagerId());
     String desc = "바뀔 내용입니다.";
 
@@ -170,16 +178,15 @@ public class CommunityBoardServiceTest {
   @Test
   @DisplayName("담당자가 아닌 사람이 관리자를 변경할 경우엔 변경되면 안 됨")
   void changeManagerWithNotManager() {
-    CommunityBoard board = boardService.getBoardById(2L);
-    TestUser manager = userService.getUserById(
-            board.getManagerId() > 1 ? board.getManagerId() - 1 : board.getManagerId()+1);
-    TestUser notManager = userService.getUserById(1L);
+    CommunityBoard board = boardService.getBoardById(boardId);
+    TestUser notFromManager = userService.getUserById(managerId+1);
+    TestUser notToManager = userService.getUserById(managerId+2);
 
     // When
-    boardService.setManager(board.getId(), manager.getId(), notManager.getId());
+    boardService.setManager(board.getId(), notFromManager.getId(), notToManager.getId());
 
     // Then
-    assertThat(boardService.getBoardById(board.getId()).getManagerId()).isNotEqualTo(notManager.getId());
+    assertThat(boardService.getBoardById(board.getId()).getManagerId()).isNotEqualTo(notToManager.getId());
   }
 
     // 관리자 또는 담당자가 담당자를 변경할 경우엔 변경되어야 함
@@ -214,15 +221,17 @@ public class CommunityBoardServiceTest {
   void getBoardWithNoActivation() {
     // Given
     CommunityBoard board = CommunityBoard.allBuilder()
-            .id(50L)
             .title("isDeletedTest")
             .description("the board for testing isDeleted")
-            .isDeleted(false)
+            .managerId(1L)
+            .gameId(101L)
+            .isDeleted(true)
             .build();
-    boardService.addBoard(board);
+
+    Long tmpId = boardService.addBoard(board);
 
     // When
-    CommunityBoard result = boardService.getBoardById(board.getId());
+    CommunityBoard result = boardService.getBoardById(tmpId);
 
     // Then
     assertThat(result).isNull();
@@ -232,7 +241,7 @@ public class CommunityBoardServiceTest {
   @DisplayName("보드가 유효하면 조회되어야 함")
   void getBoardOnRightCondition() {
     // When
-    CommunityBoard board = boardService.getBoardById(2L);
+    CommunityBoard board = boardService.getBoardById(boardId);
 
     // Then
     assertThat(board).isNotNull();
@@ -243,9 +252,10 @@ public class CommunityBoardServiceTest {
   void getDisabledBoardWithManager() {
     // Given
     CommunityBoard board = CommunityBoard.allBuilder()
-            .id(50L)
             .title("isDeletedTest")
             .description("the board for testing isDeleted")
+            .managerId(managerId)
+            .gameId(101L)
             .isDeleted(false)
             .build();
     boardService.addBoard(board);

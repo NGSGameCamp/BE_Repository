@@ -1,10 +1,7 @@
 package com.imfine.ngs.community.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -16,7 +13,6 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Table(name = "community_post")
 public class CommunityPost {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,6 +22,7 @@ public class CommunityPost {
   private Long boardId;
 
   @Column(nullable = false)
+  @Setter
   private Long authorId;
 
   @Column(nullable = false)
@@ -56,6 +53,9 @@ public class CommunityPost {
     this.authorId = authorId;
     this.title = title;
     this.content = content;
+    this.tags = tags;
+
+    this.isDeleted = false;
   }
 
   @Builder(builderMethodName = "allBuilder", builderClassName = "AllBuilder")
@@ -69,6 +69,7 @@ public class CommunityPost {
   public void updateTitle(String title) { this.title = title; }
   public void updateContent(String content) { this.content = content; }
   public void updateIsDeleted(Boolean isDeleted) { this.isDeleted = isDeleted; }
+  public void updateTags(List<CommunityTag> tags) { this.tags = tags; }
   public void insertTags(List<CommunityTag> tags) { this.tags = tags; }
 
   @Override

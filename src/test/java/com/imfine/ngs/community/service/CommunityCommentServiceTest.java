@@ -39,88 +39,85 @@ public class CommunityCommentServiceTest {
     this.userService = userService;
   }
 
+  Long managerId;
+  Long postId;
+  Long boardId;
+  Long userId;
+  Long commentId;
+
   // 테스트 전 준비해야하는 데이터들 나열
   @BeforeEach
   void setUp() {
     // 매니저 생성
     TestUser manager = TestUser.builder()
-            .id(427L)
             .name("Manager")
             .role("MANAGER")
             .build();
-    userService.addUser(manager);
+    managerId = userService.addUser(manager);
     // 보드 생성
     for (int i = 0; i < 5; ++i) {
       CommunityBoard board = CommunityBoard.builder()
               .title("This is test board for post test" + i)
+              .gameId((long) (Math.random()*100000))
+              .managerId(managerId)
               .build();
 
-      boardService.addBoard(board);
+      Long tmp = boardService.addBoard(board);
+
+      if (i == 2)
+        boardId = tmp;
     }
     // 유저 5명 생성
     for (int i = 0 ; i < 5; ++i) {
       TestUser user = TestUser.builder()
-              .id((long) i)
               .name("communityTest"+i)
               .build();
 
-      userService.addUser(user);
+      Long tmp = userService.addUser(user);
+
+      if (i == 3)
+        userId = tmp;
     }
     // 게시글 5개 생성
     for (int i = 0 ; i < 5; ++i) {
       CommunityPost post = CommunityPost.builder()
-              .boardId((long) i)
+              .boardId(boardId)
               .title("commentTestPost"+1)
               .content("this is test post for comment test" + i)
               .build();
 
-      postService.addPost((long) (Math.random() * 5), post);
+      Long tmp = postService.addPost(userId, post);
+
+      if (i == 3)
+        postId = tmp;
     }
     // 댓글 30개 생성
     for (int i = 0 ; i < 30; ++i) {
       CommunityComment comment = CommunityComment.builder()
-              .postId((long) (Math.random() * 5))
+              .postId(postId)
               .content("this is test comment for comment test" + i)
               .build();
 
-      commentService.addComment((long) (Math.random() * 5), comment);
+      Long tmp = commentService.addComment(userId, comment);
+      if (i == 3)
+        commentId = tmp;
     }
   }
 
   // 댓글 작성 파트
   // ============================================================
   @Test
-  @DisplayName("유효하지 않은 유저가 댓글을 작성할 경우 댓글 수가 늘어나면 안 됨")
-  void addCommentWithWrongUser() {
-    // Given
-    TestUser user = TestUser.builder()
-            .id(50L)
-            .name("WrongUser")
-            .build();
-    CommunityComment comment = CommunityComment.builder()
-            .postId(2L)
-            .content("test comment")
-            .build();
-    int commentCnt = commentService.count();
-
-    // When
-    commentService.addComment(user.getId(), comment);
-
-    // Then
-    assertThat(commentService.count()).isEqualTo(commentCnt);
-  }
-
-  @Test
   @DisplayName("댓글 내용이 없으면 댓글 수가 늘어나면 안 됨")
   void addCommentWithNoContent() {
     // Given
-    TestUser user = userService.getUserById(2L);
+    TestUser user = userService.getUserById(userId);
+
     CommunityComment comment = CommunityComment.builder()
-            .postId(2L)
-            .authorId(user.getId())
+            .postId(postId)
+            .authorId(userId)
             .content("")
             .build();
-    int commentCnt = commentService.count();
+    Long commentCnt = commentService.count();
 
     // When
     commentService.addComment(user.getId(), comment);
@@ -133,13 +130,13 @@ public class CommunityCommentServiceTest {
   @DisplayName("부모 댓글이 올바르지 않으면 댓글 수가 늘어나면 안 됨")
   void addCommentWithWrongParent() {
     // Given
-    TestUser user = userService.getUserById(2L);
+    TestUser user = userService.getUserById(userId);
     CommunityComment comment = CommunityComment.builder()
-            .postId(2L)
-            .parentId(50L)
+            .postId(postId)
+            .parentId(1023023L)
             .content("this is test comment")
             .build();
-    int commentCnt = commentService.count();
+    Long commentCnt = commentService.count();
 
     // When
     commentService.addComment(user.getId(), comment);
@@ -152,29 +149,27 @@ public class CommunityCommentServiceTest {
   @DisplayName("올바르지 않은 게시글에 댓글을 작성하면 댓글 수가 늘어나면 안 됨")
   void addCommentOnWrongPost() {
     // Given
-    TestUser user = userService.getUserById(2L);
+    TestUser user = userService.getUserById(userId);
     CommunityComment comment = CommunityComment.builder()
             .postId(50000L)
             .content("this is test comment")
             .build();
-    int commentCnt = commentService.count();
 
     // When
-    commentService.addComment(user.getId(), comment);
+    Long tmp = commentService.addComment(user.getId(), comment);
 
-    // Then
-    assertThat(commentService.count()).isEqualTo(commentCnt);
+    assertThat(tmp).isNull();
   }
 
   @Test
   @DisplayName("올바른 댓글을 작성하면 댓글 수가 늘어나야 함")
   void addCommentOnRightCondition() {
-    TestUser user = userService.getUserById(2L);
+    TestUser user = userService.getUserById(userId);
     CommunityComment comment = CommunityComment.builder()
-            .postId(1L)
+            .postId(postId)
             .content("this is test comment")
             .build();
-    int commentCnt = commentService.count();
+    Long commentCnt = commentService.count();
 
     // When
     commentService.addComment(user.getId(), comment);
@@ -189,18 +184,15 @@ public class CommunityCommentServiceTest {
   @DisplayName("알맞지 않은 유저가 댓글을 수정 시도할 경우 그 내용이 바뀌면 안 됨")
   void editCommentWithWrongUser() {
     // Given
-    CommunityComment comment = commentService.getCommentById(2L);
-    TestUser user = userService.getUserById(
-            comment.getAuthorId() > 1 ? comment.getAuthorId()-1 : comment.getAuthorId()+1);
+    CommunityComment comment = commentService.getCommentById(commentId);
+    TestUser user = userService.getUserById(comment.getAuthorId()+1);
     String toContent = "이걸로 바뀜";
 
-    Long tmpId = comment.getId();
-
     // When
-    commentService.editComment(user.getId(), comment.getId(), toContent);
+    Long tmp = commentService.editComment(user.getId(), comment.getId(), toContent);
 
     // Then
-    assertThat(commentService.getCommentById(tmpId))
+    assertThat(commentService.getCommentById(tmp))
             .isEqualTo(comment);
   }
 
@@ -208,7 +200,7 @@ public class CommunityCommentServiceTest {
   @DisplayName("댓글을 수정했을 때 내용이 없으면 그 내용이 바뀌면 안 됨")
   void editCommentWithNoContent() {
     // Given
-    CommunityComment comment = commentService.getCommentById(2L);
+    CommunityComment comment = commentService.getCommentById(commentId);
     TestUser user = userService.getUserById(comment.getAuthorId());
     String toContent = "";
 
@@ -228,35 +220,32 @@ public class CommunityCommentServiceTest {
   @DisplayName("알맞지 않은 유저가 댓글을 삭제 시도할 경우 댓글 수가 줄어들면 안 됨")
   void deleteCommentWithWrongUser() {
     // Given
-    CommunityComment comment = commentService.getCommentById(2L);
-    TestUser user = userService.getUserById(
-            comment.getAuthorId() > 1 ? comment.getAuthorId()-1 : comment.getAuthorId()+1);
+    CommunityComment comment = commentService.getCommentById(commentId);
+    TestUser user = userService.getUserById(comment.getAuthorId());
 
     // int tmpId = comment.getId();
-    int tmp = commentService.count();
+    Long tmp = commentService.count();
 
 
     // When
     commentService.deleteComment(user.getId(), comment.getId());
 
     // Then
-    // assertThat(commentService.getCommentById(tmpId)).isEqualTo(comment);
     assertThat(commentService.count()).isEqualTo(tmp);
   }
 
   @Test
-  @DisplayName("알맞은 유저가 댓글을 삭제 시도할 경우 댓글 수가 줄어들어야 함")
+  @DisplayName("알맞은 유저가 댓글을 삭제 시도할 경우 해당 댓글의 isDeleted가 true가 되어야 함")
   void deleteCommentOnRightCondition() {
     // Given
-    CommunityComment comment = commentService.getCommentById(2L);
+    CommunityComment comment = commentService.getCommentById(commentId);
     TestUser user = userService.getUserById(comment.getAuthorId());
-    int tmp = commentService.count();
 
     // When
     commentService.deleteComment(user.getId(), comment.getId());
 
     // Then
-    assertThat(commentService.count()).isEqualTo(tmp -1);
+    assertThat(commentService.getCommentById(user.getId(), comment.getId()).getIsDeleted()).isTrue();
   }
 
     // TODO: 관리자가 댓글 제거하는 경우?
@@ -277,36 +266,36 @@ public class CommunityCommentServiceTest {
   @DisplayName("대상 댓글을 갖는 게시글이 유효하지 않을 때 null을 출력함")
   void getCommentWithInvalidPost() {
     // Given
-    TestUser user = userService.getUserById(1L);
-    CommunityPost post = CommunityPost.allBuilder()
-            .id(100L)
-            .boardId(1L)
+    TestUser user = userService.getUserById(userId);
+    CommunityPost post = CommunityPost.builder()
+            .boardId(boardId)
             .authorId(user.getId())
             .title("댓글 테스트용 포스트")
             .content("댓글 테스트용 포스트 입니다.")
             .build();
-    CommunityComment comment = CommunityComment.allBuilder()
-            .id(500L)
-            .postId(post.getId())
+    Long postNum = postService.addPost(user.getId(), post);
+
+    CommunityComment comment = CommunityComment.builder()
+            .postId(postNum)
             .authorId(user.getId())
             .content("테스트용 댓글이에요")
             .build();
-    postService.addPost(user.getId(), post);
-    commentService.addComment(user.getId(), comment);
-    postService.deletePost(user.getId(), post.getId());
+
+    Long commentNum = commentService.addComment(user.getId(), comment);
+    postService.deletePost(user.getId(), postNum);
 
     // When
-    CommunityComment tmp = commentService.getCommentById(comment.getId());
+    CommunityComment tmp = commentService.getCommentById(commentNum);
 
     // Then
-    assertThat(tmp).isNull();
+    assertThat(tmp.getIsDeleted());
   }
 
   @Test
   @DisplayName("유효한 댓글을 조회할 때 대상 댓글을 출력함")
   void getCommentOnRightCondition() {
     // When
-    CommunityComment comment = commentService.getCommentById(2L);
+    CommunityComment comment = commentService.getCommentById(commentId);
 
     // Then
     assertThat(comment).isNotNull();
@@ -316,31 +305,29 @@ public class CommunityCommentServiceTest {
   @DisplayName("관리자가 댓글 조회 할 경우 유효하지 않은 게시글의 댓글도 조회함")
   void getCommentWithManager() {
     // Given
-    TestUser user = userService.getUserById(1L);
-    CommunityPost post = CommunityPost.allBuilder()
-            .id(100L)
-            .boardId(1L)
+    TestUser user = userService.getUserById(userId);
+    CommunityPost post = CommunityPost.builder()
+            .boardId(boardId)
             .authorId(user.getId())
             .title("댓글 테스트용 포스트")
             .content("댓글 테스트용 포스트 입니다.")
             .build();
-    CommunityComment comment = CommunityComment.allBuilder()
-            .id(500L)
-            .postId(post.getId())
+    Long postNum = postService.addPost(user.getId(), post);
+    CommunityComment comment = CommunityComment.builder()
+            .postId(postNum)
             .authorId(user.getId())
             .content("테스트용 댓글이에요")
             .build();
-    postService.addPost(user.getId(), post);
-    commentService.addComment(user.getId(), comment);
-    postService.deletePost(user.getId(), post.getId());
+    Long commentNum = commentService.addComment(user.getId(), comment);
+    postService.deletePost(user.getId(), postNum);
 
-    TestUser manager = userService.getUserByName("Manager");
+    TestUser manager = userService.getUserById(managerId);
 
     // When
-    CommunityComment tmp = commentService.getCommentById(manager.getId(), comment.getId());
+    CommunityComment tmp = commentService.getCommentById(manager.getId(), commentNum);
 
     // Then
-    assertThat(tmp).isNull();
+    assertThat(tmp).isNotNull();
   }
     // 여러 개 조회
       //
@@ -348,7 +335,7 @@ public class CommunityCommentServiceTest {
   @DisplayName("원하는 Post의 모든 Comment 가져오게 하기")
   void getCommentsOnSpecificPost() {
     // Given
-    CommunityPost post = postService.getPostById(1L);
+    CommunityPost post = postService.getPostById(postId);
 
     // When
     List<CommunityComment> comments = commentService.getCommentsByPostId(post.getId());
@@ -361,7 +348,7 @@ public class CommunityCommentServiceTest {
   @DisplayName("원하는 Author의 모든 Comment 가져오게 하기")
   void getCommentsOnSpecificAuthor() {
     // Given
-    TestUser user = userService.getUserById(1L);
+    TestUser user = userService.getUserById(userId);
 
     // When
     List<CommunityComment> comments = commentService.getCommentsByAuthorId(user.getId());

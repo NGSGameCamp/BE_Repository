@@ -1,10 +1,7 @@
 package com.imfine.ngs.community.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -15,7 +12,6 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Table(name = "community_comment")
 public class CommunityComment {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,12 +21,18 @@ public class CommunityComment {
   private Long postId;
 
   @Column(nullable = false)
+  @Setter
   private Long authorId;
 
+  @Column(nullable = false, columnDefinition = "number default -1")
   private Long parentId;
 
   @Column(nullable = false)
   private String content;
+
+  @Column(nullable = false)
+  @Setter
+  private Boolean isDeleted;
 
   @CreationTimestamp
   private LocalDateTime createdAt;
@@ -39,19 +41,21 @@ public class CommunityComment {
 
   @Builder
   public CommunityComment(Long postId, Long authorId, Long parentId, String content) {
-    if (parentId == null) { this.parentId = -1L; }
-
     this.postId = postId;
     this.authorId = authorId;
-    this.parentId = parentId;
     this.content = content;
+
+    if (parentId == null) this.parentId = -1L;
+    else this.parentId = parentId;
+
+    isDeleted = false;
   }
 
   @Builder(builderMethodName = "allBuilder", builderClassName = "AllBuilder")
-  public CommunityComment(Long id, Long postId, Long authorId, Long parentId, String content) {
+  public CommunityComment(Long postId, Long authorId, Long parentId, String content, Boolean isDeleted) {
     this(postId, authorId, parentId, content);
 
-    this.id = id;
+    this.isDeleted = isDeleted;
   }
 
   public void updateContent(String content) { this.content = content; }

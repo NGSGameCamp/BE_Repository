@@ -5,6 +5,8 @@ import com.imfine.ngs.community.repository.TestUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class TestUserService {
   TestUserRepository userRepo;
@@ -14,8 +16,11 @@ public class TestUserService {
     this.userRepo = userRepo;
   }
 
-  void addUser(TestUser user) { userRepo.save(user); }
-  TestUser getUserById(Long id) { return userRepo.findById(id).isPresent() ? userRepo.findById(id).get() : null; }
+  public Long addUser(TestUser user) { return userRepo.save(user).getId(); }
 
-  public TestUser getUserByName(String name) { return userRepo.findByName(name).isPresent() ? userRepo.findByName(name).get() : null ; }
+  public TestUser getUserById(Long id) { return userRepo.findById(id).orElse(null); }
+
+  public TestUser getUserByName(String name) { return userRepo.findByName(name).orElse(null); }
+
+  public List<TestUser> getAllUsers() { return userRepo.findAll(); }
 }

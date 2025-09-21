@@ -2,6 +2,7 @@ package com.imfine.ngs.community.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -9,6 +10,7 @@ import java.util.Objects;
 
 @Entity
 @Getter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "community_board_tags")
@@ -29,5 +31,10 @@ public class CommunityTag {
   @Override
   public int hashCode() {
     return Objects.hash(id, name);
+  }
+
+  @Override
+  public String toString() {
+    return name;
   }
 }

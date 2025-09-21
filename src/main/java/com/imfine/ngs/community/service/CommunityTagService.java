@@ -9,17 +9,30 @@ import java.util.List;
 
 @Service
 public class CommunityTagService {
-  CommunityTagRepository communityTagRepository;
+  CommunityTagRepository tagRepository;
 
   @Autowired
-  CommunityTagService(CommunityTagRepository communityTagRepository) {
-    this.communityTagRepository = communityTagRepository;
+  CommunityTagService(CommunityTagRepository tagRepository) {
+    this.tagRepository = tagRepository;
+  }
+
+  public CommunityTag addTag(String tagName) {
+    CommunityTag tag = CommunityTag.builder()
+            .name(tagName)
+            .build();
+    return tagRepository.save(tag);
   }
 
   public CommunityTag getTagByName(String tagName) {
+    CommunityTag result = tagRepository.findByName(tagName).orElse(null);
+    if (result == null) {
+      result = addTag(tagName);
+    }
 
-    return null;
+    return result;
   }
 
-  public List<CommunityTag> getTagsByName(String tmpText) { return null;}
+  public List<CommunityTag> getTagsByName(String tmpText) {
+    return tagRepository.findAllByName(tmpText);
+  }
 }

@@ -16,13 +16,12 @@ import java.util.Objects;
 @AllArgsConstructor
 @Getter
 @Entity
-@Table(name = "community_board")
 public class CommunityBoard {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(nullable = false)
+  @Column(nullable = false, unique = true)
   private Long gameId;
 
   @Column(nullable = false)
@@ -42,23 +41,27 @@ public class CommunityBoard {
   private LocalDateTime updatedAt;
 
   @Builder
-  public CommunityBoard(Long gameId, Long managerId, String title, String description) {
+  public CommunityBoard(Long gameId, Long managerId, String title, String description, Boolean isDeleted) {
     this.gameId = gameId;
     this.managerId = managerId;
     this.title = title;
 
-    this.isDeleted = Boolean.FALSE;
+    if (isDeleted == null)
+      this.isDeleted = false;
+    else
+      this.isDeleted = isDeleted;
 
     if (description == null || description.isEmpty())
       this.description = title + "에 관한 게시판입니다.";
+    else
+      this.description = description;
   }
 
   @Builder(builderMethodName = "allBuilder", builderClassName = "AllBuilder")
   public CommunityBoard(Long id, Long gameId, Long managerId, String title, String description, Boolean isDeleted) {
-    this(gameId, managerId, title, description);
+    this(gameId, managerId, title, description, isDeleted);
 
     this.id = id;
-    this.isDeleted = isDeleted;
   }
 
   public void updateManagerId(Long managerId) { this.managerId = managerId; }

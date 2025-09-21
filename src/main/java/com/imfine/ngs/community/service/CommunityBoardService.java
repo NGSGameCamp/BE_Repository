@@ -24,26 +24,25 @@ public class CommunityBoardService {
   }
 
   // Create
-  public void addBoard(CommunityBoard board) {
-    boardRepo.save(board);
+  public Long addBoard(CommunityBoard board) {
+    return boardRepo.save(board).getId();
   }
 
   // Read
   public Long count() { return boardRepo.count(); }
 
   public CommunityBoard getBoardById(Long managerId, Long id) {
-//    TestUser tmpUser = null;
-//    if (managerId != null)
-//      tmpUser = userRepo.findById(managerId).orElse(null);
+    TestUser tmpUser = null;
+    if (managerId != null)
+      tmpUser = userRepo.findById(managerId).orElse(null);
 
-    CommunityBoard board = boardRepo.findById(id).isPresent() ? boardRepo.findById(id).get() : null;
-//    if (board == null)
-//      return null;
-//    System.out.println("Board: " + board.getId());
-//    if (!board.getIsDeleted())
-//      return board;
-//    if (tmpUser == null)
-//      return null;
+    CommunityBoard board = boardRepo.findById(id).orElse(null);
+    if (board == null)
+      return null;
+    if (!board.getIsDeleted())
+      return board;
+    if (tmpUser == null)
+      return null;
 
     return board;
   }
@@ -66,8 +65,10 @@ public class CommunityBoardService {
     if (board == null)
       throw new IllegalArgumentException("불가능한 접근입니다!");
 
-    board.updateIsDeleted(isDeleted);
-    boardRepo.save(board);
+    if (managerId.equals(board.getManagerId())) {
+      board.updateIsDeleted(isDeleted);
+      boardRepo.save(board);
+    }
   }
 
   public void setDescription(Long userId, Long boardId, String desc) {
@@ -86,9 +87,7 @@ public class CommunityBoardService {
     TestUser tmpUser = userRepo.findById(fromUserId).isPresent() ? userRepo.findById(fromUserId).get() : null;
     if (board == null)
       return;
-    if (!board.getManagerId().equals(fromUserId))
-      return;
-    if (tmpUser != null && !tmpUser.getRole().equals("MANAGER"))
+    if (!board.getManagerId().equals(fromUserId) && (tmpUser != null && !tmpUser.getRole().equals("MANAGER")))
       return;
 
     board.updateManagerId(toUserId);
