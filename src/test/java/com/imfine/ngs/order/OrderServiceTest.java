@@ -1,5 +1,7 @@
 package com.imfine.ngs.order;
 
+import com.imfine.ngs._global.error.exception.BusinessException;
+import com.imfine.ngs._global.error.model.ErrorCode;
 import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.repository.GameRepository;
 import com.imfine.ngs.order.entity.Order;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings("removal")
@@ -91,7 +94,8 @@ public class OrderServiceTest {
         orderService.addGameToCart(testUserId, game1.getId());
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () -> orderService.addGameToCart(testUserId, game1.getId()));
+        BusinessException exception = assertThrows(BusinessException.class, () -> orderService.addGameToCart(testUserId, game1.getId()));
+        assertEquals(ErrorCode.GAME_ALREADY_IN_CART, exception.getErrorCode());
     }
 
     @Test
@@ -101,7 +105,8 @@ public class OrderServiceTest {
         Long nonExistentGameId = 9999L;
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () -> orderService.addGameToCart(testUserId, nonExistentGameId));
+        BusinessException exception = assertThrows(BusinessException.class, () -> orderService.addGameToCart(testUserId, nonExistentGameId));
+        assertEquals(ErrorCode.ENTITY_NOT_FOUND, exception.getErrorCode());
     }
 
     @Test
@@ -129,7 +134,8 @@ public class OrderServiceTest {
         orderService.addGameToCart(testUserId, game1.getId()); // game1만 추가
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () -> orderService.removeGameFromCart(testUserId, game2.getId()));
+        BusinessException exception = assertThrows(BusinessException.class, () -> orderService.removeGameFromCart(testUserId, game2.getId()));
+        assertEquals(ErrorCode.GAME_NOT_IN_CART, exception.getErrorCode());
     }
 
     @Test
@@ -161,6 +167,7 @@ public class OrderServiceTest {
         Long nonExistentOrderId = 9999L;
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () -> orderService.findByOrderId(nonExistentOrderId));
+        BusinessException exception = assertThrows(BusinessException.class, () -> orderService.findByOrderId(nonExistentOrderId));
+        assertEquals(ErrorCode.ORDER_NOT_FOUND, exception.getErrorCode());
     }
 }
