@@ -25,7 +25,7 @@ public class CommunityCommentService {
   Long addComment(Long userId, CommunityComment comment) {
     comment.setAuthorId(userId);
 
-    if (comment.getContent().isBlank())
+    if (comment.getContent() != null && comment.getContent().isBlank())
       throw new IllegalArgumentException("내용이 없습니다!");
     if (postService.getPostById(comment.getPostId()) == null)
       throw new IllegalArgumentException("유효하지 않은 게시판입니다!");
