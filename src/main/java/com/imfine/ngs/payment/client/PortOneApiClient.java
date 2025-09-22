@@ -1,6 +1,6 @@
 package com.imfine.ngs.payment.client;
 
-import com.imfine.ngs._global.config.FeignConfig;
+import com.imfine.ngs.payment.config.FeignConfig;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
