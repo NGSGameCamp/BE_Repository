@@ -16,6 +16,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Transactional
 @ActiveProfiles("test")
@@ -119,10 +120,8 @@ public class CommunityCommentServiceTest {
     Long commentCnt = commentService.count();
 
     // When
-    commentService.addComment(user.getId(), comment);
-
-    // Then
-    assertThat(commentService.count()).isEqualTo(commentCnt);
+    assertThatThrownBy(() -> commentService.addComment(user.getId(), comment))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -138,10 +137,8 @@ public class CommunityCommentServiceTest {
     Long commentCnt = commentService.count();
 
     // When
-    commentService.addComment(user.getId(), comment);
-
-    // Then
-    assertThat(commentService.count()).isEqualTo(commentCnt);
+    assertThatThrownBy(() -> commentService.addComment(user.getId(), comment))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -155,9 +152,8 @@ public class CommunityCommentServiceTest {
             .build();
 
     // When
-    Long tmp = commentService.addComment(user.getId(), comment);
-
-    assertThat(tmp).isNull();
+    assertThatThrownBy(() -> commentService.addComment(user.getId(), comment))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -188,11 +184,8 @@ public class CommunityCommentServiceTest {
     String toContent = "이걸로 바뀜";
 
     // When
-    Long tmp = commentService.editComment(user.getId(), comment.getId(), toContent);
-
-    // Then
-    assertThat(commentService.getCommentById(tmp))
-            .isEqualTo(comment);
+    assertThatThrownBy(() -> commentService.editComment(user.getId(), comment.getId(), toContent))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -206,11 +199,8 @@ public class CommunityCommentServiceTest {
     Long tmpId = comment.getId();
 
     // When
-    commentService.editComment(user.getId(), comment.getId(), toContent);
-
-    // Then
-    assertThat(commentService.getCommentById(tmpId))
-            .isEqualTo(comment);
+    assertThatThrownBy(() -> commentService.editComment(user.getId(), comment.getId(), toContent))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
   // 댓글 삭제 파트
@@ -256,14 +246,12 @@ public class CommunityCommentServiceTest {
   @DisplayName("유효하지 않은 댓글을 조회할 때 null을 출력함")
   void getCommentWithWrongCommentId() {
     // When
-    CommunityComment comment = commentService.getCommentById(21231L);
-
-    // Then
-    assertThat(comment).isNull();
+    assertThatThrownBy(() -> commentService.getCommentById(21231L))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
-  @DisplayName("대상 댓글을 갖는 게시글이 유효하지 않을 때 null을 출력함")
+  @DisplayName("대상 댓글을 갖는 게시글이 유효하지 않을 때 에러 발생")
   void getCommentWithInvalidPost() {
     // Given
     TestUser user = userService.getUserById(userId);
@@ -285,10 +273,8 @@ public class CommunityCommentServiceTest {
     postService.deletePost(user.getId(), postNum);
 
     // When
-    CommunityComment tmp = commentService.getCommentById(commentNum);
-
-    // Then
-    assertThat(tmp.getIsDeleted());
+    assertThatThrownBy(() -> commentService.getCommentById(commentNum))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test

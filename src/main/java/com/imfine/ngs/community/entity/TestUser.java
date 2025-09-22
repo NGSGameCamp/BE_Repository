@@ -6,6 +6,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * TODO: 이거 꼭 지워버릴 것.
+ *  아니면 User 담당자랑 잘 협상해서 잘 써보던가
+ */
 @Entity
 @Getter
 @Builder

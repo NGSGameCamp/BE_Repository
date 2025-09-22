@@ -71,7 +71,7 @@ public class CommunityBoardServiceTest {
   // 게시판 생성 파트
   // ============================================================
   @Test
-  @DisplayName("제목 없이 게시판을 등록 시도할 경우, 게시판의 개수가 늘어나면 안 됨")
+  @DisplayName("제목 없이 게시판을 등록 시도할 경우 에러")
   void addBoardWithNoTitle() {
     // Given
     CommunityBoard board = CommunityBoard.builder().build();
@@ -104,7 +104,7 @@ public class CommunityBoardServiceTest {
   // 게시판 변경 파트
   // ============================================================
   @Test
-  @DisplayName("관리자가 아닌 사람이 isDeleted를 변경시키는 경우 변경되면 안됨")
+  @DisplayName("관리자가 아닌 사람이 isDeleted를 변경시키는 경우 에러")
   void changeIsActiveWithWrongUser() {
     // Given
     CommunityBoard board = boardService.getBoardById(boardId);
@@ -115,14 +115,12 @@ public class CommunityBoardServiceTest {
             .build();
 
     // When
-    boardService.setIsDeleted(user.getId(), board.getId(), true);
-
-    // Then
-    assertThat(boardService.getBoardById(board.getId()).getIsDeleted()).isFalse();
+    assertThatThrownBy(() -> boardService.setIsDeleted(user.getId(), board.getId(), true))
+            .isInstanceOf(IllegalArgumentException.class);
   }
     //
   @Test
-  @DisplayName("담당자나 관리자가 아닌 사람이 description을 변경시키는 경우 변경되면 안 됨")
+  @DisplayName("담당자나 관리자가 아닌 사람이 description을 변경시키는 경우 에러")
   void changeDescriptionWithWrongUser() {
     // Given
     CommunityBoard board = boardService.getBoardById(boardId);
@@ -130,17 +128,14 @@ public class CommunityBoardServiceTest {
     String desc = "바뀔 내용입니다.";
 
     // When
-    boardService.setDescription(user.getId(), board.getId(), desc);
-
-    // Then
-    assertThat(boardService.getBoardById(board.getId()).getDescription()).isNotEqualTo(desc);
+    assertThatThrownBy(() -> boardService.setDescription(user.getId(), board.getId(), desc))
+            .isInstanceOf(IllegalArgumentException.class);
   }
     //
   @Test
   @DisplayName("관리자가 isDeleted를 변경시키는 경우 변경되어야 함")
   void changeIsActiveWithManager() {
     // Given
-
     CommunityBoard board = CommunityBoard.builder()
             .title("test")
             .managerId(managerId)
@@ -152,10 +147,8 @@ public class CommunityBoardServiceTest {
     TestUser user = userService.getUserById(board.getManagerId());
 
     // When
-    boardService.setIsDeleted(user.getId(), board.getId(), false);
-
-    // Then
-    assertThat(board.getIsDeleted()).isFalse();
+    assertThatThrownBy(() -> boardService.setIsDeleted(user.getId(), board.getId(), false))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -183,10 +176,8 @@ public class CommunityBoardServiceTest {
     TestUser notToManager = userService.getUserById(managerId+2);
 
     // When
-    boardService.setManager(board.getId(), notFromManager.getId(), notToManager.getId());
-
-    // Then
-    assertThat(boardService.getBoardById(board.getId()).getManagerId()).isNotEqualTo(notToManager.getId());
+    assertThatThrownBy(() -> boardService.setManager(board.getId(), notFromManager.getId(), notToManager.getId()))
+            .isInstanceOf(IllegalArgumentException.class);;
   }
 
     // 관리자 또는 담당자가 담당자를 변경할 경우엔 변경되어야 함
@@ -210,10 +201,8 @@ public class CommunityBoardServiceTest {
   @DisplayName("보드가 존재하지 않으면 조회되면 안 됨")
   void getBoardWithInvalidBoardId() {
     // When
-    CommunityBoard target = boardService.getBoardById(12321L);
-
-    // Then
-    assertThat(target).isNull();
+    assertThatThrownBy(() -> boardService.getBoardById(12321L))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -231,10 +220,8 @@ public class CommunityBoardServiceTest {
     Long tmpId = boardService.addBoard(board);
 
     // When
-    CommunityBoard result = boardService.getBoardById(tmpId);
-
-    // Then
-    assertThat(result).isNull();
+    assertThatThrownBy(() -> boardService.getBoardById(tmpId))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
