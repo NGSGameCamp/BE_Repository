@@ -45,6 +45,14 @@ public class User {
     @Column
     private LocalDateTime deletedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "role_id", nullable = false)
+    private UserRole role;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "status_id", nullable = false)
+    private UserStatus status;
+
     @Builder
     public static User create(String email, String pwd, String name, String nickname) {
         if (nickname == null || nickname.isBlank()) {
@@ -66,9 +74,14 @@ public class User {
         this.nickname = newNickname;
     }
 
+    public void updateProfileUrl(String newProfileUrl) {this.profileUrl = newProfileUrl;}
+
     public void softDelete() {
         this.deletedAt = LocalDateTime.now();
     }
+
+    public void assignRole(UserRole role) { this.role = role; }
+    public void assignStatus(UserStatus status) { this.status = status; }
 
     @PrePersist
     public void prePersist() {
@@ -76,4 +89,3 @@ public class User {
     }
 
 }
-

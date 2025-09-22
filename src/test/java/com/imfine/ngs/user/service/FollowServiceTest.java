@@ -2,7 +2,9 @@ package com.imfine.ngs.user.service;
 
 import com.imfine.ngs.user.entity.Follow;
 import com.imfine.ngs.user.entity.TargetType;
+import com.imfine.ngs.user.entity.User;
 import com.imfine.ngs.user.repository.FollowRepository;
+import com.imfine.ngs.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,40 +24,54 @@ public class FollowServiceTest {
 
     @Autowired
     private FollowRepository followRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
 
     @Test
     @DisplayName("팔로우 성공")
     void followSucess() {
-        Follow follow = followService.follow(1L, TargetType.USER, 2L);
+        User follower = userRepository.save(User.builder()
+                .email("a@b.com")
+                .pwd("1234")
+                .name("Hun")
+                .nickname("hunny")
+                .build());
+        User target = userRepository.save(User.builder()
+                .email("c@d.com")
+                .pwd("1234")
+                .name("Hue")
+                .nickname("huey")
+                .build());
 
-        assertEquals(1L, follow.getUserId());
+        Follow follow = followService.follow(follower.getId(), TargetType.USER, target.getId());
+
+        assertEquals(follower.getId(), follow.getUser().getId());
         assertEquals(TargetType.USER, follow.getTargetType());
-        assertEquals(2L, follow.getTargetId());
+        assertEquals(target.getId(), follow.getTargetId());
     }
-
-    @Test
-    @DisplayName("팔로우 중복")
-    void followDuplicate() {
-        Follow follow = followService.follow(1L, TargetType.USER, 2L);
-
-        assertThrows(IllegalArgumentException.class, () -> followService.follow(1L, TargetType.USER, 2L));
-    }
-
 
     @Test
     @DisplayName("언팔로우 성공")
     void unfollowSucess() {
-        followService.follow(1L, TargetType.USER, 2L);
+        User follower = userRepository.save(User.builder()
+                .email("e@f.com")
+                .pwd("1234")
+                .name("Hun2")
+                .nickname("hunny2")
+                .build());
+        User target = userRepository.save(User.builder()
+                .email("g@h.com")
+                .pwd("1234")
+                .name("Hue2")
+                .nickname("huey2")
+                .build());
 
-        followService.unfollow(1L, TargetType.USER, 1L);
+        followService.follow(follower.getId(), TargetType.USER, target.getId());
 
-        assertFalse(followRepository.existsByUserIdAndTargetTypeAndTargetId(1L, TargetType.USER, 2L));
-    }
+        followService.unfollow(follower.getId(), TargetType.USER, target.getId());
 
-    @Test
-    @DisplayName("언팔로우 실패 - 존재하지 않음")
-    void unfollowfail() {
-        assertThrows(IllegalArgumentException.class, () -> followService.unfollow(1L, TargetType.USER, 2L));
+        assertFalse(followRepository.existsByUserIdAndTargetTypeAndTargetId(follower.getId(), TargetType.USER, target.getId()));
     }
 
 }

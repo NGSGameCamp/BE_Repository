@@ -16,6 +16,7 @@ import java.util.List;
  * 게임({@link Game}) 검색 서비스 클래스.
  * {@link Game}의 isActive가 활성화 되어야 조회가 가능하다.
  * 현재는 테스트코드를 위해 간소화 된 상태이다.
+ * TODO: 각 조회 메서드에 정렬(Sort) 메서드가 중복되어 있다. 하나의 메서드로 통합해서 관리 할 수 있다.
  *
  * @author chan
  */
