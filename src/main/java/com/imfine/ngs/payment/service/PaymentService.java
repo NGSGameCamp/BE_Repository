@@ -1,5 +1,7 @@
 package com.imfine.ngs.payment.service;
 
+import com.imfine.ngs._global.error.exception.BusinessException;
+import com.imfine.ngs._global.error.model.ErrorCode;
 import com.imfine.ngs.order.entity.Order;
 import com.imfine.ngs.order.entity.OrderHistory;
 import com.imfine.ngs.order.repository.OrderHistoryRepository;
@@ -27,29 +29,34 @@ public class PaymentService {
 
     @Transactional
     public PaymentCompleteResponse completePayment(String paymentId) {
+        // 1. PortOne API를 통해 결제 정보 조회
+        PortOnePaymentData portOnePayment;
         try {
-            // 1. PortOne API를 통해 결제 정보 조회
-            PortOnePaymentData portOnePayment = portOneApiClient.getPayment(paymentId);
-
+            portOnePayment = portOneApiClient.getPayment(paymentId);
             if (portOnePayment == null) {
-                throw new RuntimeException("PortOne API로부터 결제 정보를 받지 못했습니다.");
+                // PortOne에서 데이터를 못받아오는 경우.
+                throw new BusinessException(ErrorCode.PORTONE_API_ERROR);
             }
-            logger.info("PortOne 결제 정보 조회 성공: {}", portOnePayment);
+        } catch (Exception e) {
+            logger.error("PortOne API 호출 중 오류 발생 (paymentId: {})", paymentId, e);
+            throw new BusinessException(ErrorCode.PORTONE_API_ERROR);
+        }
+        logger.info("PortOne 결제 정보 조회 성공: {}", portOnePayment);
 
-            // 2. 결제 상태 확인
+        // 2. 우리 DB에서 주문 정보 조회
+        final Order order = orderRepository.findByMerchantUid(portOnePayment.getMerchantUid())
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+
+        try {
+            // 3. 결제 상태 확인 (PortOne)
             if (!"PAID".equalsIgnoreCase(portOnePayment.getStatus())) {
-                logger.warn("결제가 완료되지 않은 상태입니다. (paymentId: {}, 상태: {})", paymentId, portOnePayment.getStatus());
-                throw new RuntimeException("결제가 완료되지 않았습니다. 상태: " + portOnePayment.getStatus());
+                throw new BusinessException(ErrorCode.PAYMENT_NOT_COMPLETED);
             }
 
-            // 3. 우리 DB에서 주문 정보 조회
-            final Order order = orderRepository.findByMerchantUid(portOnePayment.getMerchantUid())
-                    .orElseThrow(() -> new IllegalArgumentException("일치하는 주문을 찾을 수 없습니다. merchantUid=" + portOnePayment.getMerchantUid()));
-
-            // 4. 이미 처리된 주문인지 확인
+            // 4. 이미 처리된 주문인지 확인 (우리 DB)
             if (order.isPaid()) {
-                logger.warn("이미 결제 처리된 주문입니다. (orderId: {})", order.getOrderId());
-                return new PaymentCompleteResponse("PAID", "이미 처리된 주문입니다.");
+                // 예외를 발생시켜 클라이언트에게 일관된 에러 메시지를 전달
+                throw new BusinessException(ErrorCode.PAYMENT_ALREADY_COMPLETED);
             }
 
             // 5. 결제 금액 검증
@@ -57,15 +64,14 @@ public class PaymentService {
             final long expectedAmount = order.getTotalPrice();
 
             if (paidAmount != expectedAmount) {
-                order.paymentFailed();
-                orderHistoryRepository.save(new OrderHistory(order, order.getStatus())); // 히스토리 기록
-                portOneApiClient.cancelPayment(paymentId); // PortOne API를 통한 결제 취소 호출
-                throw new RuntimeException("결제 금액(" + paidAmount + ")이 주문 금액(" + expectedAmount + ")과 일치하지 않습니다.");
+                // 금액이 일치하지 않으면 PortOne 결제를 취소해야 함
+                portOneApiClient.cancelPayment(paymentId);
+                throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
             }
 
             // 6. 모든 검증 통과 -> 주문 상태를 '결제 완료'로 변경
             order.paymentCompleted();
-            orderHistoryRepository.save(new OrderHistory(order, order.getStatus())); // 히스토리 기록
+            orderHistoryRepository.save(new OrderHistory(order, order.getStatus()));
 
             // 7. Payment 객체 생성 및 저장
             Payment payment = new Payment(order, paidAmount, paymentId);
@@ -73,21 +79,12 @@ public class PaymentService {
 
             return new PaymentCompleteResponse("PAID", "결제가 성공적으로 완료되었습니다.");
 
-        } catch (Exception e) {
-            logger.error("결제 검증 처리 중 심각한 오류 발생 (paymentId: {})", paymentId, e);
-            // 결제 실패 시 주문 상태 변경 및 히스토리 기록
-            // 이 로직은 특정 주문을 식별할 수 있을 때만 실행해야 함
-            // portOnePayment에서 merchantUid를 가져올 수 있는 경우
-            if (e.getMessage().contains("merchantUid")) {
-                String merchantUid = e.getMessage().split("merchantUid=")[1].split(" ")[0];
-                orderRepository.findByMerchantUid(merchantUid).ifPresent(order -> {
-                    if (!order.isPaid()) { // 아직 결제 완료되지 않은 경우에만 실패 처리
-                        order.paymentFailed();
-                        orderHistoryRepository.save(new OrderHistory(order, order.getStatus()));
-                    }
-                });
-            }
-            throw new RuntimeException("결제 검증 중 오류 발생: " + e.getMessage(), e);
+        } catch (BusinessException e) {
+            // 검증 과정에서 비즈니스 예외 발생 시 주문 상태를 '결제 실패'로 변경
+            order.paymentFailed();
+            orderHistoryRepository.save(new OrderHistory(order, order.getStatus()));
+            // GlobalExceptionHandler가 처리하도록 예외를 다시 던짐
+            throw e;
         }
     }
 }
