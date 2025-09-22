@@ -1,6 +1,8 @@
 package com.imfine.ngs.user.service;
 
-import com.imfine.ngs.user.dto.response.UserProfileDto;
+import com.imfine.ngs.user.dto.request.ProfileRequest;
+import com.imfine.ngs.user.dto.request.SignUpRequest;
+import com.imfine.ngs.user.dto.response.ProfileResponse;
 import com.imfine.ngs.user.entity.User;
 import com.imfine.ngs.user.oauth.client.OauthClient;
 import com.imfine.ngs.user.oauth.dto.OauthUserInfo;
@@ -14,7 +16,8 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -30,56 +33,56 @@ public class ProfileServiceTest {
     @Autowired
     private UserRepository userRepository;
 
-    @TestConfiguration
-    static class TestConfig {
-        @Bean
-        public OauthClient oauthClient() {
-            return (provider, token) -> new OauthUserInfo("dummy@test.com", "Dummy");
-        }
-    }
-    /*
     @Test
-    @DisplayName("닉네임 변경 성공")
-    void updateNicknameSuccess() {
-        authService.signUp("a@b.com", "1234", "1234", "Hun");
-        profileService.updateNickname("a@b.com", "NewHun");
-        User user = userRepository.findByEmail("a@b.com").orElseThrow();
-        assertEquals("NewHun", user.getNickname());
+    @DisplayName("프로필 변경 성공")
+    void updateProfileSuccess() {
+        SignUpRequest request = new SignUpRequest();
+        request.setEmail("a@b.com");
+        request.setName("Hun");
+        request.setPwd("1234");
+        request.setPwdCheck("1234");
+
+        authService.signUp(request);
+        ProfileRequest profileRequest = new ProfileRequest();
+        profileRequest.setNickname("NewHun");
+        profileService.updateProfile("a@b.com", profileRequest);
+        User updatedUser = userRepository.findByEmail("a@b.com").orElseThrow();
+        assertEquals("NewHun", updatedUser.getNickname());
+
     }
 
     @Test
     @DisplayName("프로필 조회 성공")
-    void userDetailSuccess() {
-        authService.signUp("a@b.com", "1234", "1234", "Hun");
-        UserProfileDto profile = profileService.getUserProfile("a@b.com");
-        assertEquals("a@b.com", profile.getEmail());
-        assertEquals("Hun", profile.getNickname());
+    void GetProfileSuccess() {
+        SignUpRequest request = new SignUpRequest();
+        request.setEmail("a@b.com");
+        request.setName("Hun");
+        request.setPwd("1234");
+        request.setPwdCheck("1234");
+
+        authService.signUp(request);
+
+        ProfileResponse profileResponse = profileService.getProfile("a@b.com");
+        assertEquals("Hun", profileResponse.getNickname());
     }
 
     @Test
-    @DisplayName("프로필 조회 실패")
-    void userDetailFail() {
-        authService.signUp("a@b.com", "1234", "1234", "Hun");
-        assertThrows(IllegalArgumentException.class,
-                () -> profileService.getUserProfile("c@d.com"));
-    }
-
-    @Test
-    @DisplayName("회원 삭제 성공")
+    @DisplayName("회원 탈퇴 성공")
     void deleteUserSuccess() {
-        authService.signUp("a@b.com", "1234","1234", "Hun");
+        SignUpRequest request = new SignUpRequest();
+        request.setEmail("a@b.com");
+        request.setName("Hun");
+        request.setPwd("1234");
+        request.setPwdCheck("1234");
+
+        authService.signUp(request);
+
         profileService.deleteUser("a@b.com");
+
         assertFalse(userRepository.findByEmail("a@b.com").isPresent());
-    }
 
-    @Test
-    @DisplayName("회원 삭제 실패 - 존재하지 않는 이메일")
-    void deleteUserFail() {
-        authService.signUp("a@b.com", "1234", "1234", "Hun");
-        assertThrows(IllegalArgumentException.class,
-                () -> profileService.deleteUser("c@d.com"));
-    }
 
-     */
+
+    }
 }
 

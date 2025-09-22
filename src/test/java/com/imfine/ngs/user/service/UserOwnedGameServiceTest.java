@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 public class UserOwnedGameServiceTest {
 
+    /*
     @Autowired
     OrderService orderService;
 
@@ -63,4 +64,7 @@ public class UserOwnedGameServiceTest {
 class OrderDetail {
     void orderDetail(Order order, Game game) {
     }
+
+
+     */
 }

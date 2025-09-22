@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class PublisherRegistrationTest {
 
     // 게임 등록 서비스
-//    PublisherService publisherService;
+    //PublisherService publisherService;
 
     // 게임 공지 등록 서비스
     @Autowired
