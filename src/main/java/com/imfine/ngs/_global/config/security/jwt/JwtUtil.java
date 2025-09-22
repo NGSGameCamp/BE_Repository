@@ -23,12 +23,18 @@ public class JwtUtil {
     }
 
     public String generateToken(Long userId) {
-        return Jwts.builder()
+        return generateToken(userId, null);
+    }
+
+    public String generateToken(Long userId, String role) {
+        var builder = Jwts.builder()
                 .setSubject(String.valueOf(userId))
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS));
+        if (role != null) {
+            builder.claim("role", role);
+        }
+        return builder.signWith(key, SignatureAlgorithm.HS256).compact();
     }
 
     public Long getUserIdFromToken(String token) {
@@ -47,5 +53,15 @@ public class JwtUtil {
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
+    }
+
+    public String getRoleFromToken(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(this.key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        Object role = claims.get("role");
+        return role != null ? role.toString() : null;
     }
 }

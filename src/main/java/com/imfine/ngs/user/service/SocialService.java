@@ -3,7 +3,7 @@ package com.imfine.ngs.user.service;
 import com.imfine.ngs.user.entity.User;
 import com.imfine.ngs.user.oauth.client.OauthClient;
 import com.imfine.ngs.user.oauth.dto.OauthUserInfo;
-import com.imfine.ngs.user.repository.UserRepository;
+import com.imfine.ngs.user.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 public class SocialService {
 
     private final UserRepository userRepository;
+    private final UserRoleRepository userRoleRepository;
+    private final UserStatusRepository userStatusRepository;
     private final OauthClient oauthClient;
 
     public User socialLogin(String provider, String accessToken) {
@@ -25,8 +27,11 @@ public class SocialService {
                             userInfo.getName(),
                             null
                     );
+                    var defaultRole = userRoleRepository.findByRole("USER").orElseThrow();
+                    var defaultStatus = userStatusRepository.findByName("ACTIVE").orElseThrow();
+                    newUser.assignRole(defaultRole);
+                    newUser.assignStatus(defaultStatus);
                     return userRepository.save(newUser);
                 });
     }
 }
-

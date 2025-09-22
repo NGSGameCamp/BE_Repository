@@ -5,7 +5,7 @@ import com.imfine.ngs.user.dto.request.SignInRequest;
 import com.imfine.ngs.user.dto.request.SignUpRequest;
 import com.imfine.ngs.user.dto.response.SignInResponse;
 import com.imfine.ngs.user.entity.User;
-import com.imfine.ngs.user.repository.UserRepository;
+import com.imfine.ngs.user.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final UserRoleRepository userRoleRepository;
+    private final UserStatusRepository userStatusRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
@@ -28,39 +30,12 @@ public class AuthService {
         }
 
         User user = User.create(request.getEmail(), passwordEncoder.encode(request.getPwd()), request.getName(), null);
-
+        var defaultRole = userRoleRepository.findByRole("USER").orElseThrow();
+        var defaultStatus = userStatusRepository.findByName("ACTIVE").orElseThrow();
+        user.assignRole(defaultRole);
+        user.assignStatus(defaultStatus);
         userRepository.save(user);
     }
-    /*
-    public Long signUp(String email, String pwd, String pwdCheck, String name) {
-        if (email == null || pwd == null || pwdCheck == null || name == null) {
-            throw new IllegalArgumentException("필수 입력값 누락");
-        }
-        if (!pwd.equals(pwdCheck)) {
-            throw new IllegalArgumentException("비밀번호 불일치");
-        }
-        if (userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("이메일 이미 존재");
-        }
-
-        User user = User.create(email, pwd, name, null);
-
-        return userRepository.save(user).getId();
-    }
-
-    /* test signIn
-    public User signIn(String email, String pw) {
-        if (email == null || pw == null) {
-            throw new IllegalArgumentException("아이디/비밀번호 미입력");
-        }
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디"));
-        if (!user.getPwd().equals(pw)) {
-            throw new IllegalArgumentException("비밀번호 불일치");
-        }
-        return user;
-    }
-     */
 
     public SignInResponse signIn(SignInRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
@@ -70,11 +45,10 @@ public class AuthService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        String token = jwtUtil.generateToken(user.getId());
+        String role = user.getRole() != null ? user.getRole().getRole() : null;
+        String token = jwtUtil.generateToken(user.getId(), role);
         return new SignInResponse(token, user.getId());
     }
-
-
 
     public void updatePwd(String email, String oldPwd, String newPwd) {
         if (oldPwd == null || newPwd == null) {
@@ -90,4 +64,3 @@ public class AuthService {
         userRepository.save(user);
     }
 }
-

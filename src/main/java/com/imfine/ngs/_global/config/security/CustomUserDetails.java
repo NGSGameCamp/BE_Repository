@@ -3,6 +3,7 @@ package com.imfine.ngs._global.config.security;
 import com.imfine.ngs.user.entity.User;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 
@@ -21,7 +22,13 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList();
+        if (user.getRole() == null || user.getRole().getRole() == null) {
+            return Collections.emptyList();
+        }
+        String role = user.getRole().getRole();
+        //  @PreAuthorize("hasRole('ADMIN')"), @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")이런식으로 사용 ADMIN으로 되있으면 앞에 추가
+        String authority = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+        return Collections.singletonList(new SimpleGrantedAuthority(authority));
     }
 
 
