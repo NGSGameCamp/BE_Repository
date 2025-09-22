@@ -1,7 +1,7 @@
 package com.imfine.ngs.support.unit;
 
 import com.imfine.ngs.support.entity.Support;
-import com.imfine.ngs.support.repository.SupportRepo;
+import com.imfine.ngs.support.repository.SupportRepository;
 import com.imfine.ngs.support.service.SupportService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 public class SupportTest {
 
     @Mock
-    private SupportRepo supportRepo;
+    private SupportRepository supportRepository;
 
     @InjectMocks
     private SupportService supportService;
@@ -39,7 +39,7 @@ public class SupportTest {
                 .build();
 
 
-        when(supportRepo.save(any(Support.class))).thenAnswer(invocationOnMock -> {
+        when(supportRepository.save(any(Support.class))).thenAnswer(invocationOnMock -> {
                     Support s = invocationOnMock.getArgument(0);
                     s.setId(1L);
                     return s;

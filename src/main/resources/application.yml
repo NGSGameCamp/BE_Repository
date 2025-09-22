@@ -31,3 +31,10 @@ cors:
 # SpringBoot port
 server:
   port: 8080
+
+#jwt
+jwt:
+  secret : ${JWT_SECRET}
+  
+portone:
+  api-secret: ${API_SECRET}

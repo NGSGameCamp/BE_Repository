@@ -1,11 +1,10 @@
 package com.imfine.ngs.support.service;
 
 import com.imfine.ngs.support.entity.SupportAnswer;
-import com.imfine.ngs.support.repository.SupportAnswerRepo;
-import com.imfine.ngs.support.repository.SupportRepo;
+import com.imfine.ngs.support.repository.SupportAnswerRepository;
+import com.imfine.ngs.support.repository.SupportRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -15,8 +14,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SupportAnswerService {
 
-    private final SupportAnswerRepo supportAnswerRepo;
-    private final SupportRepo supportRepo;
+    private final SupportAnswerRepository supportAnswerRepo;
+    private final SupportRepository supportRepository;
 
     public SupportAnswer findBySupportId(long supportId) {
         SupportAnswer answer = supportAnswerRepo.findBySupportId(supportId);
@@ -36,7 +35,7 @@ public class SupportAnswerService {
     public List<SupportAnswer> findAnswerByUserId(long userId) {
         List<SupportAnswer> answers = new ArrayList<>();
 
-        supportRepo.findByUserId(userId).forEach(supportAnswer -> {
+        supportRepository.findByUserId(userId).forEach(supportAnswer -> {
             answers.add(findBySupportId(supportAnswer.getId()));
         });
 

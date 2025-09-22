@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @NoArgsConstructor
@@ -27,8 +30,20 @@ public class User {
     @Column(nullable = false)
     private String name;
 
-    @Column
+    @Column(nullable = false)
     private String nickname;
+
+    @Column
+    private String profileUrl;
+
+    @Column
+    private LocalDate birthAt;
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column
+    private LocalDateTime deletedAt;
 
     @Builder
     public static User create(String email, String pwd, String name, String nickname) {
@@ -50,5 +65,15 @@ public class User {
     public void updateNickname(String newNickname) {
         this.nickname = newNickname;
     }
+
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
+
 }
 

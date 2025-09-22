@@ -22,7 +22,7 @@ public class SupportAnswer {
     String content;
 
     @CreatedDate
-    LocalDateTime createDateAt;
+    LocalDateTime createdAt;
 
     @Builder
     public SupportAnswer(long supportId, String content) {

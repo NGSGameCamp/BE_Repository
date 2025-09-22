@@ -1,15 +1,13 @@
-package com.imfine.ngs.game.entity;
+package com.imfine.ngs.game.entity.env;
 
+import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.enums.EnvType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
- * 게임({@link Game})과 {@link EnvType} 테이블을 연결하는 중간 테이블이다.
+ * 게임({@link Game})에서 사용할 {@link EnvType} 관리 엔티티 클래스.
  *
  * @author chan
  */
@@ -24,7 +22,4 @@ public class Env {
     private Long id;
 
     private EnvType envType;
-
-//    @ManyToMany(mappedBy =  "supportedEnvs")
-//    private Set<Game> games = new HashSet<>();
 }

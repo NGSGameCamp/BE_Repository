@@ -1,8 +1,13 @@
 package com.imfine.ngs.user.service;
 
+import com.imfine.ngs._global.config.security.jwt.JwtUtil;
+import com.imfine.ngs.user.dto.request.SignInRequest;
+import com.imfine.ngs.user.dto.request.SignUpRequest;
+import com.imfine.ngs.user.dto.response.SignInResponse;
 import com.imfine.ngs.user.entity.User;
 import com.imfine.ngs.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -10,7 +15,23 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
+
+    public void signUp(SignUpRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+        }
+        if (!request.getPwd().equals(request.getPwdCheck())) {
+            throw new IllegalArgumentException("비밀번호 불일치");
+        }
+
+        User user = User.create(request.getEmail(), passwordEncoder.encode(request.getPwd()), request.getName(), null);
+
+        userRepository.save(user);
+    }
+    /*
     public Long signUp(String email, String pwd, String pwdCheck, String name) {
         if (email == null || pwd == null || pwdCheck == null || name == null) {
             throw new IllegalArgumentException("필수 입력값 누락");
@@ -27,6 +48,7 @@ public class AuthService {
         return userRepository.save(user).getId();
     }
 
+    /* test signIn
     public User signIn(String email, String pw) {
         if (email == null || pw == null) {
             throw new IllegalArgumentException("아이디/비밀번호 미입력");
@@ -38,6 +60,21 @@ public class AuthService {
         }
         return user;
     }
+     */
+
+    public SignInResponse signIn(SignInRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(request.getPwd(), user.getPwd())) {
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        String token = jwtUtil.generateToken(user.getId());
+        return new SignInResponse(token, user.getId());
+    }
+
+
 
     public void updatePwd(String email, String oldPwd, String newPwd) {
         if (oldPwd == null || newPwd == null) {

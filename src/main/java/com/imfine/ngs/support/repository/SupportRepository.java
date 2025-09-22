@@ -1,16 +1,14 @@
 package com.imfine.ngs.support.repository;
 
 import com.imfine.ngs.support.entity.Support;
-import com.zaxxer.hikari.util.FastList;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface SupportRepo extends JpaRepository<Support, Long> {
+public interface SupportRepository extends JpaRepository<Support, Long> {
 
     List<Support> findAllByCategoryId(long categoryId);
 

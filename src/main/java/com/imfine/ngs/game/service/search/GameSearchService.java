@@ -1,6 +1,7 @@
 package com.imfine.ngs.game.service.search;
 
 import com.imfine.ngs.game.entity.Game;
+import com.imfine.ngs.game.enums.EnvType;
 import com.imfine.ngs.game.enums.SortType;
 import com.imfine.ngs.game.repository.GameRepository;
 import io.micrometer.common.util.StringUtils;
@@ -27,6 +28,11 @@ public class GameSearchService {
     // 게임 등록 로직 (테스트용)
     public void registerGame(Game game) {
         gameRepository.save(game);
+    }
+
+    // 게임 단일 조회 로직
+    public Game findById(Long id) {
+        return gameRepository.findById(id).orElse(null);
     }
 
     // 게임 전체 조회 로직
@@ -71,12 +77,9 @@ public class GameSearchService {
 
 
     // Env + 정렬 조회
-    public List<Game> findByEnv(String env, SortType sortType) {
+    public List<Game> findByEnv(EnvType env, SortType sortType) {
 
         // 유효성 검사
-        if (StringUtils.isEmpty(env)) {
-            throw new RuntimeException("env is empty");
-        }
 
         Sort sort = Sort.by(
                 Sort.Direction.fromString(sortType.getDirection()),

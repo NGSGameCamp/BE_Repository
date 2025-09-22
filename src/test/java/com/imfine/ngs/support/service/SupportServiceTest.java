@@ -1,46 +1,38 @@
-package com.imfine.ngs.support.integration;
+package com.imfine.ngs.support.service;
 
 import com.imfine.ngs.support.entity.Support;
 import com.imfine.ngs.support.entity.SupportAnswer;
 import com.imfine.ngs.support.entity.SupportCategory;
-import com.imfine.ngs.support.repository.SupportAnswerRepo;
-import com.imfine.ngs.support.repository.SupportCategoryRepo;
-import com.imfine.ngs.support.repository.SupportRepo;
-import com.imfine.ngs.support.service.SupportAnswerService;
-import com.imfine.ngs.support.service.SupportCategoryService;
-import com.imfine.ngs.support.service.SupportService;
-import lombok.RequiredArgsConstructor;
+import com.imfine.ngs.support.repository.SupportAnswerRepository;
+import com.imfine.ngs.support.repository.SupportCategoryRepository;
+import com.imfine.ngs.support.repository.SupportRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.stereotype.Repository;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 
 import java.time.LocalDateTime;
 import java.time.Month;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 
 @SpringBootTest
 @ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class SupportH2Test {
+public class SupportServiceTest {
 
     // repo
     @Autowired
-    private SupportRepo supportRepo;
+    private SupportRepository supportRepository;
     @Autowired
-    private SupportCategoryRepo supportCategoryRepo;
+    private SupportCategoryRepository supportCategoryRepository;
     @Autowired
-    private SupportAnswerRepo supportAnswerRepo;
+    private SupportAnswerRepository supportAnswerRepository;
 
     // service
     @Autowired
@@ -52,60 +44,9 @@ public class SupportH2Test {
 
     @BeforeEach
     void setUp() {
-        // 작성 카테고리 설정 (게임문의, 환불문의, 1:1문의, 기타문의)
-        SupportCategory game = supportCategoryRepo.save(
-                SupportCategory.builder()
-                .name("GAME")
-                .description("게임 관련된 문제나 궁금한 점")
-                .build()
-        );
-        assertThat(game).isNotNull();
-
-        SupportCategory refund = supportCategoryRepo.save(
-                SupportCategory.builder()
-                        .name("REFUND")
-                        .description("환불 요청 및 결제 관련 문의")
-                        .build()
-        );
-        assertThat(refund).isNotNull();
-
-
-        SupportCategory inquiry = supportCategoryRepo.save(
-                SupportCategory.builder()
-                        .name("INQUIRY")
-                        .description("게임 관련된 문제나 궁금한 점")
-                        .build()
-        );
-        assertThat(inquiry).isNotNull();
-
-
-        SupportCategory etc = supportCategoryRepo.save(
-                SupportCategory.builder()
-                        .name("etc")
-                        .description("기타 서비스 관련 문의")
-                        .build()
-        );
-        assertThat(etc).isNotNull();
-
-        // 문의사항 작성
-        LocalDateTime baseTime = LocalDateTime.of(2025, Month.AUGUST, 1, 1, 0, 0);
-        for (long i = 0; i < 10; i++) {
-            Support s = Support.builder()
-                    .userId(1L)
-                    .orderId(5L)
-                    .categoryId(i)
-                    .content("조회 테스트" + i)
-                    .createdAt(baseTime.plusYears(i))
-                    .build();
-            supportRepo.save(s);
-        }
-
-        // 답변작성
-        SupportAnswer supportAnswer = SupportAnswer.builder()
-                .supportId(8L)
-                .content("답변 완료했습니다.")
-                .build();
-        supportAnswerRepo.save(supportAnswer);
+        createCategoryRepo();
+        createSupportRepo();
+        createSupportAnswerRepo();
     }
 
     @Test
@@ -126,7 +67,7 @@ public class SupportH2Test {
         //then : 검증
         assertThat(saved).isNotNull();
 
-        Support find = supportRepo.findById(saved.getId()).orElseThrow();
+        Support find = supportRepository.findById(saved.getId()).orElseThrow();
         assertThat(find.getId()).isEqualTo(11L);
     }
 
@@ -151,7 +92,7 @@ public class SupportH2Test {
         //given
         SupportCategory supportCategory = supportCategoryService.findByName("REFUND");
 
-        supportCategoryRepo.findAll().forEach(System.out::println);
+        supportCategoryRepository.findAll().forEach(System.out::println);
 
         //when
         List<Support> supports = supportService.findSupportByCategoryId(supportCategory.getId());
@@ -173,7 +114,7 @@ public class SupportH2Test {
                 .supportId(2L)
                 .content("답변 완료했습니다.")
                 .build();
-        supportAnswerRepo.save(supportAnswer);
+        supportAnswerRepository.save(supportAnswer);
 
         //then
         assertThat(supportAnswer).isNotNull();
@@ -188,7 +129,7 @@ public class SupportH2Test {
         long userId = 1L;
 
         // when
-        List<Support> supports = supportRepo.findByUserId(1L);
+        List<Support> supports = supportRepository.findByUserId(1L);
 
         //then
         supports.forEach(support -> {
@@ -257,6 +198,65 @@ public class SupportH2Test {
 
         //then
         assertThat(supportAnswer).isNotNull();
+    }
+
+    public void createCategoryRepo() {
+        // 작성 카테고리 설정 (게임문의, 환불문의, 1:1문의, 기타문의)
+        SupportCategory game = supportCategoryRepository.save(
+                SupportCategory.builder()
+                        .name("GAME")
+                        .description("게임 관련된 문제나 궁금한 점")
+                        .build()
+        );
+        assertThat(game).isNotNull();
+
+        SupportCategory refund = supportCategoryRepository.save(
+                SupportCategory.builder()
+                        .name("REFUND")
+                        .description("환불 요청 및 결제 관련 문의")
+                        .build()
+        );
+        assertThat(refund).isNotNull();
+
+
+        SupportCategory inquiry = supportCategoryRepository.save(
+                SupportCategory.builder()
+                        .name("INQUIRY")
+                        .description("게임 관련된 문제나 궁금한 점")
+                        .build()
+        );
+        assertThat(inquiry).isNotNull();
+
+
+        SupportCategory etc = supportCategoryRepository.save(
+                SupportCategory.builder()
+                        .name("etc")
+                        .description("기타 서비스 관련 문의")
+                        .build()
+        );
+        assertThat(etc).isNotNull();
+    }
+
+    public void createSupportRepo() {
+        LocalDateTime baseTime = LocalDateTime.of(2025, Month.AUGUST, 1, 1, 0, 0);
+        for (long i = 0; i < 10; i++) {
+            Support s = Support.builder()
+                    .userId(1L)
+                    .orderId(5L)
+                    .categoryId(i)
+                    .content("조회 테스트" + i)
+                    .createdAt(baseTime.plusYears(i))
+                    .build();
+            supportRepository.save(s);
+        }
+    }
+
+    public void createSupportAnswerRepo() {
+        SupportAnswer supportAnswer = SupportAnswer.builder()
+                .supportId(8L)
+                .content("답변 완료했습니다.")
+                .build();
+        supportAnswerRepository.save(supportAnswer);
     }
 
 }

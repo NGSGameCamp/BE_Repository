@@ -1,15 +1,11 @@
 package com.imfine.ngs.support.service;
 
 import com.imfine.ngs.support.entity.Support;
-import com.imfine.ngs.support.repository.SupportRepo;
+import com.imfine.ngs.support.repository.SupportRepository;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,26 +14,26 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class SupportService {
 
-    private final SupportRepo supportRepo;
+    private final SupportRepository supportRepository;
 
     public Support insertSupportRepo(Support support) {
-        return supportRepo.save(support);
+        return supportRepository.save(support);
     }
 
     public List<Support> findSupportByUserId(long userId) {
-        return supportRepo.findAllByUserId(userId);
+        return supportRepository.findAllByUserId(userId);
     }
 
     public List<Support> findSupportByCategoryId(long categoryId) {
-        return supportRepo.findAllByCategoryId(categoryId);
+        return supportRepository.findAllByCategoryId(categoryId);
     }
 
     public List<Support> findAllSupport() {
-        return supportRepo.findAll();
+        return supportRepository.findAll();
     }
 
     public Support findById(long id) {
-        return supportRepo.findById(id)
+        return supportRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         id + ": 존재하지 않는 문의글입니다."
                 ));

@@ -1,11 +1,15 @@
 package com.imfine.ngs.game.entity;
 
+import com.imfine.ngs.game.entity.env.Env;
+import com.imfine.ngs.game.entity.env.LinkedEnv;
+import com.imfine.ngs.game.entity.env.util.LinkedEnvId;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 게임({@link Game}) 엔티티 클래스.
@@ -32,17 +36,16 @@ public class Game {
     @Column(nullable = false)
     private Long price; // 게임 가격
 
-    private String env;
+//    private String env;
+
     private String tag;
-    //    @ManyToMany
-//    @JoinTable(
-//            name = "linked_envs",
-//            joinColumns = @JoinColumn(name = "game_id"),
-//            inverseJoinColumns = @JoinColumn(name = "env_id")
-//    )
-//    private Set<Env> env = new HashSet<>(); // 게임 OS
+
+    @OneToMany(mappedBy = "game")
+    private Set<LinkedEnv> env = new HashSet<>(); // 게임 OS
+
     private boolean isActive;
 
     @CreatedDate
     private LocalDateTime createdAt; // 게임 등록 날짜
 }
+

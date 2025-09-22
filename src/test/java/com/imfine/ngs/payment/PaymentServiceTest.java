@@ -1,11 +1,17 @@
 package com.imfine.ngs.payment;
 
 import com.imfine.ngs.order.entity.Order;
-import com.imfine.ngs.order.service.OrderService;
-import com.imfine.ngs.payment.client.PortOneClient;
-import com.imfine.ngs.payment.dto.PaymentRequest;
-import com.imfine.ngs.payment.dto.PaymentResponse;
+import com.imfine.ngs.order.entity.OrderHistory;
+import com.imfine.ngs.order.repository.OrderHistoryRepository;
+import com.imfine.ngs.order.repository.OrderRepository;
+import com.imfine.ngs.payment.client.PortOneApiClient;
+import com.imfine.ngs.payment.client.PortOneAmount;
+import com.imfine.ngs.payment.client.PortOnePaymentData;
+import com.imfine.ngs.payment.dto.PaymentCompleteResponse;
+import com.imfine.ngs.payment.entity.Payment;
+import com.imfine.ngs.payment.repository.PaymentRepository;
 import com.imfine.ngs.payment.service.PaymentService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,8 +19,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -26,144 +36,139 @@ public class PaymentServiceTest {
     private PaymentService paymentService;
 
     @Mock
-    private OrderService orderService;
+    private OrderRepository orderRepository;
 
     @Mock
-    private PortOneClient portOneClient;
+    private PaymentRepository paymentRepository;
+
+    @Mock
+    private OrderHistoryRepository orderHistoryRepository;
+
+    @Mock
+    private PortOneApiClient portOneApiClient;
+
+    @Mock
+    private Order testOrder;
+
+    private String testPaymentId;
+    private String testMerchantUid;
+    private long testAmount;
+
+    @BeforeEach
+    void setUp() {
+        testPaymentId = "payment-id-123";
+        testMerchantUid = "merchant-uid-123";
+        testAmount = 50000L;
+    }
+
+    private PortOnePaymentData createPortOnePaymentData(String paymentId, String merchantUid, long amount, String status) {
+        PortOneAmount amountObject = new PortOneAmount(amount, 0, 0, amount, 0, amount, 0, 0);
+        return new PortOnePaymentData(paymentId, status, merchantUid, "테스트 상품", amountObject, null, null, null, null);
+    }
 
     @Test
-    @DisplayName("실제 결제 금액과 주문 금액이 일치하면, 주문 상태를 COMPLETED로 변경한다.")
+    @DisplayName("실제 결제 금액과 주문 금액이 일치하면, 주문 상태를 '결제 완료'로 변경한다.")
     void testPaymentSuccess() {
         //given
-        long orderId = 12345L;
-        String impUid = "imp-456";
-        long correctAmount = 50000L;
-
-        given(orderService.findByOrderId(orderId))
-                .willReturn(new Order(orderId, correctAmount));
-        given(portOneClient.getPaymentData(impUid))
-                .willReturn(new PaymentResponse(impUid, correctAmount));
+        PortOnePaymentData portOnePaymentData = createPortOnePaymentData(testPaymentId, testMerchantUid, testAmount, "PAID");
+        given(portOneApiClient.getPayment(testPaymentId)).willReturn(portOnePaymentData);
+        given(orderRepository.findByMerchantUid(testMerchantUid)).willReturn(Optional.of(testOrder));
+        given(testOrder.isPaid()).willReturn(false);
+        given(testOrder.getTotalPrice()).willReturn(testAmount);
 
         //when
-        PaymentRequest request = new PaymentRequest(orderId, impUid);
-        paymentService.verifyPayment(request);
+        PaymentCompleteResponse response = paymentService.completePayment(testPaymentId);
 
         //then
-        verify(orderService).updateOrderStatus(orderId, com.imfine.ngs.order.entity.OrderStatus.PAYMENT_COMPLETED);
+        assertThat(response.getStatus()).isEqualTo("PAID");
+        assertThat(response.getMessage()).isEqualTo("결제가 성공적으로 완료되었습니다.");
+
+        verify(testOrder).paymentCompleted();
+        verify(orderHistoryRepository).save(any(OrderHistory.class));
+        verify(paymentRepository).save(any(Payment.class));
     }
 
     @Test
-    @DisplayName("실제 결제 금액과 주문 금액이 다르면, 예외가 발생하고 결제 취소를 요청한다")
-    void testPaymentFailed() {
+    @DisplayName("실제 결제 금액과 주문 금액이 다르면, 예외가 발생하고 주문 상태를 '결제 실패'로 변경한다")
+    void testPaymentAmountMismatch() {
         // given
-        long orderId = 12345L;
-        String impUid = "imp-456";
-        long orderAmount = 50000L; // 주문 금액
-        long paidAmount = 40000L;  // 실제 결제된 금액 (위변조)
-
-        given(orderService.findByOrderId(orderId))
-                .willReturn(new Order(orderId, orderAmount));
-        given(portOneClient.getPaymentData(impUid))
-                .willReturn(new PaymentResponse(impUid, paidAmount));
+        long paidAmount = 40000L;  // 실제 결제된 금액 (불일치)
+        PortOnePaymentData portOnePaymentData = createPortOnePaymentData(testPaymentId, testMerchantUid, paidAmount, "PAID");
+        given(portOneApiClient.getPayment(testPaymentId)).willReturn(portOnePaymentData);
+        given(orderRepository.findByMerchantUid(testMerchantUid)).willReturn(Optional.of(testOrder));
+        given(testOrder.getTotalPrice()).willReturn(testAmount);
 
         // when & then
-        PaymentRequest request = new PaymentRequest(orderId, impUid);
-        assertThrows(RuntimeException.class, () -> {
-            paymentService.verifyPayment(request);
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            paymentService.completePayment(testPaymentId);
         });
 
-        verify(portOneClient).cancelPayment(impUid, "결제 금액 위변조 의심");
-        verify(orderService).updateOrderStatus(orderId, com.imfine.ngs.order.entity.OrderStatus.PAYMENT_FAILED);
+        assertThat(exception.getMessage()).contains("결제 금액(" + paidAmount + ")이 주문 금액(" + testAmount + ")과 일치하지 않습니다.");
+        verify(testOrder).paymentFailed();
+        verify(orderHistoryRepository).save(any(OrderHistory.class));
+        verify(portOneApiClient).cancelPayment(testPaymentId); // 금액 불일치 시 결제 취소 호출 검증
     }
 
     @Test
-    @DisplayName("이미 결제 완료된 주문을 다시 결제 시도하면 예외가 발생한다.")
+    @DisplayName("이미 결제 완료된 주문을 다시 결제 시도하면 성공 응답을 반환하고 추가 처리를 하지 않는다.")
     void testPaymentAlreadyCompleted() {
         //given
-        long orderId = 12345L;
-        String impUid = "imp-456";
-        long correctAmount = 50000L;
+        PortOnePaymentData portOnePaymentData = createPortOnePaymentData(testPaymentId, testMerchantUid, testAmount, "PAID");
+        given(portOneApiClient.getPayment(testPaymentId)).willReturn(portOnePaymentData);
+        given(orderRepository.findByMerchantUid(testMerchantUid)).willReturn(Optional.of(testOrder));
+        given(testOrder.isPaid()).willReturn(true); // 이미 결제된 상태로 설정
 
-        Order completedOrder = new Order(orderId, correctAmount);
-        completedOrder.setOrderStatus(com.imfine.ngs.order.entity.OrderStatus.PAYMENT_COMPLETED);
+        //when
+        PaymentCompleteResponse response = paymentService.completePayment(testPaymentId);
 
-        given(orderService.findByOrderId(orderId))
-                .willReturn(completedOrder);
+        //then
+        assertThat(response.getStatus()).isEqualTo("PAID");
+        assertThat(response.getMessage()).contains("이미 처리된 주문입니다.");
 
-        //when & then
-        PaymentRequest request = new PaymentRequest(orderId, impUid);
-        assertThrows(IllegalArgumentException.class, () -> {
-            paymentService.verifyPayment(request);
-        });
+        // 추가적인 상태 변경이나 저장이 없어야 함
+        verify(testOrder, never()).paymentCompleted();
+        verify(orderHistoryRepository, never()).save(any());
+        verify(paymentRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("존재하지 않는 주문 ID로 결제 시도하면 예외가 발생하고 결제 조회는 호출되지 않는다")
+    @DisplayName("존재하지 않는 주문 ID로 결제 시도하면 예외가 발생한다")
     void testPaymentOrderNotFound() {
         // given
-        long orderId = 99999L;
-        String impUid = "imp-999";
-
-        given(orderService.findByOrderId(orderId))
-                .willThrow(new IllegalArgumentException("주문을 찾을 수 없습니다: " + orderId));
-        
+        PortOnePaymentData portOnePaymentData = createPortOnePaymentData(testPaymentId, testMerchantUid, testAmount, "PAID");
+        given(portOneApiClient.getPayment(testPaymentId)).willReturn(portOnePaymentData);
+        given(orderRepository.findByMerchantUid(testMerchantUid)).willReturn(Optional.empty());
 
         // when & then
-        PaymentRequest request = new PaymentRequest(orderId, impUid);
-        assertThrows(IllegalArgumentException.class, () -> paymentService.verifyPayment(request));
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> paymentService.completePayment(testPaymentId));
 
-        // 결제 서비스(외부) 호출되지 않아야 함
-        verify(portOneClient, never()).getPaymentData(impUid);
+        assertThat(exception.getMessage()).contains("일치하는 주문을 찾을 수 없습니다");
     }
 
     @Test
-    @DisplayName("결제 정보 조회 실패 시 예외가 발생하고 주문 상태는 변경되지 않는다")
-    void testPaymentDataNotFound() {
+    @DisplayName("PortOne API 결제 정보 조회 실패 시 예외가 발생한다")
+    void testPortOneApiFailure() {
         // given
-        long orderId = 12345L;
-        String impUid = "imp-404";
-        long orderAmount = 50000L;
-
-        Order order = new Order(orderId, orderAmount);
-        given(orderService.findByOrderId(orderId))
-                .willReturn(order);
-        given(portOneClient.getPaymentData(impUid))
-                .willReturn(null); // 결제 데이터 조회 실패
+        given(portOneApiClient.getPayment(testPaymentId)).willThrow(new RuntimeException("API 통신 오류"));
 
         // when & then
-        PaymentRequest request = new PaymentRequest(orderId, impUid);
-        assertThrows(RuntimeException.class, () -> paymentService.verifyPayment(request));
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> paymentService.completePayment(testPaymentId));
 
-        // 외부 취소 호출도, 상태 변경도 없어야 함
-        verify(portOneClient, never()).cancelPayment(impUid, "결제 금액 위변조 의심");
-        verify(orderService, never()).updateOrderStatus(orderId, com.imfine.ngs.order.entity.OrderStatus.PAYMENT_FAILED);
-        verify(orderService, never()).updateOrderStatus(orderId, com.imfine.ngs.order.entity.OrderStatus.PAYMENT_COMPLETED);
+        assertThat(exception.getMessage()).contains("API 통신 오류");
+        verify(orderRepository, never()).findByMerchantUid(anyString());
     }
 
     @Test
-    @DisplayName("PortOne API 네트워크 오류 발생 시, 주문 상태는 변경되지 않고 예외가 발생한다")
-    void testNetworkErrorDuringPayment() {
+    @DisplayName("PortOne 결제 상태가 PAID가 아니면 예외가 발생한다")
+    void testPortOneStatusNotPaid() {
         // given
-        long orderId = 12345L;
-        String impUid = "imp-999";
-        long orderAmount = 50000L;
-
-        Order pendingOrder = new Order(orderId, orderAmount);
-        pendingOrder.setOrderStatus(com.imfine.ngs.order.entity.OrderStatus.PENDING);
-
-        given(orderService.findByOrderId(orderId))
-                .willReturn(pendingOrder);
-        given(portOneClient.getPaymentData(impUid))
-                .willThrow(new RuntimeException("API 연결 실패"));
+        PortOnePaymentData portOnePaymentData = createPortOnePaymentData(testPaymentId, testMerchantUid, testAmount, "PENDING");
+        given(portOneApiClient.getPayment(testPaymentId)).willReturn(portOnePaymentData);
 
         // when & then
-        PaymentRequest request = new PaymentRequest(orderId, impUid);
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> paymentService.verifyPayment(request));
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> paymentService.completePayment(testPaymentId));
 
-        assertThat(exception.getMessage()).isEqualTo("API 연결 실패");
-
-        // 주문 상태는 그대로 PENDING
-        assertThat(pendingOrder.getOrderStatus()).isEqualTo(com.imfine.ngs.order.entity.OrderStatus.PENDING);
+        assertThat(exception.getMessage()).contains("결제가 완료되지 않았습니다. 상태: PENDING");
+        verify(orderRepository, never()).findByMerchantUid(anyString());
     }
 }
