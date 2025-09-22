@@ -109,8 +109,6 @@ public class PublisherRegistrationTest {
         Game inValidGame = Game.builder()
                 .name("")
                 .price(-10000L)
-                .env("Mac")
-                .env("TestTag")
                 .tag("TestTag")
                 .isActive(true)
                 .createdAt(LocalDateTime.now())
