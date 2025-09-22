@@ -17,5 +17,4 @@ public interface SupportRepository extends JpaRepository<Support, Long> {
     List<Support> findByUserId(long userId);
 
     Optional<Support> findById(long id);
-
 }

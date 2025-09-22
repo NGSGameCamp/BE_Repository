@@ -1,11 +1,21 @@
 package com.imfine.ngs.support.service;
 
+import com.imfine.ngs.game.entity.Game;
+import com.imfine.ngs.order.entity.Order;
+import com.imfine.ngs.order.entity.OrderDetails;
+import com.imfine.ngs.order.repository.OrderDetailsRepository;
+import com.imfine.ngs.order.repository.OrderRepository;
+import com.imfine.ngs.order.service.OrderService;
+import com.imfine.ngs.support.dto.SupportRequestDto;
+import com.imfine.ngs.support.dto.SupportResponseDto;
 import com.imfine.ngs.support.entity.Support;
+import com.imfine.ngs.support.entity.SupportCategory;
 import com.imfine.ngs.support.repository.SupportRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,9 +25,19 @@ import java.util.stream.Collectors;
 public class SupportService {
 
     private final SupportRepository supportRepository;
+    private final OrderService orderService;
+    private final OrderDetailsRepository orderDetailsRepository;
 
-    public Support insertSupportRepo(Support support) {
-        return supportRepository.save(support);
+    public Support insertSupportRepo(long userId, SupportRequestDto requestDto, SupportCategory category) {
+
+        return supportRepository.save(Support.builder()
+                .userId(userId)
+                .content(requestDto.getContent())
+                .orderId(requestDto.getOrderId())
+                .categoryId(category.getId())
+                .createdAt(LocalDateTime.now())
+                .build()
+        );
     }
 
     public List<Support> findSupportByUserId(long userId) {
@@ -50,5 +70,12 @@ public class SupportService {
         };
 
         return supports.stream().sorted(comparator).collect(Collectors.toList());
+    }
+
+    // 게임 목록 가져오기
+    public List<Game> findGameByUserId(long userId) {
+        List<Order> orders = orderService.getOrdersByUserId(userId);
+        List<OrderDetails> orderDetails = orderDetailsRepository.findAllById(orders.stream().map(Order::getOrderId).collect(Collectors.toList()));
+        return orderDetails.stream().map(OrderDetails::getGame).collect(Collectors.toList());
     }
 }
