@@ -1,6 +1,5 @@
 package com.imfine.ngs.user.service;
 
-import com.imfine.ngs.order.entity.Game;
 import com.imfine.ngs.order.entity.Order;
 import com.imfine.ngs.order.service.OrderService;
 import org.junit.jupiter.api.BeforeEach;

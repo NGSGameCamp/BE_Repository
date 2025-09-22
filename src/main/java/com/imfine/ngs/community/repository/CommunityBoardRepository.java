@@ -14,4 +14,8 @@ public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, 
   Optional<CommunityBoard> findByTitle(String title);
 
   List<CommunityBoard> findCommunityBoardsByTitleContains(String title);
+
+  List<CommunityBoard> findCommunityBoardsByIsDeletedIsFalse();
+
+  List<CommunityBoard> findCommunityBoardsByIsDeletedAndTitleContains(boolean isDeleted, String keyword);
 }

@@ -12,24 +12,29 @@ import java.util.Optional;
 
 @Repository
 public interface CommunityPostRepository extends JpaRepository<CommunityPost, Long> {
-  Optional<CommunityPost> findCommunityPostsByBoardId(Long boardId, Limit limit);
+  List<CommunityPost> findCommunityPostsByBoardId(Long boardId);
 
   @Query(value = """
 SELECT p.*
 FROM community_post p
 JOIN users u ON u.id = p.author_id
 WHERE
-    (( :type = 'TITLE_ONLY'          AND p.title   LIKE CONCAT('%', :keyword, '%') )
- OR ( :type = 'AUTHOR_ONLY'         AND u.name    LIKE CONCAT('%', :keyword, '%') )
- OR ( :type = 'CONTENT_ONLY'        AND p.content LIKE CONCAT('%', :keyword, '%') )
- OR ( :type = 'TITLE_AND_CONTENT'   AND (p.title LIKE CONCAT('%', :keyword, '%')
+      (( :type = 'TITLE_ONLY'          AND p.title   LIKE CONCAT('%', :keyword, '%') )
+    OR ( :type = 'AUTHOR_ONLY'         AND u.name    LIKE CONCAT('%', :keyword, '%') )
+    OR ( :type = 'CONTENT_ONLY'        AND p.content LIKE CONCAT('%', :keyword, '%') )
+    OR ( :type = 'TITLE_AND_CONTENT'   AND (p.title LIKE CONCAT('%', :keyword, '%')
                                       OR  p.content LIKE CONCAT('%', :keyword, '%')) ))
-AND p.board_id = :board_id;
+AND p.board_id = :board_id
+AND (
+        :is_manager = TRUE
+    OR (:is_manager = FALSE AND p.is_deleted = FALSE)
+);
 """, nativeQuery = true)
   List<CommunityPost> searchKeywords(
           @Param("board_id") Long boardId,
           @Param("type") String type,
-          @Param("keyword") String keyword
+          @Param("keyword") String keyword,
+          @Param("is_manager") Boolean isManager
   );
 
   @Query(value = """
@@ -44,20 +49,25 @@ JOIN (
     HAVING COUNT(DISTINCT t.id) = :tagCount
 ) tagged ON tagged.community_post_id = p.id
 JOIN users u ON u.id = p.author_id
-WHERE p.board_id = :boardId
-  AND (
-        (:type = 'TITLE_ONLY'        AND p.title   LIKE CONCAT('%', :keyword, '%')) OR
-        (:type = 'AUTHOR_ONLY'       AND u.name    LIKE CONCAT('%', :keyword, '%')) OR
-        (:type = 'CONTENT_ONLY'      AND p.content LIKE CONCAT('%', :keyword, '%')) OR
-        (:type = 'TITLE_AND_CONTENT' AND (p.title LIKE CONCAT('%', :keyword, '%')
+WHERE 
+      ((:type = 'TITLE_ONLY'        AND p.title   LIKE CONCAT('%', :keyword, '%')) 
+    OR (:type = 'AUTHOR_ONLY'       AND u.name    LIKE CONCAT('%', :keyword, '%'))
+    OR (:type = 'CONTENT_ONLY'      AND p.content LIKE CONCAT('%', :keyword, '%'))
+    OR (:type = 'TITLE_AND_CONTENT' AND (p.title LIKE CONCAT('%', :keyword, '%')
                                         OR  p.content LIKE CONCAT('%', :keyword, '%')))
-      );
+      )
+AND p.board_id = :boardId
+AND (
+        :is_manager = TRUE
+    OR (:is_manager = FALSE AND p.is_deleted = FALSE)
+);
 """, nativeQuery = true)
   List<CommunityPost> searchKeywordsWithTags(
           @Param("boardId") Long boardId,
           @Param("type") String type,
           @Param("keyword") String keyword,
           @Param("tagNames") List<String> tagNames,
-          @Param("tagCount") long tagCount
+          @Param("tagCount") long tagCount,
+          @Param("is_manager") Boolean isManager
   );
 }
