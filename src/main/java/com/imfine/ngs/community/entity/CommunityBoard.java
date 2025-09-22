@@ -12,6 +12,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+/**
+ * 필수 요소: gameId, managerId, title
+ * 선택 요소: description
+ */
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

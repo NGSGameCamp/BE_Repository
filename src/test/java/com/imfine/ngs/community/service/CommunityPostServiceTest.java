@@ -137,8 +137,10 @@ public class CommunityPostServiceTest {
             .build();
 
     // When & Then
-    assertThat(postService.addPost(user.getId(), contentlessPost)).isNull();
-    assertThat(postService.addPost(user.getId(), titlelessPost)).isNull();
+    assertThatThrownBy(() -> postService.addPost(user.getId(), contentlessPost))
+            .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> postService.addPost(user.getId(), titlelessPost))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -154,10 +156,8 @@ public class CommunityPostServiceTest {
     Long postCnt = postService.count();
 
     // When
-    postService.addPost(user.getId(), post);
-
-    // Then
-    assertThat(postService.count()).isEqualTo(postCnt+1);
+    assertThatThrownBy(() -> postService.addPost(user.getId(), post))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -166,7 +166,7 @@ public class CommunityPostServiceTest {
     // Given
     TestUser user = userService.getUserById(getRandomUser());
     CommunityPost post = CommunityPost.builder()
-            .boardId(1L)
+            .boardId(boardId)
             .title("올바른 제목")
             .content("올바른 내용")
             .build();
@@ -186,13 +186,11 @@ public class CommunityPostServiceTest {
   void deletePostWithWrongUserId() {
     // Given
     CommunityPost post = postService.getPostById(postId);
-    TestUser user = userService.getUserById(post.getAuthorId());
+    TestUser user = userService.getUserById(post.getAuthorId() + 1);
 
     // When
-    postService.deletePost(user.getId(), post.getId());
-
-    // Then
-    assertThat(postService.getPostById(post.getId()).getIsDeleted()).isEqualTo(post.getIsDeleted());
+    assertThatThrownBy(() -> postService.deletePost(user.getId(), post.getId()))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -221,7 +219,8 @@ public class CommunityPostServiceTest {
             .content("새로운 내용")
             .build();
     // When
-    postService.editPost(user.getId(), fromPost.getId(), toPost);
+    assertThatThrownBy(() -> postService.editPost(user.getId(), fromPost.getId(), toPost))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -246,13 +245,14 @@ public class CommunityPostServiceTest {
             .build();
 
     // When
-    postService.editPost(user.getId(), fromPost.getId(), toPost1);
-    postService.editPost(user.getId(), fromPost.getId(), toPost2);
-    postService.editPost(user.getId(), fromPost.getId(), toPost3);
-    postService.editPost(user.getId(), fromPost.getId(), toPost4);
-
-    // Then
-    assertThat(postService.getPostById(fromPost.getId())).isEqualTo(fromPost);
+    assertThatThrownBy(() -> postService.editPost(user.getId(), fromPost.getId(), toPost1))
+            .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> postService.editPost(user.getId(), fromPost.getId(), toPost2))
+            .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> postService.editPost(user.getId(), fromPost.getId(), toPost3))
+            .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> postService.editPost(user.getId(), fromPost.getId(), toPost4))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -286,15 +286,13 @@ public class CommunityPostServiceTest {
   @DisplayName("올바르지 않은 게시글을 조회 시도할 경우 null이 출력되어야 함")
   void getPostWithWrongPostId() {
     // When
-    CommunityPost target = postService.getPostById(1023L);
-
-    // Then
-    assertThat(target).isNull();
+    assertThatThrownBy(() -> postService.getPostById(1023L))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
 
   @Test
-  @DisplayName("게시글의 게시판이 유효하지 않으면 null이 출력되어야 함")
+  @DisplayName("게시글의 게시판이 유효하지 않으면 에러 발생")
   void getPostWithWrongBoardId() {
     // Given
     CommunityBoard noActiveBoard = CommunityBoard.allBuilder()
@@ -316,10 +314,8 @@ public class CommunityPostServiceTest {
             .build();
 
     boardService.addBoard(noActiveBoard);
-    postService.addPost(user.getId(), postOfNoActivated);
-
-    assertThatThrownBy(() -> boardService.setIsDeleted(manager.getId(), noActiveBoard.getId(), false))
-            .isInstanceOf(Exception.class);
+    assertThatThrownBy(() -> postService.addPost(user.getId(), postOfNoActivated))
+            .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test

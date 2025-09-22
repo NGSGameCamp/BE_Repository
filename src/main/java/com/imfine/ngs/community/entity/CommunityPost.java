@@ -9,6 +9,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * 필수 요소: boardId, authorId, title, content
+ * 선택 요소: tags
+ */
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor

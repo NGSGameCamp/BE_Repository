@@ -8,6 +8,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+/**
+ * 필수 요소: postId, authorId, content
+ */
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
