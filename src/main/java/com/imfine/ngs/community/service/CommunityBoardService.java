@@ -69,14 +69,14 @@ public class CommunityBoardService {
     CommunityBoard board = getBoardById(boardId);
 
     if (board == null)
-      throw new IllegalArgumentException("불가능한 접근입니다!");
+      throw new IllegalArgumentException("유효하지 않은 게시판입니다!");
 
     if (managerId.equals(board.getManagerId())) {
       board.updateIsDeleted(isDeleted);
       boardRepo.save(board);
     }
 
-    throw new IllegalArgumentException("불가능한 접근입니다!");
+    throw new IllegalArgumentException("접근 권한이 없습니다!");
   }
 
   // Update
@@ -85,10 +85,10 @@ public class CommunityBoardService {
    */
   public void setDescription(Long userId, Long boardId, String desc) {
     CommunityBoard board = getBoardById(boardId);
-    if (board == null) throw new IllegalArgumentException("불가능한 접근입니다!");
+    if (board == null) throw new IllegalArgumentException("유효하지 않은 게시판입니다!");
 
     if (!board.getManagerId().equals(userId))
-      throw new IllegalArgumentException("불가능한 접근입니다!");
+      throw new IllegalArgumentException("접근 권한이 없습니다!");
 
     board.updateDescription(desc);
     boardRepo.save(board);
@@ -99,9 +99,9 @@ public class CommunityBoardService {
     CommunityBoard board = getBoardById(boardId);
     TestUser tmpUser = userRepo.findById(fromUserId).isPresent() ? userRepo.findById(fromUserId).get() : null;
     if (board == null)
-      throw new IllegalArgumentException("불가능한 접근입니다!");
+      throw new IllegalArgumentException("유효하지 않은 게시판입니다!");
     if (!board.getManagerId().equals(fromUserId) && (tmpUser != null && !tmpUser.getRole().equals("MANAGER")))
-      throw new IllegalArgumentException("불가능한 접근입니다!");
+      throw new IllegalArgumentException("접근 권한이 없습니다!");
 
     board.updateManagerId(toUserId);
     boardRepo.save(board);

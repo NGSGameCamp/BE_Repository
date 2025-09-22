@@ -49,7 +49,7 @@ public class CommunityPostService {
   public CommunityPost getPostById(Long postId) {
     CommunityPost post = postRepo.findById(postId).orElse(null);
     if  (post == null)
-      throw new IllegalArgumentException("불가능한 접근입니다!");
+      throw new IllegalArgumentException("유효하지 않은 게시글입니다!");
     return post;
   }
 
@@ -63,12 +63,12 @@ public class CommunityPostService {
     }
 
     if (!validate.isValidUser(post.getAuthorId(), user))
-      throw new IllegalArgumentException("불가능한 접근입니다!");
+      throw new IllegalArgumentException("접근 권한이 없습니다!");
 
     if (toPost.getContent() == null || toPost.getContent().isBlank())
-      throw new IllegalArgumentException("불가능한 접근입니다!");
+      throw new IllegalArgumentException("내용이 비었습니다!");
     if (toPost.getTitle() == null || toPost.getTitle().isBlank())
-      throw new IllegalArgumentException("불가능한 접근입니다!");
+      throw new IllegalArgumentException("제목이 없습니다!");
 
     post.updateContent(toPost.getContent());
     post.updateTitle(toPost.getTitle());
@@ -83,7 +83,7 @@ public class CommunityPostService {
     CommunityPost post = getPostById(postId);
 
     if (user != null && (user.getRole().equals("MANAGER") || !post.getAuthorId().equals(userId)))
-      throw new IllegalArgumentException("불가능한 접근입니다!");
+      throw new IllegalArgumentException("접근 권한이 없습니다!");
 
     post.updateIsDeleted(true);
     postRepo.save(post);

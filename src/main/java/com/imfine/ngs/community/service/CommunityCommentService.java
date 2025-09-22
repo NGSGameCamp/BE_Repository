@@ -26,13 +26,13 @@ public class CommunityCommentService {
     comment.setAuthorId(userId);
 
     if (comment.getContent().isBlank())
-      throw new IllegalArgumentException("불가능한 접근입니다!");
+      throw new IllegalArgumentException("내용이 없습니다!");
     if (postService.getPostById(comment.getPostId()) == null)
-      throw new IllegalArgumentException("불가능한 접근입니다!");
+      throw new IllegalArgumentException("유효하지 않은 게시판입니다!");
 
     // comment.getParentId()가 -1이 아니고, commentRepo에서 부모 댓글을 찾을 수 없다면 잘못된 접근
     if (comment.getParentId() != -1L && commentRepo.findById(comment.getParentId()).orElse(null) == null)
-      throw new IllegalArgumentException("불가능한 접근입니다!");
+      throw new IllegalArgumentException("유효하지 않은 접근입니다!");
 
     return commentRepo.save(comment).getId();
   }
@@ -50,17 +50,17 @@ public class CommunityCommentService {
       tmpUser = userRepo.findById(managerId).orElse(null);
 
     if (commentId == null)
-      throw new IllegalArgumentException("불가능한 접근입니다!");
+      throw new IllegalArgumentException("인자가 잘못되었습니다!");
     CommunityComment comment = commentRepo.findById(commentId).orElse(null);
 
     if (comment == null)
-      throw new IllegalArgumentException("불가능한 접근입니다!");
+      throw new IllegalArgumentException("유효하지 않은 댓글입니다!");
     if (comment.getIsDeleted() && !valid.isValidUser(comment.getAuthorId(), tmpUser))
-      throw new IllegalArgumentException("불가능한 접근입니다!");
+      throw new IllegalArgumentException("접근 권한이 없습니다!");
     if (postService.getPostById(comment.getPostId()).getIsDeleted() && valid.isValidUser(comment.getAuthorId(), tmpUser))
       return comment;
     if (postService.getPostById(comment.getPostId()).getIsDeleted() && !valid.isValidUser(comment.getAuthorId(), tmpUser))
-      throw new IllegalArgumentException("불가능한 접근입니다!");
+      throw new IllegalArgumentException("접근 권한이 없습니다!");
 //      return comment;
 
     return comment;
@@ -71,9 +71,9 @@ public class CommunityCommentService {
     TestUser tmpUser = userRepo.findById(userId).orElse(null);
 
     if (!valid.isValidUser(comment.getAuthorId(), tmpUser))
-      throw new IllegalArgumentException("불가능한 접근입니다!");
+      throw new IllegalArgumentException("접근 권한이 없습니다!");
     if (toComment.isBlank())
-      throw new IllegalArgumentException("불가능한 접근입니다!");
+      throw new IllegalArgumentException("내용이 없습니다!");
 
     comment.updateContent(toComment);
     return commentRepo.save(comment).getId();
@@ -83,7 +83,7 @@ public class CommunityCommentService {
     CommunityComment comment = commentRepo.findById(commentId).orElse(null);
     TestUser tmpUser = userRepo.findById(userId).orElse(null);
 
-    if (comment == null) throw new IllegalArgumentException("불가능한 접근입니다!");
+    if (comment == null) throw new IllegalArgumentException("유효하지 않은 댓글입니다!");
     if (valid.isValidUser(comment.getAuthorId(), tmpUser)) {
       comment.setIsDeleted(true);
       commentRepo.save(comment);
