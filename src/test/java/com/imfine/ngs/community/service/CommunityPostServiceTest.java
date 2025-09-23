@@ -1,5 +1,6 @@
 package com.imfine.ngs.community.service;
 
+import com.imfine.ngs.community.dto.CommunityBoardSearchForm;
 import com.imfine.ngs.community.entity.CommunityBoard;
 import com.imfine.ngs.community.entity.CommunityPost;
 import com.imfine.ngs.community.entity.CommunityTag;
@@ -294,9 +295,13 @@ public class CommunityPostServiceTest {
     // Given
     SearchType type = SearchType.TITLE_ONLY;
     String keyword = "test";
+    CommunityBoardSearchForm form = CommunityBoardSearchForm.builder()
+            .type(type)
+            .keyword(keyword)
+            .build();
 
     // When
-    List<CommunityPost> result = postService.getPostsWithSearch(correctUser, boardId, type, keyword);
+    List<CommunityPost> result = postService.getPostsWithSearch(correctUser, boardId, form).getContent();
 
     // Then
     assertThat(result).allMatch(post -> post.getTitle().contains(keyword));
@@ -329,9 +334,13 @@ public class CommunityPostServiceTest {
     // Given
     SearchType type = SearchType.CONTENT_ONLY;
     String keyword = "test";
+    CommunityBoardSearchForm form = CommunityBoardSearchForm.builder()
+            .type(type)
+            .keyword(keyword)
+            .build();
 
     // When
-    List<CommunityPost> result = postService.getPostsWithSearch(wrongUser, boardId, type, keyword);
+    List<CommunityPost> result = postService.getPostsWithSearch(wrongUser, boardId, form).getContent();
 
     // Then
     assertThat(result).allMatch(post -> post.getContent().contains(keyword));
@@ -343,9 +352,13 @@ public class CommunityPostServiceTest {
     // Given
     SearchType type = SearchType.TITLE_AND_CONTENT;
     String keyword = "test";
+    CommunityBoardSearchForm form = CommunityBoardSearchForm.builder()
+            .type(type)
+            .keyword(keyword)
+            .build();
 
     // When
-    List<CommunityPost> result = postService.getPostsWithSearch(wrongUser, boardId, type, keyword);
+    List<CommunityPost> result = postService.getPostsWithSearch(wrongUser, boardId, form).getContent();
 
     // Then
     assertThat(result).allMatch(post ->
@@ -361,13 +374,18 @@ public class CommunityPostServiceTest {
     // Given
     SearchType type = SearchType.TITLE_AND_CONTENT;
     String keyword = "test";
-            CommunityTag[] tags = {
+    CommunityTag[] tags = {
             tagService.getTagByName("test"),
             tagService.getTagByName("abc"),
     };
+    CommunityBoardSearchForm form = CommunityBoardSearchForm.builder()
+            .type(type)
+            .keyword(keyword)
+            .tagList(Arrays.asList(tags))
+            .build();
 
     // When
-    List<CommunityPost> result = postService.getPostsWithSearch(correctUser, boardId, type, keyword, Arrays.asList(tags));
+    List<CommunityPost> result = postService.getPostsWithSearch(correctUser, boardId, form).getContent();
 
     assertThat(result).allMatch(post ->
             post.getTags().containsAll(Arrays.asList(tags))

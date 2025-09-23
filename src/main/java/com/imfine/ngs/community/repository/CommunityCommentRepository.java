@@ -1,6 +1,8 @@
 package com.imfine.ngs.community.repository;
 
 import com.imfine.ngs.community.entity.CommunityComment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,10 +12,8 @@ import java.util.List;
 
 @Repository
 public interface CommunityCommentRepository extends JpaRepository<CommunityComment, Long> {
-  List<CommunityComment> findCommunityCommentsByPostId(Long postId);
 
-  List<CommunityComment> findCommunityCommentsByAuthorId(Long authorId);
-
+  Page<CommunityComment> findCommunityCommentsByAuthorId(Long authorId, Pageable pageable);
 
   @Query(value = """
 SELECT c.*
@@ -26,5 +26,9 @@ AND (
 """, nativeQuery = true)
   List<CommunityComment> findCommunityCommentsByPostId(
           @Param("post_id") Long postId,
-          @Param("is_manager") Boolean isManager);
+          @Param("is_manager") Boolean isManager
+  );
+  List<CommunityComment> findCommunityCommentsByPostId(Long postId);
+
+  long countByPostId(Long postId);
 }

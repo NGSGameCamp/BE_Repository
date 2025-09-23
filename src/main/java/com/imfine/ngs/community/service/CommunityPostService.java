@@ -1,5 +1,6 @@
 package com.imfine.ngs.community.service;
 
+import com.imfine.ngs.community.dto.CommunityBoardSearchForm;
 import com.imfine.ngs.community.entity.CommunityBoard;
 import com.imfine.ngs.community.entity.CommunityPost;
 import com.imfine.ngs.community.entity.CommunityTag;
@@ -7,6 +8,9 @@ import com.imfine.ngs.community.dto.CommunityUser;
 import com.imfine.ngs.community.enums.SearchType;
 import com.imfine.ngs.community.repository.CommunityPostRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -32,7 +36,9 @@ public class CommunityPostService {
 
   public Long count() { return postRepository.count(); }
   public Long count(Long boardId) {
-    return (long) postRepository.findCommunityPostsByBoardId(boardId).size();
+    // TODO
+    Pageable pageable = PageRequest.of(0, 1);
+    return (long) postRepository.findCommunityPostsByBoardId(boardId, pageable).getContent().size();
   }
 
   public CommunityPost getPostById(CommunityUser user, Long postId) {
@@ -91,36 +97,24 @@ public class CommunityPostService {
     post.updateIsDeleted(true);
     postRepository.save(post);
   }
-
-  public List<CommunityPost> getPostsWithSearch(CommunityUser user, Long boardId, SearchType type, String keyword) {
+  public Page<CommunityPost> getPostsWithSearch(CommunityUser user, Long boardId, CommunityBoardSearchForm searchForm) {
     CommunityBoard board = boardService.getBoardById(user, boardId);
-    return switch (user.getRole()) {
-      case "USER" -> {
-        if (board.getManagerId().equals(user.getId()))
-          yield postRepository.searchKeywords(boardId, type.name(), keyword, true);
-
-        yield postRepository.searchKeywords(boardId, type.name(), keyword, false);
-      }
-      case "MANAGER" -> postRepository.searchKeywords(boardId, type.name(), keyword, true);
-      default -> throw new IllegalArgumentException("권한 잘못됨 에러");
-    };
-  }
-
-  public List<CommunityPost> getPostsWithSearch(CommunityUser user, Long boardId, SearchType type, String keyword, List<CommunityTag> tagList) {
+    SearchType type = searchForm.type;
+    String keyword = searchForm.keyword;
     List<String> tags = new ArrayList<>();
-    for (CommunityTag tag : tagList) {
-      tags.add(tag.getName());
-    }
+    if (searchForm.tagList != null && !searchForm.tagList.isEmpty())
+      for (CommunityTag tag : searchForm.tagList)
+        tags.add(tag.getName());
+    Pageable pageable = searchForm.pageable;
 
-    CommunityBoard board = boardService.getBoardById(user, boardId);
     return switch (user.getRole()) {
       case "USER" -> {
         if (board.getManagerId().equals(user.getId()))
-          yield postRepository.searchKeywordsWithTags(boardId, type.name(), keyword, tags, tags.size(), true);
+          yield postRepository.searchKeywordsWithTags(boardId, type.name(), keyword, tags, tags.size(), true, pageable);
 
-        yield postRepository.searchKeywordsWithTags(boardId, type.name(), keyword, tags, tags.size(), false);
+        yield postRepository.searchKeywordsWithTags(boardId, type.name(), keyword, tags, tags.size(), false, pageable);
       }
-      case "MANAGER" -> postRepository.searchKeywordsWithTags(boardId, type.name(), keyword, tags, tags.size(), true);
+      case "MANAGER" -> postRepository.searchKeywordsWithTags(boardId, type.name(), keyword, tags, tags.size(), true, pageable);
       default -> throw new IllegalArgumentException("권한 잘못됨 에러");
     };
   }
