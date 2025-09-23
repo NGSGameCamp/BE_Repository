@@ -3,17 +3,14 @@ package com.imfine.ngs.community.service;
 import com.imfine.ngs.community.entity.CommunityBoard;
 import com.imfine.ngs.community.entity.CommunityPost;
 import com.imfine.ngs.community.entity.CommunityTag;
-import com.imfine.ngs.community.entity.TestUser;
+import com.imfine.ngs.community.dto.CommunityUser;
 import com.imfine.ngs.community.enums.SearchType;
 import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.ArrayList;
@@ -30,60 +27,67 @@ public class CommunityPostServiceTest {
   CommunityPostService postService;
   CommunityBoardService boardService;
   CommunityTagService tagService;
-  TestUserService userService;
 
   @Autowired
   CommunityPostServiceTest(
           CommunityPostService postService,
           CommunityBoardService boardService,
-          CommunityTagService tagService,
-          TestUserService userService) {
+          CommunityTagService tagService) {
     this.postService = postService;
     this.boardService = boardService;
     this.tagService = tagService;
-    this.userService = userService;
   }
 
   Long managerId;
-  List<Long> userId = new ArrayList<>();
   Long boardId;
   Long postId;
+  CommunityUser manager;
+  CommunityUser boardManager;
+  CommunityUser correctUser;
+  CommunityUser wrongUser;
 
   @BeforeEach
   void setUp() {
     // 매니저 생성
-    TestUser manager = TestUser.builder()
-            .name("Manager")
+    manager = CommunityUser.builder()
+            .id(1L)
+            .nickname("Manager")
             .role("MANAGER")
             .build();
-    managerId = userService.addUser(manager);
+    managerId = manager.getId();
+
     // 보드 생성
     for (int i = 0; i < 5; ++i) {
       CommunityBoard board = CommunityBoard.builder()
               .title("This is test board for post test" + i)
               .gameId((long) i)
-              .managerId(managerId)
+              .managerId(i+10L)
               .build();
 
       Long tmp = boardService.addBoard(board);
-      if (i == 2)
+      if (i == 2) {
         boardId = tmp;
+        boardManager = CommunityUser.builder()
+                .id(i+10L)
+                .nickname("board manager")
+                .build();
+      }
     }
-    // 유저 생성
-    for (int i = 0; i < 5; ++i) {
-      TestUser user = TestUser.builder()
-              .name("postTest"+i)
-              .build();
 
-      Long tmp = userService.addUser(user);
-      if  (i == 2)
-        userId.add(tmp);
-    }
+    correctUser = CommunityUser.builder()
+            .id((long) (Math.random()*10203212))
+            .nickname("Right User")
+            .build();
+    wrongUser = CommunityUser.builder()
+            .id(correctUser.getId()+1)
+            .nickname("Wrong User")
+            .build();
     // 포스트 생성
     for (int i = 0; i < 5; ++i) {
       for (int j = 0; j < 5; ++j) {
         CommunityPost post = CommunityPost.builder()
                 .boardId(boardId)
+                .authorId(correctUser.getId())
                 .title("this is test post for post test" + i + " " + j)
                 .content("this is test post for post test" + i + "\n yes.")
                 .build();
@@ -95,68 +99,50 @@ public class CommunityPostServiceTest {
 
         post.insertTags(tags);
 
-        Long tmp = postService.addPost(userId.get((int)(Math.random() * userId.size())), post);
+        Long tmp = postService.addPost(correctUser, post);
         if (i == 2 && j == 2)
           postId = tmp;
       }
     }
   }
-
-  @AfterEach
-  void resetUserId() {
-    userId.clear();
-  }
-
-  // 유틸
-  // ============================================================
-  Long getRandomUser() {
-    return userId.get((int) (Math.random() * userId.size()));
-  }
-
   // 게시글 작성 파트
   // ============================================================
   @Test
   @DisplayName("글 작성 시 내용이 유효하지 않으면 작성된 글 개수가 늘어나면 안 됨.")
   void writePostWithNoContent() {
     // Given: 준비
-    System.out.println("====================================");
-    for (TestUser user: userService.getAllUsers()) {
-      System.out.println(user.getId() + ": " + user.getName());
-    }
-    System.out.println("====================================");
-    TestUser user = userService.getUserById(getRandomUser());
     CommunityPost contentlessPost = CommunityPost.builder()
-            .boardId(1L)
+            .boardId(boardId)
+            .authorId(correctUser.getId())
             .title("내용이 없을 경우")
             .content("")
             .build();
     CommunityPost titlelessPost = CommunityPost.builder()
-            .boardId(1L)
+            .boardId(boardId)
+            .authorId(wrongUser.getId())
             .title("")
             .content("제목이 없을 경우")
             .build();
 
     // When & Then
-    assertThatThrownBy(() -> postService.addPost(user.getId(), contentlessPost))
+    assertThatThrownBy(() -> postService.addPost(correctUser, contentlessPost))
             .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> postService.addPost(user.getId(), titlelessPost))
+    assertThatThrownBy(() -> postService.addPost(wrongUser, titlelessPost))
             .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
-  @DisplayName("게시판이 존재하지 않을 경우 글을 작성해도 개수가 늘어나면 안 됨")
+  @DisplayName("게시판이 존재하지 않을 경우 에러")
   void writePostOnWrongBoard() {
     // Given
-    TestUser user = userService.getUserById(getRandomUser());
     CommunityPost post = CommunityPost.builder()
             .boardId(500L)
             .title("Wrong Board")
             .content("Post on Wrong Board")
             .build();
-    Long postCnt = postService.count();
 
     // When
-    assertThatThrownBy(() -> postService.addPost(user.getId(), post))
+    assertThatThrownBy(() -> postService.addPost(correctUser, post))
             .isInstanceOf(IllegalArgumentException.class);
   }
 
@@ -164,16 +150,16 @@ public class CommunityPostServiceTest {
   @DisplayName("올바르게 글 작성 시 글의 개수가 1개 늘어나야 함")
   void writePostOnRightConditions() {
     // Given
-    TestUser user = userService.getUserById(getRandomUser());
     CommunityPost post = CommunityPost.builder()
             .boardId(boardId)
+            .authorId(correctUser.getId())
             .title("올바른 제목")
             .content("올바른 내용")
             .build();
     Long postCnt = postService.count();
 
     // When
-    postService.addPost(user.getId(), post);
+    postService.addPost(correctUser, post);
 
     // Then
     assertThat(postService.count()).isEqualTo(postCnt+1);
@@ -184,42 +170,34 @@ public class CommunityPostServiceTest {
   @Test
   @DisplayName("올바르지 않은 유저가 게시글을 삭제 시도할 경우 해당 글이 비활성화 되면 안 됨")
   void deletePostWithWrongUserId() {
-    // Given
-    CommunityPost post = postService.getPostById(postId);
-    TestUser user = userService.getUserById(post.getAuthorId() + 1);
-
-    // When
-    assertThatThrownBy(() -> postService.deletePost(user.getId(), post.getId()))
+    // When & Then
+    assertThatThrownBy(() -> postService.deletePost(wrongUser, postId))
             .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   @DisplayName("올바른 유저가 게시글을 삭제할 경우 글이 비활성화 되어야 함")
   void deletePostOnRightConditions() {
-    // Given
-    CommunityPost post = postService.getPostById(postId);
-    TestUser user = userService.getUserById(post.getAuthorId());
-
     // When
-    postService.deletePost(user.getId(), post.getId());
+    postService.deletePost(correctUser, postId);
 
     // Then
-    assertThat(postService.getPostById(post.getId()).getIsDeleted()).isEqualTo(post.getIsDeleted());
+    assertThat(postService.getPostById(manager, postId).getIsDeleted()).isTrue();
   }
   // 게시글 수정 파트
   // ============================================================
   @Test
   @DisplayName("올바르지 않은 유저가 게시글을 수정 시도할 경우 글이 수정되면 안 됨")
   void editPostWithWrongUserId() {
-    // Given
-    CommunityPost fromPost = postService.getPostById(postId);
-    TestUser user = userService.getUserById(fromPost.getAuthorId()+1);
-    CommunityPost toPost = CommunityPost.builder()
+    CommunityPost toPost = CommunityPost.allBuilder()
+            .id(postId)
+            .boardId(boardId)
+            .authorId(wrongUser.getId())
             .title("새로운 제목")
             .content("새로운 내용")
             .build();
     // When
-    assertThatThrownBy(() -> postService.editPost(user.getId(), fromPost.getId(), toPost))
+    assertThatThrownBy(() -> postService.editPost(wrongUser, postId, toPost))
             .isInstanceOf(IllegalArgumentException.class);
   }
 
@@ -227,8 +205,6 @@ public class CommunityPostServiceTest {
   @DisplayName("올바르지 않은 내용으로 수정 시도할 경우 수정되면 안 됨")
   void editPostWithNoContent() {
     // Given
-    CommunityPost fromPost = postService.getPostById(postId);
-    TestUser user = userService.getUserById(fromPost.getAuthorId());
     CommunityPost toPost1 = CommunityPost.builder()
             .title("NoContent")
             .content("")
@@ -245,33 +221,30 @@ public class CommunityPostServiceTest {
             .build();
 
     // When
-    assertThatThrownBy(() -> postService.editPost(user.getId(), fromPost.getId(), toPost1))
+    assertThatThrownBy(() -> postService.editPost(correctUser, postId, toPost1))
             .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> postService.editPost(user.getId(), fromPost.getId(), toPost2))
+    assertThatThrownBy(() -> postService.editPost(wrongUser, postId, toPost2))
             .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> postService.editPost(user.getId(), fromPost.getId(), toPost3))
+    assertThatThrownBy(() -> postService.editPost(wrongUser, postId, toPost3))
             .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> postService.editPost(user.getId(), fromPost.getId(), toPost4))
+    assertThatThrownBy(() -> postService.editPost(correctUser, postId, toPost4))
             .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   @DisplayName("올바른 조건으로 수정 시도할 경우 그대로 수정이 되어야 함")
   void editPostOnRightCondition() {
-    // Given
-    CommunityPost fromPost = postService.getPostById(postId);
-    TestUser user = userService.getUserById(fromPost.getAuthorId());
     CommunityPost toPost = CommunityPost.allBuilder()
-            .id(fromPost.getId())
-            .boardId(fromPost.getBoardId())
-            .authorId(fromPost.getAuthorId())
+            .id(postId)
+            .boardId(boardId)
+            .authorId(correctUser.getId())
             .title("새로운 제목입니다.")
             .content("새로운 내용입니다.")
             .tags(null)
             .build();
 
     // When
-    Long tmp = postService.editPost(user.getId(), fromPost.getId(), toPost);
+    Long tmp = postService.editPost(correctUser, postId, toPost);
 
     // Then
     assertThat(postService.getPostById(tmp).getId()).isEqualTo(toPost.getId());
@@ -286,7 +259,7 @@ public class CommunityPostServiceTest {
   @DisplayName("올바르지 않은 게시글을 조회 시도할 경우 null이 출력되어야 함")
   void getPostWithWrongPostId() {
     // When
-    assertThatThrownBy(() -> postService.getPostById(1023L))
+    assertThatThrownBy(() -> postService.getPostById(correctUser, 1023L))
             .isInstanceOf(IllegalArgumentException.class);
   }
 
@@ -295,37 +268,23 @@ public class CommunityPostServiceTest {
   @DisplayName("게시글의 게시판이 유효하지 않으면 에러 발생")
   void getPostWithWrongBoardId() {
     // Given
-    CommunityBoard noActiveBoard = CommunityBoard.allBuilder()
-            .title("This Board will be unactivated.")
-            .description("yes")
-            .gameId(100L)
-            .managerId(managerId)
-            .isDeleted(true)
-            .build();
-
-    TestUser user = userService.getUserById(getRandomUser());
-    TestUser manager = userService.getUserById(managerId);
-
     CommunityPost postOfNoActivated = CommunityPost.builder()
             .title("BoardDeletedPost")
             .content("The board of this post will gbe deleted.")
-            .boardId(50L)
-            .authorId(user.getId())
+            .boardId(boardId)
+            .authorId(correctUser.getId())
             .build();
 
-    boardService.addBoard(noActiveBoard);
-    assertThatThrownBy(() -> postService.addPost(user.getId(), postOfNoActivated))
+    boardService.deleteBoard(manager, postOfNoActivated.getBoardId());
+    assertThatThrownBy(() -> postService.addPost(correctUser, postOfNoActivated))
             .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   @DisplayName("올바른 게시글을 조회할 경우 원하는 게시판을 출력해야 함")
   void getPostOnRightCondition() {
-    // When
-    CommunityPost result = postService.getPostById(postId);
-
-    // Then
-    assertThat(result).isNotNull();
+    // When & Then
+    assertThat(postService.getPostById(postId)).isNotNull();
   }
 
 
@@ -337,26 +296,31 @@ public class CommunityPostServiceTest {
     String keyword = "test";
 
     // When
-    List<CommunityPost> result = postService.getPostsWithSearch(boardId, type, keyword);
+    List<CommunityPost> result = postService.getPostsWithSearch(correctUser, boardId, type, keyword);
 
     // Then
     assertThat(result).allMatch(post -> post.getTitle().contains(keyword));
   }
 
-  @Test
-  @DisplayName("조회된 모든 게시글의 작성자에 검색어와 일치하는 단어가 있는가?")
-  void getPostsWithAuthorSearch() {
-    // Given
-    SearchType type = SearchType.AUTHOR_ONLY;
-    String keyword = "test";
-
-    // When
-    List<CommunityPost> result = postService.getPostsWithSearch(boardId, type, keyword);
-
-    // Then
-    assertThat(result).allMatch(
-            post -> userService.getUserById(post.getAuthorId()).getName().contains(keyword));
-  }
+  /*
+   * TODO: 이거 테스트 해볼 방법 연구하기
+   *  이거 하려면? 유저를 조회해야함
+   *    UserService 사용법 이해하고 써보기
+   */
+//  @Test
+//  @DisplayName("조회된 모든 게시글의 작성자에 검색어와 일치하는 단어가 있는가?")
+//  void getPostsWithAuthorSearch() {
+//    // Given
+//    SearchType type = SearchType.AUTHOR_ONLY;
+//    String keyword = "test";
+//
+//    // When
+//    List<CommunityPost> result = postService.getPostsWithSearch(wrongUser, boardId, type, keyword);
+//
+//    // Then
+//    assertThat(result).allMatch(
+//            post -> post.getAuthorId().contains(keyword));
+//  }
 
   // 조회된 모든 게시글의 내용에 검색어와 일치하는 단어가 있는가?
   @Test
@@ -367,7 +331,7 @@ public class CommunityPostServiceTest {
     String keyword = "test";
 
     // When
-    List<CommunityPost> result = postService.getPostsWithSearch(boardId, type, keyword);
+    List<CommunityPost> result = postService.getPostsWithSearch(wrongUser, boardId, type, keyword);
 
     // Then
     assertThat(result).allMatch(post -> post.getContent().contains(keyword));
@@ -381,7 +345,7 @@ public class CommunityPostServiceTest {
     String keyword = "test";
 
     // When
-    List<CommunityPost> result = postService.getPostsWithSearch(boardId, type, keyword);
+    List<CommunityPost> result = postService.getPostsWithSearch(wrongUser, boardId, type, keyword);
 
     // Then
     assertThat(result).allMatch(post ->
@@ -403,7 +367,7 @@ public class CommunityPostServiceTest {
     };
 
     // When
-    List<CommunityPost> result = postService.getPostsWithSearch(boardId, type, keyword, Arrays.asList(tags));
+    List<CommunityPost> result = postService.getPostsWithSearch(correctUser, boardId, type, keyword, Arrays.asList(tags));
 
     assertThat(result).allMatch(post ->
             post.getTags().containsAll(Arrays.asList(tags))

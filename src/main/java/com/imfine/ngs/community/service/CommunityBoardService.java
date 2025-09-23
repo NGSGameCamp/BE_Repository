@@ -1,12 +1,9 @@
 package com.imfine.ngs.community.service;
 
 import com.imfine.ngs.community.entity.CommunityBoard;
-import com.imfine.ngs.community.entity.TestUser;
+import com.imfine.ngs.community.dto.CommunityUser;
 import com.imfine.ngs.community.repository.CommunityBoardRepository;
-import com.imfine.ngs.community.repository.CommunityTagRepository;
-import com.imfine.ngs.community.repository.TestUserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,96 +11,125 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CommunityBoardService {
-  private final CommunityBoardRepository boardRepo;
-  private final TestUserRepository userRepo;
-
+  private final CommunityBoardRepository boardRepository;
   // Create
   public Long addBoard(CommunityBoard board) {
-    return boardRepo.save(board).getId();
+    return boardRepository.save(board).getId();
   }
 
   // Read
-  public Long count() { return boardRepo.count(); }
+  public int count() { return (int) boardRepository.count(); }
 
-  public CommunityBoard getBoardById(Long managerId, Long id) {
-    // 매니저인지 조회하기 위한 tmpUser
-    // TODO: PreAuthorize로 변경 필요
-    TestUser tmpUser = null;
-    if (managerId != null)
-      tmpUser = userRepo.findById(managerId).orElse(null);
-
-    CommunityBoard board = boardRepo.findById(id).orElse(null);
-    if (board == null)
-      throw new IllegalArgumentException("유효하지 않은 게시판입니다!");
-    if (!board.getIsDeleted())
-      return board;
-    if (tmpUser == null) // 매니저가 아님
-      throw new IllegalArgumentException("비활성화된 게시판입니다!");
-
-    return board; // 비활성화된 게시판인데, 조회 주체가 매니저임
+  public CommunityBoard getBoardById(CommunityUser user, Long boardId) {
+    String role = user.getRole();
+    return switch(role) {
+      case "USER" -> {
+        CommunityBoard board = boardRepository.findById(boardId).orElse(null);
+        if (board != null && !board.getIsDeleted())
+          yield board;
+        else throw new IllegalArgumentException("해당하는 게시판 없음 에러");
+      }
+      case "MANAGER" -> {
+        CommunityBoard board = boardRepository.findById(boardId).orElse(null);
+        if (board != null)
+          yield board;
+        else throw new IllegalArgumentException("해당하는 게시판 없음 에러");
+      }
+      default -> throw new IllegalArgumentException("권한 잘못됨 에러");
+    };
   }
-  public CommunityBoard getBoardById(Long id) {
-    return getBoardById(null, id);
-  }
-
   /*
-   * TODO: 특정 권한이라면 진짜 다 보여주고, 아니면 isDeleted = true 인건 보여주지 않기
-   *  테스트 추가 작성 필요?
+   * 이런 식으로 유저를 특정하지 않는 검색이 필요한지 모르겠음........
+   *  일단 빼고 생각해보자..
+   *    -> 필요하네..
    */
-  public List<CommunityBoard> getAllBoards() {
-    return boardRepo.findAll();
+  public CommunityBoard getBoardById(Long boardId) {
+    // 가라 유저
+    CommunityUser tmpUser = CommunityUser.builder()
+            .role("USER")
+            .build();
+    return getBoardById(tmpUser, boardId);
   }
 
-  /* TODO: 특정 권한이라면 다 검색해주고, 아니면 isDeleted = true 인건 보여주지 않기
-   *  테스트 추가 작성 필요?
-   */
-  public List<CommunityBoard> getBoardsByKeyword(String keyword) {
-    return boardRepo.findCommunityBoardsByTitleContains(keyword);
+  public List<CommunityBoard> getAllBoards(CommunityUser user) {
+    return switch (user.getRole()) {
+      case "USER" -> boardRepository.findCommunityBoardsByIsDeletedIsFalse();
+      case "MANAGER" -> boardRepository.findAll();
+      default -> throw new IllegalArgumentException("권한 잘못됨 에러");
+    };
+  }
+
+  public List<CommunityBoard> getBoardsByKeyword(CommunityUser user, String keyword) {
+    return switch (user.getRole()) {
+      case "USER" -> boardRepository.findCommunityBoardsByIsDeletedAndTitleContains(false, keyword);
+      case "MANAGER" -> boardRepository.findCommunityBoardsByTitleContains(keyword);
+      default -> throw new IllegalArgumentException("권한 잘못됨 에러");
+    };
   }
 
   // Update
-  /* TODO: 마지막 if문에 특정 권한을 가질 경우 검사 추가
-   *  테스트 추가 작성 필요?
-   */
-  public void setIsDeleted(Long managerId, Long boardId, boolean isDeleted) {
-    CommunityBoard board = getBoardById(boardId);
-
+  public void deleteBoard(CommunityUser user, Long boardId) {
+    CommunityBoard board = boardRepository.findById(boardId).orElse(null);
     if (board == null)
       throw new IllegalArgumentException("유효하지 않은 게시판입니다!");
 
-    if (managerId.equals(board.getManagerId())) {
-      board.updateIsDeleted(isDeleted);
-      boardRepo.save(board);
+    switch (user.getRole()) {
+      case "USER" -> {
+        if (board.getIsDeleted() || !board.getManagerId().equals(user.getId()))
+          throw new IllegalArgumentException("유효하지 않은 접근입니다!");
+      }
+      case "MANAGER" -> {
+        if (board.getIsDeleted())
+          throw new IllegalArgumentException("이미 비활성화된 게시판입니다!");
+      }
+      default -> throw new IllegalArgumentException("권한 잘못됨 에러");
     }
 
-    throw new IllegalArgumentException("접근 권한이 없습니다!");
+    board.updateIsDeleted(true);
+    boardRepository.save(board);
   }
 
   // Update
-  /* TODO: 마지막 if문에 특정 권한을 가질 경우 검사 추가
-   *  테스트 추가 작성 필요?
-   */
-  public void setDescription(Long userId, Long boardId, String desc) {
-    CommunityBoard board = getBoardById(boardId);
+  public void setDescription(CommunityUser user, Long boardId, String description) {
+    CommunityBoard board = getBoardById(user, boardId);
     if (board == null) throw new IllegalArgumentException("유효하지 않은 게시판입니다!");
 
-    if (!board.getManagerId().equals(userId))
-      throw new IllegalArgumentException("접근 권한이 없습니다!");
-
-    board.updateDescription(desc);
-    boardRepo.save(board);
+    switch (user.getRole()) {
+      case "USER" -> {
+        if (!board.getManagerId().equals(user.getId()))
+          throw new IllegalArgumentException("수정 권한이 없습니다!");
+      }
+      case "MANAGER" -> {}
+      default -> throw new IllegalArgumentException("권한 잘못됨 에러");
+    }
+    board.updateDescription(description);
+    boardRepository.save(board);
   }
 
-  // TODO: 권한검사 좀 섹시하게 하기
-  public void setManager(Long boardId, Long fromUserId, Long toUserId) {
-    CommunityBoard board = getBoardById(boardId);
-    TestUser tmpUser = userRepo.findById(fromUserId).isPresent() ? userRepo.findById(fromUserId).get() : null;
-    if (board == null)
-      throw new IllegalArgumentException("유효하지 않은 게시판입니다!");
-    if (!board.getManagerId().equals(fromUserId) && (tmpUser != null && !tmpUser.getRole().equals("MANAGER")))
-      throw new IllegalArgumentException("접근 권한이 없습니다!");
+//  public void setManager(Long boardId, Long fromUserId, Long toUserId) {
+//    CommunityBoard board = getBoardById(boardId);
+//    CommunityUser tmpUser = userRepo.findById(fromUserId).isPresent() ? userRepo.findById(fromUserId).get() : null;
+//    if (board == null)
+//      throw new IllegalArgumentException("유효하지 않은 게시판입니다!");
+//    if (!board.getManagerId().equals(fromUserId) && (tmpUser != null && !tmpUser.getRole().equals("MANAGER")))
+//      throw new IllegalArgumentException("접근 권한이 없습니다!");
+//
+//    board.updateManagerId(toUserId);
+//    boardRepository.save(board);
+//  }
+  public void setManager(Long boardId, CommunityUser user, CommunityUser newManager) {
+    CommunityBoard board = getBoardById(user, boardId);
+    if (board == null) throw new IllegalArgumentException("유효하지 않은 보드입니다!");
 
-    board.updateManagerId(toUserId);
-    boardRepo.save(board);
+    switch (user.getRole()) {
+      case "USER" -> {
+        if (!board.getManagerId().equals(user.getId()))
+          throw new IllegalArgumentException("수정 권한이 없습니다!");
+      }
+      case "MANAGER" -> {}
+      default -> throw new IllegalArgumentException("권한 잘못됨 에러");
+    }
+    board.updateManagerId(newManager.getId());
+    boardRepository.save(board);
   }
 }
