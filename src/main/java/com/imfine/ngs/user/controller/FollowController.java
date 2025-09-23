@@ -6,18 +6,20 @@ import com.imfine.ngs.user.entity.TargetType;
 import com.imfine.ngs.user.service.FollowService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/follow")
+@RequestMapping("/api/follow")
 @RequiredArgsConstructor
 public class FollowController {
 
     private final FollowService followService;
 
     @PostMapping("/{targetType}/{targetId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<FollowResponse> follow(@PathVariable TargetType targetType,
                                                  @PathVariable Long targetId,
                                                  @RequestParam Long userId) {
@@ -26,6 +28,7 @@ public class FollowController {
     }
 
     @DeleteMapping("/{targetType}/{targetId}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> unfollow(@PathVariable TargetType targetType,
                                          @PathVariable Long targetId,
                                          @RequestParam Long userId) {
