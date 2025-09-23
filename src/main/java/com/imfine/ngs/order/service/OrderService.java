@@ -1,16 +1,19 @@
 package com.imfine.ngs.order.service;
 
-import com.imfine.ngs.order.entity.Game;
+import com.imfine.ngs._global.error.exception.BusinessException;
+import com.imfine.ngs._global.error.model.ErrorCode;
+import com.imfine.ngs.game.entity.Game;
+import com.imfine.ngs.game.repository.GameRepository;
 import com.imfine.ngs.order.entity.Order;
+import com.imfine.ngs.order.entity.OrderDetails;
 import com.imfine.ngs.order.entity.OrderStatus;
+import com.imfine.ngs.order.repository.OrderDetailsRepository;
 import com.imfine.ngs.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,69 +21,60 @@ import java.util.stream.Collectors;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderDetailsRepository orderDetailsRepository;
+    private final GameRepository gameRepository;
 
-    public Order createOrder(long userId, List<Game> games) {
-        if (games.isEmpty()) {
-            throw new IllegalArgumentException("주문할 게임이 없습니다.");
-        }
-
-        Order order = new Order();
-        order.setUserId(userId);
-        order.setOrderItems(new ArrayList<>(games));
-        order.setTotalPrice(calculateTotalPrice(games));
-        order.setOrderStatus(OrderStatus.PENDING);
-
-        return orderRepository.save(order);
+    // 장바구니(PENDING 상태의 주문) 조회 또는 생성
+    public Order getOrCreateCart(Long userId) {
+        return orderRepository.findByUserIdAndStatus(userId, OrderStatus.PENDING)
+                .orElseGet(() -> orderRepository.save(new Order(userId)));
     }
 
-    private long calculateTotalPrice(List<Game> games) {
-        return games.stream()
-                .mapToLong(Game::getPrice)
-                .sum();
+    // 장바구니에 게임 추가
+    public Order addGameToCart(Long userId, Long gameId) {
+        Order cart = getOrCreateCart(userId);
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ENTITY_NOT_FOUND));
+
+        // 이미 장바구니에 담겼는지 확인
+        boolean isAlreadyInCart = cart.getOrderDetails().stream()
+                .anyMatch(detail -> detail.getGame().equals(game));
+
+        if (isAlreadyInCart) {
+            throw new BusinessException(ErrorCode.GAME_ALREADY_IN_CART);
+        }
+
+        OrderDetails orderDetails = new OrderDetails(cart, game);
+        cart.addOrderDetail(orderDetails);
+
+        return orderRepository.save(cart);
     }
 
-    public void addGameToOrder(Order order, Game game) {
-        if (order.getOrderItems().contains(game)) {
-            throw new IllegalArgumentException("이미 주문에 담긴 게임입니다.");
-        }
-        order.getOrderItems().add(game);
-        order.setTotalPrice(order.getTotalPrice() + game.getPrice());
-        orderRepository.save(order);
-    }
+    // 장바구니에서 게임 삭제
+    public Order removeGameFromCart(Long userId, Long gameId) {
+        Order cart = getOrCreateCart(userId);
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ENTITY_NOT_FOUND));
 
-    public void removeGameFromOrder(Order order, Game game) {
-        if (!order.getOrderItems().contains(game)) {
-            throw new IllegalArgumentException("주문에 없는 게임입니다.");
-        }
-        order.getOrderItems().remove(game);
-        order.setTotalPrice(order.getTotalPrice() - game.getPrice());
-        orderRepository.save(order);
+        OrderDetails detailToRemove = cart.getOrderDetails().stream()
+                .filter(detail -> detail.getGame().equals(game))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(ErrorCode.GAME_NOT_IN_CART));
+
+        cart.getOrderDetails().remove(detailToRemove);
+        orderDetailsRepository.delete(detailToRemove);
+
+        return orderRepository.save(cart);
     }
 
     @Transactional(readOnly = true)
-    public Order findByOrderId(long orderId) {
+    public Order findByOrderId(Long orderId) {
         return orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다: " + orderId));
-    }
-
-    public void updateOrderStatus(long orderId, OrderStatus status) {
-        Order order = findByOrderId(orderId);
-        order.setOrderStatus(status);
-        orderRepository.save(order);
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
     }
 
     @Transactional(readOnly = true)
-    public List<Order> getOrdersByUserId(long userId) {
+    public List<Order> getOrdersByUserId(Long userId) {
         return orderRepository.findByUserId(userId);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
-    }
-
-    // 테스트에서 사용하기 위한 헬퍼 메서드
-    public void clearAllOrders() {
-        orderRepository.deleteAll();
     }
 }

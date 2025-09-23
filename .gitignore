@@ -293,4 +293,5 @@ data/
 # Environment variables
 .env
 
-
+# Resources안에 json파일
+!**/src/main/resources/*.json

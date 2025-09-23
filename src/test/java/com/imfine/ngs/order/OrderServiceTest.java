@@ -1,21 +1,25 @@
 package com.imfine.ngs.order;
 
-import com.imfine.ngs.order.entity.Game;
+import com.imfine.ngs._global.error.exception.BusinessException;
+import com.imfine.ngs._global.error.model.ErrorCode;
+import com.imfine.ngs.game.entity.Game;
+import com.imfine.ngs.game.repository.GameRepository;
 import com.imfine.ngs.order.entity.Order;
-import com.imfine.ngs.order.service.OrderService;
+import com.imfine.ngs.order.entity.OrderStatus;
 import com.imfine.ngs.order.repository.OrderRepository;
-import org.junit.jupiter.api.Assertions;
+import com.imfine.ngs.order.service.OrderService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SuppressWarnings("removal")
 @SpringBootTest
@@ -28,203 +32,142 @@ public class OrderServiceTest {
     @Autowired
     private OrderRepository orderRepository;
 
-    @Test
-    @DisplayName("사용자가 고른 게임을 기반으로 주문을 생성할 수 있다.")
-    void createOrderFromGameList() {
-        //given
-        long userId = 1;
-        Game game1 = new Game("It Takes Two", 25000);
-        Game game2 = new Game("Split Fiction", 54000);
-        List<Game> games = Arrays.asList(game1, game2);
+    @Autowired
+    private GameRepository gameRepository;
 
-        //when
-        Order newOrder = orderService.createOrder(userId, games);
+    private Long testUserId;
+    private Game game1;
+    private Game game2;
 
-        //then
-        assertThat(newOrder).isNotNull();
-        assertThat(newOrder.getUserId()).isEqualTo(userId);
-        assertThat(newOrder.getTotalPrice()).isEqualTo(79000);
-        assertThat(newOrder.getOrderItemCount()).isEqualTo(2);
+    @BeforeEach
+    void setUp() {
+        testUserId = 1L;
+
+        // 테스트용 게임 저장
+        game1 = gameRepository.save(Game.builder().name("Test Game 1").price(10000L).isActive(true).build());
+        game2 = gameRepository.save(Game.builder().name("Test Game 2").price(20000L).isActive(true).build());
     }
 
     @Test
-    @DisplayName("빈 게임 목록으로는 주문을 생성할 수 없다.")
-    void createOrderWithEmptyGameList() {
-        //given
-        long userId = 1;
-        List<Game> emptyGames = new ArrayList<>();
+    @DisplayName("사용자의 장바구니를 조회하거나 새로 생성할 수 있다.")
+    void getOrCreateCart() {
+        // When
+        Order cart = orderService.getOrCreateCart(testUserId);
 
-        //when & then
-        Assertions.assertThrows(IllegalArgumentException.class, () -> orderService.createOrder(userId, emptyGames));
+        // Then
+        assertThat(cart).isNotNull();
+        assertThat(cart.getUserId()).isEqualTo(testUserId);
+        assertThat(cart.getStatus()).isEqualTo(OrderStatus.PENDING);
+        assertThat(cart.getOrderDetails()).isEmpty();
+
+        // When - 다시 호출하면 기존 장바구니 반환
+        Order existingCart = orderService.getOrCreateCart(testUserId);
+        assertThat(existingCart.getOrderId()).isEqualTo(cart.getOrderId());
     }
 
     @Test
-    @DisplayName("모든 주문 목록을 정상적으로 반환한다.")
-    void getAllOrdersReturnsAllOrders() {
-        //given
-        long userId1 = 1;
-        long userId2 = 2;
-        Game game1 = new Game("Game A", 10000);
-        Game game2 = new Game("Game B", 20000);
-        Game game3 = new Game("Game C", 30000);
+    @DisplayName("장바구니에 게임을 추가할 수 있다.")
+    void addGameToCart() {
+        // Given
+        Order cart = orderService.getOrCreateCart(testUserId);
 
-        Order order1 = orderService.createOrder(userId1, Arrays.asList(game1));
-        Order order2 = orderService.createOrder(userId1, Arrays.asList(game2));
-        Order order3 = orderService.createOrder(userId2, Arrays.asList(game3));
+        // When
+        Order updatedCart = orderService.addGameToCart(testUserId, game1.getId());
 
-        //when
-        List<Order> allOrders = orderService.getAllOrders();
+        // Then
+        assertThat(updatedCart.getOrderDetails()).hasSize(1);
+        assertThat(updatedCart.getOrderDetails().get(0).getGame().getId()).isEqualTo(game1.getId());
+        assertThat(updatedCart.getTotalPrice()).isEqualTo(game1.getPrice());
 
-        //then
-        assertThat(allOrders).isNotNull();
-        assertThat(allOrders.size()).isEqualTo(3);
-        assertThat(allOrders).contains(order1, order2, order3);
+        // When - 다른 게임 추가
+        updatedCart = orderService.addGameToCart(testUserId, game2.getId());
+
+        // Then
+        assertThat(updatedCart.getOrderDetails()).hasSize(2);
+        assertThat(updatedCart.getTotalPrice()).isEqualTo(game1.getPrice() + game2.getPrice());
     }
 
     @Test
-    @DisplayName("비어있는 주문에 게임을 추가하면 아이템 개수는 1이 된다.")
-    void addGameToEmptyOrder() {
-        //given
-        Order order = new Order();
-        order.setOrderItems(new ArrayList<>());
-        order.setTotalPrice(0);
-        Game newGame = new Game("Overcooked", 22000);
+    @DisplayName("이미 장바구니에 담긴 게임은 다시 추가할 수 없다.")
+    void addDuplicateGameToCartThrowsException() {
+        // Given
+        orderService.addGameToCart(testUserId, game1.getId());
 
-        //when
-        orderService.addGameToOrder(order, newGame);
-
-        //then
-        assertThat(order.getOrderItemCount()).isEqualTo(1);
-        assertThat(order.getTotalPrice()).isEqualTo(22000);
+        // When & Then
+        BusinessException exception = assertThrows(BusinessException.class, () -> orderService.addGameToCart(testUserId, game1.getId()));
+        assertEquals(ErrorCode.GAME_ALREADY_IN_CART, exception.getErrorCode());
     }
 
     @Test
-    @DisplayName("아이템이 있는 주문에 게임을 삭제하면 아이템 개수는 0이 된다.")
-    void removeGameFromOrder() {
-        //given
-        Order order = new Order();
-        Game gameToRemove = new Game("ItTakesTwo", 25000);
-        order.setOrderItems(new ArrayList<>(Arrays.asList(gameToRemove)));
-        order.setTotalPrice(25000);
+    @DisplayName("존재하지 않는 게임은 장바구니에 추가할 수 없다.")
+    void addNonExistentGameToCartThrowsException() {
+        // Given
+        Long nonExistentGameId = 9999L;
 
-        //when
-        orderService.removeGameFromOrder(order, gameToRemove);
-
-        //then
-        assertThat(order.getOrderItemCount()).isEqualTo(0);
-        assertThat(order.getTotalPrice()).isEqualTo(0);
+        // When & Then
+        BusinessException exception = assertThrows(BusinessException.class, () -> orderService.addGameToCart(testUserId, nonExistentGameId));
+        assertEquals(ErrorCode.ENTITY_NOT_FOUND, exception.getErrorCode());
     }
 
     @Test
-    @DisplayName("한 주문에는 같은 게임을 중복해서 담을 수 없다.")
-    void addDuplicateGameToOrder() {
-        //given
-        Order order = new Order();
-        Game newGame = new Game("Among us", 5500);
-        order.setOrderItems(new ArrayList<>(Arrays.asList(newGame)));
-        order.setTotalPrice(5500);
+    @DisplayName("장바구니에서 게임을 제거할 수 있다.")
+    void removeGameFromCart() {
+        // Given
+        orderService.addGameToCart(testUserId, game1.getId());
+        orderService.addGameToCart(testUserId, game2.getId());
+        Order cart = orderService.getOrCreateCart(testUserId);
+        assertThat(cart.getOrderDetails()).hasSize(2);
 
-        //when & then
-        Assertions.assertThrows(IllegalArgumentException.class, () -> orderService.addGameToOrder(order, newGame));
-        assertThat(order.getOrderItemCount()).isEqualTo(1);
+        // When
+        Order updatedCart = orderService.removeGameFromCart(testUserId, game1.getId());
+
+        // Then
+        assertThat(updatedCart.getOrderDetails()).hasSize(1);
+        assertThat(updatedCart.getOrderDetails().get(0).getGame().getId()).isEqualTo(game2.getId());
+        assertThat(updatedCart.getTotalPrice()).isEqualTo(game2.getPrice());
     }
 
     @Test
-    @DisplayName("주문에 여러 개의 다른 게임을 추가하면, 추가한 개수만큼 아이템이 늘어난다.")
-    void addMultipleGamesToOrder() {
-        //given
-        Order order = new Order();
-        order.setOrderItems(new ArrayList<>());
-        order.setTotalPrice(0);
-        Game game1 = new Game("PICO PARK", 5500);
-        Game game2 = new Game("Split Fiction", 65000);
+    @DisplayName("장바구니에 없는 게임은 제거할 수 없다.")
+    void removeNonExistentGameFromCartThrowsException() {
+        // Given
+        orderService.addGameToCart(testUserId, game1.getId()); // game1만 추가
 
-        //when
-        orderService.addGameToOrder(order, game1);
-        orderService.addGameToOrder(order, game2);
-
-        //then
-        assertThat(order.getOrderItemCount()).isEqualTo(2);
-        assertThat(order.getTotalPrice()).isEqualTo(70500);
+        // When & Then
+        BusinessException exception = assertThrows(BusinessException.class, () -> orderService.removeGameFromCart(testUserId, game2.getId()));
+        assertEquals(ErrorCode.GAME_NOT_IN_CART, exception.getErrorCode());
     }
 
     @Test
-    @DisplayName("이미 삭제된 게임은 주문에서 삭제할 수 없다.")
-    void removeNonExistentGameFromOrder() {
-        //given
-        Order order = new Order();
-        order.setOrderItems(new ArrayList<>());
-        order.setTotalPrice(0);
-        Game nonExistentGame = new Game("Stardew Valley", 16500);
-
-        //when & then
-        Assertions.assertThrows(IllegalArgumentException.class, () -> orderService.removeGameFromOrder(order, nonExistentGame));
-    }
-
-    @Test
-    @DisplayName("한 사용자는 여러 개의 주문을 가질 수 있다.")
-    void userCanHaveMultipleOrders() {
-        //given
-        long userId = 1;
-        Game game1 = new Game("Game A", 10000);
-        Game game2 = new Game("Game B", 20000);
-        Game game3 = new Game("Game C", 30000);
-
-        Order order1 = orderService.createOrder(userId, List.of(game1));
-        Order order2 = orderService.createOrder(userId, Arrays.asList(game2, game3));
-
-        //when
-        List<Order> userOrders = orderService.getOrdersByUserId(userId);
-
-        //then
-        assertThat(userOrders).isNotNull();
-        assertThat(userOrders.size()).isEqualTo(2);
-        assertThat(userOrders).contains(order1, order2);
-    }
-
-    @Test
-    @DisplayName("특정 사용자의 주문 목록을 정상적으로 반환한다.")
+    @DisplayName("사용자의 모든 주문 목록을 정상적으로 반환한다.")
     void getOrdersByUserIdReturnsCorrectOrders() {
-        //given
-        long userId1 = 1;
-        long userId2 = 2;
-        long userId3 = 3;
-        Game game1 = new Game("Game A", 10000);
-        Game game2 = new Game("Game B", 20000);
-        Game game3 = new Game("Game C", 30000);
-        Game game4 = new Game("Game D", 40000);
-        Game game5 = new Game("Game E", 50000);
-        Game game6 = new Game("Game F", 60000);
+        // Given
+        // 장바구니 생성 (PENDING)
+        orderService.addGameToCart(testUserId, game1.getId());
+        Order cart = orderService.getOrCreateCart(testUserId);
 
-        Order order1 = orderService.createOrder(userId1, Arrays.asList(game1, game2, game3));
-        Order order2 = orderService.createOrder(userId2, List.of(game4));
-        Order order3 = orderService.createOrder(userId3, Arrays.asList(game5, game6));
+        // 완료된 주문 생성 (PAYMENT_COMPLETED)
+        Order completedOrder = orderRepository.save(new Order(testUserId));
+        completedOrder.setStatus(OrderStatus.PAYMENT_COMPLETED);
+        orderRepository.save(completedOrder);
 
-        //when
-        List<Order> user1Orders = orderService.getOrdersByUserId(userId1);
-        List<Order> user2Orders = orderService.getOrdersByUserId(userId2);
-        List<Order> nonExistentUserOrders = orderService.getOrdersByUserId(0000);
+        // When
+        List<Order> userOrders = orderService.getOrdersByUserId(testUserId);
 
-        //then
-        assertThat(user1Orders).isNotNull();
-        assertThat(user1Orders.size()).isEqualTo(1);
-        assertThat(user1Orders).contains(order1);
-
-        assertThat(user2Orders).isNotNull();
-        assertThat(user2Orders.size()).isEqualTo(1);
-        assertThat(user2Orders).contains(order2);
-
-        assertThat(nonExistentUserOrders).isNotNull();
-        assertThat(nonExistentUserOrders).isEmpty();
+        // Then
+        assertThat(userOrders).isNotNull();
+        assertThat(userOrders).hasSize(2); // PENDING과 PAYMENT_COMPLETED 주문 모두 포함
+        assertThat(userOrders).extracting(Order::getOrderId).contains(cart.getOrderId(), completedOrder.getOrderId());
     }
 
     @Test
     @DisplayName("존재하지 않는 주문 ID 조회 시 예외가 발생한다.")
-    void findByNonExistentOrderId() {
-        //given
-        long nonExistentOrderId = 9999L;
+    void findByNonExistentOrderIdThrowsException() {
+        // Given
+        Long nonExistentOrderId = 9999L;
 
-        //when & then
-        Assertions.assertThrows(IllegalArgumentException.class, () -> orderService.findByOrderId(nonExistentOrderId));
+        // When & Then
+        BusinessException exception = assertThrows(BusinessException.class, () -> orderService.findByOrderId(nonExistentOrderId));
+        assertEquals(ErrorCode.ORDER_NOT_FOUND, exception.getErrorCode());
     }
 }

@@ -1,6 +1,7 @@
 package com.imfine.ngs.game.service.search;
 
 import com.imfine.ngs.game.entity.Game;
+import com.imfine.ngs.game.enums.EnvType;
 import com.imfine.ngs.game.enums.SortType;
 import com.imfine.ngs.game.repository.GameRepository;
 import io.micrometer.common.util.StringUtils;
@@ -15,6 +16,7 @@ import java.util.List;
  * 게임({@link Game}) 검색 서비스 클래스.
  * {@link Game}의 isActive가 활성화 되어야 조회가 가능하다.
  * 현재는 테스트코드를 위해 간소화 된 상태이다.
+ * TODO: 각 조회 메서드에 정렬(Sort) 메서드가 중복되어 있다. 하나의 메서드로 통합해서 관리 할 수 있다.
  *
  * @author chan
  */
@@ -76,12 +78,9 @@ public class GameSearchService {
 
 
     // Env + 정렬 조회
-    public List<Game> findByEnv(String env, SortType sortType) {
+    public List<Game> findByEnv(EnvType env, SortType sortType) {
 
         // 유효성 검사
-        if (StringUtils.isEmpty(env)) {
-            throw new RuntimeException("env is empty");
-        }
 
         Sort sort = Sort.by(
                 Sort.Direction.fromString(sortType.getDirection()),

@@ -1,4 +1,4 @@
-package com.imfine.ngs._global.config;
+package com.imfine.ngs.payment.config;
 
 import com.imfine.ngs.payment.client.PortOneAuthApiClient;
 import com.imfine.ngs.payment.client.PortOneAuthInterceptor;
