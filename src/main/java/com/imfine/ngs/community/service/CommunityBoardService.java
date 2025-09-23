@@ -20,23 +20,6 @@ public class CommunityBoardService {
   // Read
   public int count() { return (int) boardRepository.count(); }
 
-  /*
-   * TODO: JWT 열어서 권한 체크 하도록 변경
-   *  그러고 분기점 만들기??
-   *   일단 @PreAuthorize는 최대한 생각하지 않고 만들어보자.. 다 고려하려니까 끝이 없다
-   */
-  /*
-   * 1. JWT를 깐다
-   *  -> 내가 안 까는게 좋은 것 같음
-   *  -> 저쪽에서 까서 DTO에 담아주라고 해야겠음
-   * 2. role을 확인한다
-   * 3-1. USER 일 경우
-   *  board가 null이 아니고, getManagerId가 본인이랑 같을 때 반환하기
-   *    -> USER일 경우는 글이 비활성화 되면 작성자도 못 봄
-   * 3-2. MANAGER 일 경우
-   *  board가 null이 아닐 경우에만 반환하기
-   * 4. 나머지는 (권한 없음) 예외 던지기
-   */
   public CommunityBoard getBoardById(CommunityUser user, Long boardId) {
     String role = user.getRole();
     return switch(role) {
@@ -68,10 +51,6 @@ public class CommunityBoardService {
     return getBoardById(tmpUser, boardId);
   }
 
-  /*
-   * TODO: 특정 권한이라면 진짜 다 보여주고, 아니면 isDeleted = true 인건 보여주지 않기
-   *  테스트 추가 작성 필요?
-   */
   public List<CommunityBoard> getAllBoards(CommunityUser user) {
     return switch (user.getRole()) {
       case "USER" -> boardRepository.findCommunityBoardsByIsDeletedIsFalse();
@@ -79,14 +58,7 @@ public class CommunityBoardService {
       default -> throw new IllegalArgumentException("권한 잘못됨 에러");
     };
   }
-//  public List<CommunityBoard> getAllBoards() {
-//
-//    return getAllBoards(null);
-//  }
 
-  /* TODO: 특정 권한이라면 다 검색해주고, 아니면 isDeleted = true 인건 보여주지 않기
-   *  테스트 추가 작성 필요?
-   */
   public List<CommunityBoard> getBoardsByKeyword(CommunityUser user, String keyword) {
     return switch (user.getRole()) {
       case "USER" -> boardRepository.findCommunityBoardsByIsDeletedAndTitleContains(false, keyword);
@@ -118,10 +90,6 @@ public class CommunityBoardService {
   }
 
   // Update
-  /*
-   * TODO: 마지막 if문에 특정 권한을 가질 경우 검사 추가
-   *  테스트 추가 작성 필요?
-   */
   public void setDescription(CommunityUser user, Long boardId, String description) {
     CommunityBoard board = getBoardById(user, boardId);
     if (board == null) throw new IllegalArgumentException("유효하지 않은 게시판입니다!");

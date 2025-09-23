@@ -106,10 +106,6 @@ public class CommunityCommentService {
     commentRepository.save(comment);
   }
 
-  /*
-   * TODO: 특정 권한을 가질 때 조건 추가
-   *  테스트 추가 필요?
-   */
   public List<CommunityComment> getCommentsByPostId(CommunityUser user, Long postId) {
     return switch (user.getRole()) {
       case "USER" -> {
