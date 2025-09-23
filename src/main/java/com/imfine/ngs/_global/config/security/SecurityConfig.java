@@ -38,7 +38,7 @@ public class SecurityConfig {
             .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
 
     /* todo: 권한에 따른 접근 권한 설정 하기
-     *  지금은 모든 사람이 모든 url에 접근 가능
+     *  현재 주석 처리 된 부분 활성화하시고 아래코드 주석처리하시면 필터랑 인증 사라집니다. 현재 /auth로 매핑된 로그인/회원가입만 허용되어서 나중에 비회원으로 할 수 있는 내용들 추가 검토 후 추가하겠습니다.
      */
 
     http
@@ -46,9 +46,6 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                     .anyRequest().permitAll()
             );
-
-
-
             */
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/auth/**").permitAll()

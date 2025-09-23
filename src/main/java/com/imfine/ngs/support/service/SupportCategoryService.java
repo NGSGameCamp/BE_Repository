@@ -11,8 +11,9 @@ public class SupportCategoryService {
 
     private final SupportCategoryRepository supportCategoryRepository;
 
-    public SupportCategory findByName(String name) {
-        return supportCategoryRepository.findByName(name);
+    public SupportCategory findByName(String categoryName) {
+        return supportCategoryRepository.findByNameIgnoreCase(categoryName)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리 : " + categoryName));
     }
 
 }
