@@ -1,6 +1,6 @@
 package com.imfine.ngs.community.service;
 
-import com.imfine.ngs.community.dto.CommunityBoardSearchForm;
+import com.imfine.ngs.community.dto.CommunityPostSearchForm;
 import com.imfine.ngs.community.entity.CommunityBoard;
 import com.imfine.ngs.community.entity.CommunityPost;
 import com.imfine.ngs.community.entity.CommunityTag;
@@ -295,7 +295,7 @@ public class CommunityPostServiceTest {
     // Given
     SearchType type = SearchType.TITLE_ONLY;
     String keyword = "test";
-    CommunityBoardSearchForm form = CommunityBoardSearchForm.builder()
+    CommunityPostSearchForm form = CommunityPostSearchForm.builder()
             .type(type)
             .keyword(keyword)
             .build();
@@ -334,7 +334,7 @@ public class CommunityPostServiceTest {
     // Given
     SearchType type = SearchType.CONTENT_ONLY;
     String keyword = "test";
-    CommunityBoardSearchForm form = CommunityBoardSearchForm.builder()
+    CommunityPostSearchForm form = CommunityPostSearchForm.builder()
             .type(type)
             .keyword(keyword)
             .build();
@@ -352,7 +352,7 @@ public class CommunityPostServiceTest {
     // Given
     SearchType type = SearchType.TITLE_AND_CONTENT;
     String keyword = "test";
-    CommunityBoardSearchForm form = CommunityBoardSearchForm.builder()
+    CommunityPostSearchForm form = CommunityPostSearchForm.builder()
             .type(type)
             .keyword(keyword)
             .build();
@@ -378,7 +378,7 @@ public class CommunityPostServiceTest {
             tagService.getTagByName("test"),
             tagService.getTagByName("abc"),
     };
-    CommunityBoardSearchForm form = CommunityBoardSearchForm.builder()
+    CommunityPostSearchForm form = CommunityPostSearchForm.builder()
             .type(type)
             .keyword(keyword)
             .tagList(Arrays.asList(tags))

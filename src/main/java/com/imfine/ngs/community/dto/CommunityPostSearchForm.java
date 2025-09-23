@@ -10,7 +10,7 @@ import org.springframework.data.domain.Sort;
 import java.util.List;
 
 @Builder
-public class CommunityBoardSearchForm {
+public class CommunityPostSearchForm {
   @Builder.Default
   public final SearchType type = SearchType.TITLE_ONLY;
   public final String keyword;

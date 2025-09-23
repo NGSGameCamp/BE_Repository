@@ -1,6 +1,6 @@
 package com.imfine.ngs.community.service;
 
-import com.imfine.ngs.community.dto.CommunityBoardSearchForm;
+import com.imfine.ngs.community.dto.CommunityPostSearchForm;
 import com.imfine.ngs.community.entity.CommunityBoard;
 import com.imfine.ngs.community.entity.CommunityPost;
 import com.imfine.ngs.community.entity.CommunityTag;
@@ -97,7 +97,7 @@ public class CommunityPostService {
     post.updateIsDeleted(true);
     postRepository.save(post);
   }
-  public Page<CommunityPost> getPostsWithSearch(CommunityUser user, Long boardId, CommunityBoardSearchForm searchForm) {
+  public Page<CommunityPost> getPostsWithSearch(CommunityUser user, Long boardId, CommunityPostSearchForm searchForm) {
     CommunityBoard board = boardService.getBoardById(user, boardId);
     SearchType type = searchForm.type;
     String keyword = searchForm.keyword;
