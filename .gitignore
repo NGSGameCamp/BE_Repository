@@ -113,7 +113,7 @@ cmake-build-*
 .idea/**/mongoSettings.xml
 
 # File-based project format
-.iws
+*.iws
 
 # IntelliJ
 out/
