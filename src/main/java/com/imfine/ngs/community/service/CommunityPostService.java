@@ -109,12 +109,20 @@ public class CommunityPostService {
 
     return switch (user.getRole()) {
       case "USER" -> {
-        if (board.getManagerId().equals(user.getId()))
+        if (board.getManagerId().equals(user.getId())) {
+//          if (tags.isEmpty())
+//            yield postRepository.searchKeywordsNoTags(boardId, type.name(), keyword, true, pageable);
           yield postRepository.searchKeywordsWithTags(boardId, type.name(), keyword, tags, tags.size(), true, pageable);
-
+        }
+//        if (tags.isEmpty())
+//          yield postRepository.searchKeywordsNoTags(boardId, type.name(), keyword, false, pageable);
         yield postRepository.searchKeywordsWithTags(boardId, type.name(), keyword, tags, tags.size(), false, pageable);
       }
-      case "MANAGER" -> postRepository.searchKeywordsWithTags(boardId, type.name(), keyword, tags, tags.size(), true, pageable);
+      case "MANAGER" -> {
+//        if (tags.isEmpty())
+//          yield postRepository.searchKeywordsNoTags(boardId, type.name(), keyword, true, pageable);
+        yield postRepository.searchKeywordsWithTags(boardId, type.name(), keyword, tags, tags.size(), true, pageable);
+      }
       default -> throw new IllegalArgumentException("권한 잘못됨 에러");
     };
   }

@@ -7,14 +7,17 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Builder
 public class CommunityPostSearchForm {
   @Builder.Default
   public final SearchType type = SearchType.TITLE_ONLY;
-  public final String keyword;
-  public final List<CommunityTag> tagList;
   @Builder.Default
-  public final Pageable pageable = PageRequest.of(0, 30, Sort.Direction.DESC, "createdAt");
+  public final String keyword = "";
+  @Builder.Default
+  public final List<CommunityTag> tagList = new ArrayList<>();
+  @Builder.Default
+  public final Pageable pageable = PageRequest.of(0, 30, Sort.Direction.DESC, "created_at");
 }

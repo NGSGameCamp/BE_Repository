@@ -14,30 +14,6 @@ import java.util.List;
 public interface CommunityPostRepository extends JpaRepository<CommunityPost, Long> {
   Page<CommunityPost> findCommunityPostsByBoardId(Long boardId, Pageable pageable);
 
-//  @Query(value = """
-//SELECT p.*
-//FROM community_post p
-//JOIN users u ON u.id = p.author_id
-//WHERE
-//      (( :type = 'TITLE_ONLY'          AND p.title   LIKE CONCAT('%', :keyword, '%') )
-//    OR ( :type = 'AUTHOR_ONLY'         AND u.name    LIKE CONCAT('%', :keyword, '%') )
-//    OR ( :type = 'CONTENT_ONLY'        AND p.content LIKE CONCAT('%', :keyword, '%') )
-//    OR ( :type = 'TITLE_AND_CONTENT'   AND (p.title LIKE CONCAT('%', :keyword, '%')
-//                                      OR  p.content LIKE CONCAT('%', :keyword, '%')) ))
-//AND p.board_id = :board_id
-//AND (
-//        :is_manager = TRUE
-//    OR (:is_manager = FALSE AND p.is_deleted = FALSE)
-//);
-//""", nativeQuery = true)
-//  Page<CommunityPost> searchKeywords(
-//          @Param("board_id") Long boardId,
-//          @Param("type") String type,
-//          @Param("keyword") String keyword,
-//          @Param("is_manager") Boolean isManager,
-//          Pageable pageable
-//  );
-
   @Query(
           value = """
 SELECT p.*
@@ -45,11 +21,14 @@ FROM community_post p
 JOIN users u ON u.id = p.author_id
 WHERE
       (
-        (:type = 'TITLE_ONLY'        AND p.title   LIKE CONCAT('%', :keyword, '%')) OR
-        (:type = 'AUTHOR_ONLY'       AND u.name    LIKE CONCAT('%', :keyword, '%')) OR
-        (:type = 'CONTENT_ONLY'      AND p.content LIKE CONCAT('%', :keyword, '%')) OR
-        (:type = 'TITLE_AND_CONTENT' AND (p.title LIKE CONCAT('%', :keyword, '%')
-                                       OR  p.content LIKE CONCAT('%', :keyword, '%')))
+        :keyword IS NULL OR :keyword = ''
+        OR (
+          (:type = 'TITLE_ONLY'        AND p.title   LIKE CONCAT('%', :keyword, '%')) OR
+          (:type = 'AUTHOR_ONLY'       AND u.name    LIKE CONCAT('%', :keyword, '%')) OR
+          (:type = 'CONTENT_ONLY'      AND p.content LIKE CONCAT('%', :keyword, '%')) OR
+          (:type = 'TITLE_AND_CONTENT' AND (p.title LIKE CONCAT('%', :keyword, '%')
+                                         OR  p.content LIKE CONCAT('%', :keyword, '%')))
+        )
       )
   AND p.board_id = :board_id
   AND (
@@ -57,16 +36,16 @@ WHERE
      OR (:is_manager = FALSE AND p.is_deleted = FALSE)
       )
   AND (
-        :tag_count = 0
-     OR p.id IN (
-            SELECT pt.community_post_id
-            FROM post_tag pt
-            JOIN community_board_tags t ON t.id = pt.community_tag_id
-            WHERE t.name IN (:tag_names)
-            GROUP BY pt.community_post_id
-            HAVING COUNT(DISTINCT t.id) = :tag_count
+      :tag_count = 0
+      OR p.id IN (
+          SELECT pt.community_post_id
+          FROM post_tag pt
+          JOIN community_board_tags t ON t.id = pt.community_tag_id
+          WHERE t.name IN (:tag_names)
+          GROUP BY pt.community_post_id
+          HAVING COUNT(DISTINCT t.id) = :tag_count
         )
-      );
+      )
 """,
           countQuery = """
 SELECT COUNT(DISTINCT p.id)
@@ -74,11 +53,14 @@ FROM community_post p
 JOIN users u ON u.id = p.author_id
 WHERE
       (
-        (:type = 'TITLE_ONLY'        AND p.title   LIKE CONCAT('%', :keyword, '%')) OR
-        (:type = 'AUTHOR_ONLY'       AND u.name    LIKE CONCAT('%', :keyword, '%')) OR
-        (:type = 'CONTENT_ONLY'      AND p.content LIKE CONCAT('%', :keyword, '%')) OR
-        (:type = 'TITLE_AND_CONTENT' AND (p.title LIKE CONCAT('%', :keyword, '%')
-                                       OR  p.content LIKE CONCAT('%', :keyword, '%')))
+        :keyword IS NULL OR :keyword = ''
+        OR (
+          (:type = 'TITLE_ONLY'        AND p.title   LIKE CONCAT('%', :keyword, '%')) OR
+          (:type = 'AUTHOR_ONLY'       AND u.name    LIKE CONCAT('%', :keyword, '%')) OR
+          (:type = 'CONTENT_ONLY'      AND p.content LIKE CONCAT('%', :keyword, '%')) OR
+          (:type = 'TITLE_AND_CONTENT' AND (p.title LIKE CONCAT('%', :keyword, '%')
+                                         OR  p.content LIKE CONCAT('%', :keyword, '%')))
+        )
       )
   AND p.board_id = :board_id
   AND (
@@ -86,20 +68,20 @@ WHERE
      OR (:is_manager = FALSE AND p.is_deleted = FALSE)
       )
   AND (
-        :tag_count = 0
-     OR p.id IN (
-            SELECT pt.community_post_id
-            FROM post_tag pt
-            JOIN community_board_tags t ON t.id = pt.community_tag_id
-            WHERE t.name IN (:tag_names)
-            GROUP BY pt.community_post_id
-            HAVING COUNT(DISTINCT t.id) = :tag_count
+      :tag_count = 0
+      OR p.id IN (
+          SELECT pt.community_post_id
+          FROM post_tag pt
+          JOIN community_board_tags t ON t.id = pt.community_tag_id
+          WHERE t.name IN (:tag_names)
+          GROUP BY pt.community_post_id
+          HAVING COUNT(DISTINCT t.id) = :tag_count
         )
-      );
+      )
 """, nativeQuery = true
   )
   Page<CommunityPost> searchKeywordsWithTags(
-          @Param("boardId") Long boardId,
+          @Param("board_id") Long boardId,
           @Param("type") String type,
           @Param("keyword") String keyword,
           @Param("tag_names") List<String> tagNames,
