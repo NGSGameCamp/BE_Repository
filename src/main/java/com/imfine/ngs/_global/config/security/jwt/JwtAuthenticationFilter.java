@@ -1,7 +1,5 @@
 package com.imfine.ngs._global.config.security.jwt;
 
-import com.imfine.ngs._global.config.security.CustomUserDetails;
-import com.imfine.ngs._global.config.security.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,7 +7,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -17,14 +14,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-
+// 현재는 인증에 jwtUserPrincipal만 사용하는 버전(userDetails일단 제외)
 @RequiredArgsConstructor
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 
     private final JwtUtil jwtUtil;
-    private final CustomUserDetailsService customUserDetailsService;
 
 
     @Override
@@ -43,21 +39,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 
         final String token = authHeader.substring(7);
-        final Long userId = jwtUtil.getUserIdFromToken(token);
+        if (SecurityContextHolder.getContext().getAuthentication() == null && jwtUtil.isValidToken(token)) {
+            final Long userId = jwtUtil.getUserIdFromToken(token);
+            final String role = jwtUtil.getRoleFromToken(token);
+            JwtUserPrincipal principal = new JwtUserPrincipal(userId, role);
 
-
-        if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = customUserDetailsService.loadUserById(userId);
-
-
-            if (jwtUtil.isValidToken(token)) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authToken);
         }
 
 

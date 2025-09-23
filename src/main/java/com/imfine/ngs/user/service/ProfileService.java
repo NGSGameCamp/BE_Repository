@@ -5,7 +5,6 @@ import com.imfine.ngs.user.dto.response.ProfileResponse;
 import com.imfine.ngs.user.entity.User;
 import com.imfine.ngs.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,7 +13,6 @@ public class ProfileService {
 
     private final UserRepository userRepository;
 
-    @PreAuthorize("isAuthenticated()")
     public void updateProfile(String email, ProfileRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디"));
@@ -47,11 +45,45 @@ public class ProfileService {
                 .build();
     }
 
-    @PreAuthorize("isAuthenticated()")
     public void deleteUser(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디"));
 
+        userRepository.delete(user);
+    }
+
+    // id 기반 메서드 (JWT principal과 사용)
+    public ProfileResponse getProfileById(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디"));
+        return ProfileResponse.builder()
+                .email(user.getEmail())
+                .name(user.getName())
+                .nickname(user.getNickname())
+                .profile_url(user.getProfileUrl())
+                .birth_at(user.getBirthAt())
+                .build();
+    }
+
+    public void updateProfileById(Long userId, ProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디"));
+
+        if (request.getNickname() != null) {
+            user.updateNickname(request.getNickname());
+        }
+        if (request.getProfileUrl() != null) {
+            user.updateProfileUrl(request.getProfileUrl());
+        }
+        if (request.getPwd() != null) {
+            user.updatePassword(request.getPwd());
+        }
+        userRepository.save(user);
+    }
+
+    public void deleteUserById(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디"));
         userRepository.delete(user);
     }
 
