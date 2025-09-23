@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/u")
+@RequestMapping("/api/u")
 public class UserSupportController {
 
     private final SupportService supportService;
