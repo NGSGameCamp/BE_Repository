@@ -4,6 +4,9 @@ import com.imfine.ngs.community.entity.CommunityBoard;
 import com.imfine.ngs.community.dto.CommunityUser;
 import com.imfine.ngs.community.repository.CommunityBoardRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -51,18 +54,28 @@ public class CommunityBoardService {
     return getBoardById(tmpUser, boardId);
   }
 
-  public List<CommunityBoard> getAllBoards(CommunityUser user) {
+  public Page<CommunityBoard> getAllBoards(CommunityUser user) {
+    // TODO
+    Pageable pageable = PageRequest.of(0, 1);
+    return getAllBoards(user, pageable);
+  }
+  public Page<CommunityBoard> getAllBoards(CommunityUser user, Pageable pageable) {
     return switch (user.getRole()) {
-      case "USER" -> boardRepository.findCommunityBoardsByIsDeletedIsFalse();
-      case "MANAGER" -> boardRepository.findAll();
+      case "USER" -> boardRepository.findCommunityBoardsByIsDeletedIsFalse(pageable);
+      case "MANAGER" -> boardRepository.findAll(pageable);
       default -> throw new IllegalArgumentException("권한 잘못됨 에러");
     };
   }
 
-  public List<CommunityBoard> getBoardsByKeyword(CommunityUser user, String keyword) {
+  public Page<CommunityBoard> getBoardsByKeyword(CommunityUser user, String keyword) {
+    // TODO
+    Pageable pageable = PageRequest.of(0, 1);
+    return getBoardsByKeyword(user, keyword, pageable);
+  }
+  public Page<CommunityBoard> getBoardsByKeyword(CommunityUser user, String keyword, Pageable pageable) {
     return switch (user.getRole()) {
-      case "USER" -> boardRepository.findCommunityBoardsByIsDeletedAndTitleContains(false, keyword);
-      case "MANAGER" -> boardRepository.findCommunityBoardsByTitleContains(keyword);
+      case "USER" -> boardRepository.findCommunityBoardsByIsDeletedAndTitleContains(false, keyword, pageable);
+      case "MANAGER" -> boardRepository.findCommunityBoardsByTitleContains(keyword, pageable);
       default -> throw new IllegalArgumentException("권한 잘못됨 에러");
     };
   }
