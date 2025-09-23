@@ -5,6 +5,7 @@ import com.imfine.ngs.community.entity.CommunityComment;
 import com.imfine.ngs.community.dto.CommunityUser;
 import com.imfine.ngs.community.entity.CommunityPost;
 import com.imfine.ngs.community.repository.CommunityCommentRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -38,27 +39,35 @@ public class CommunityCommentService {
 
     return switch (user.getRole()) {
       case "USER" -> {
-        if (comment.getIsDeleted())
-          throw new IllegalArgumentException("유효하지 않은 댓글입니다!");
         CommunityPost post = postService.getPostById(user, comment.getPostId());
         CommunityBoard board = boardService.getBoardById(user, post.getBoardId());
 
-        if ((board.getManagerId().equals(user.getId()))
-                && (!board.getIsDeleted() && !post.getIsDeleted()))
-          yield comment;
+        if ((!board.getManagerId().equals(user.getId()))
+                && ((board.getIsDeleted() || post.getIsDeleted()) || comment.getIsDeleted()))
+          throw new IllegalArgumentException("잘못된 접근입니다!");
 
-        throw new IllegalArgumentException("잘못된 접근입니다!");
+        yield comment;
       }
       case "MANAGER" -> comment;
       default -> throw new IllegalArgumentException("권한 잘못됨 에러");
     };
   }
+  public CommunityComment getCommentById(Long commentId) {
+    CommunityUser tmpUser = CommunityUser.builder()
+            .nickname("tmpUSer")
+            .build();
+    return getCommentById(tmpUser, commentId);
+  }
 
-  Long editComment(CommunityUser user, CommunityComment comment) {
+  @Transactional(rollbackOn = Exception.class)
+  public Long editComment(CommunityUser user, Long commentId, String toContent) {
+    CommunityComment comment = getCommentById(user, commentId);
+    comment.updateContent(toContent);
+
     if (!comment.getAuthorId().equals(user.getId()) || comment.getIsDeleted())
       throw new IllegalArgumentException("수정 권한이 없습니다!");
 
-    if (comment.getContent().isBlank())
+    if (comment.getContent() == null || comment.getContent().isBlank())
       throw new IllegalArgumentException("내용이 없습니다!");
 
     return commentRepository.save(comment).getId();
@@ -116,6 +125,11 @@ public class CommunityCommentService {
       default -> throw new IllegalArgumentException("권한 잘못됨 에러");
     };
   }
+  public List<CommunityComment> getCommentsByPostId(Long postId) {
+    CommunityUser tmpUser = CommunityUser.builder().build();
+    return getCommentsByPostId(tmpUser, postId);
+  }
+
 
   public List<CommunityComment> getCommentsByAuthorId(Long userId) {
     return commentRepository.findCommunityCommentsByAuthorId(userId);

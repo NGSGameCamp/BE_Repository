@@ -11,6 +11,7 @@ import java.util.Objects;
 
 /**
  * 필수 요소: boardId, authorId, title, content
+ * <br>
  * 선택 요소: tags
  */
 @Entity
@@ -78,12 +79,12 @@ public class CommunityPost {
 
   @Override
   public boolean equals(Object o) {
-    if (!(o instanceof CommunityPost post)) return false;
-    return Objects.equals(id, post.id) && Objects.equals(boardId, post.boardId) && Objects.equals(authorId, post.authorId) && Objects.equals(title, post.title) && Objects.equals(content, post.content) && Objects.equals(isDeleted, post.isDeleted);
+    if (!(o instanceof CommunityPost that)) return false;
+    return Objects.equals(getBoardId(), that.getBoardId()) && Objects.equals(getAuthorId(), that.getAuthorId()) && Objects.equals(getTitle(), that.getTitle()) && Objects.equals(getContent(), that.getContent()) && Objects.equals(getIsDeleted(), that.getIsDeleted()) && Objects.equals(getTags(), that.getTags());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, boardId, authorId, title, content, isDeleted);
+    return Objects.hash(getBoardId(), getAuthorId(), getTitle(), getContent(), getIsDeleted(), getTags());
   }
 }

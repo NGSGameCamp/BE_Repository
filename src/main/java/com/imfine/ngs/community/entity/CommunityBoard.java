@@ -14,6 +14,7 @@ import java.util.Objects;
 
 /**
  * 필수 요소: gameId, managerId, title
+ * <br>
  * 선택 요소: description
  */
 @NoArgsConstructor
@@ -75,12 +76,12 @@ public class CommunityBoard {
 
   @Override
   public boolean equals(Object o) {
-    if (!(o instanceof CommunityBoard board)) return false;
-    return Objects.equals(getId(), board.getId()) && Objects.equals(getGameId(), board.getGameId()) && Objects.equals(getManagerId(), board.getManagerId()) && Objects.equals(getTitle(), board.getTitle()) && Objects.equals(getIsDeleted(), board.getIsDeleted());
+    if (!(o instanceof CommunityBoard that)) return false;
+    return Objects.equals(getGameId(), that.getGameId()) && Objects.equals(getManagerId(), that.getManagerId()) && Objects.equals(getTitle(), that.getTitle()) && Objects.equals(getDescription(), that.getDescription()) && Objects.equals(getIsDeleted(), that.getIsDeleted());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getGameId(), getManagerId(), getTitle(), getIsDeleted());
+    return Objects.hash(getGameId(), getManagerId(), getTitle(), getDescription(), getIsDeleted());
   }
 }

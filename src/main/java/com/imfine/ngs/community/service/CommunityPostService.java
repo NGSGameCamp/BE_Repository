@@ -44,8 +44,6 @@ public class CommunityPostService {
       case "USER" -> {
         if (board.getIsDeleted() || post.getIsDeleted())
           throw new IllegalArgumentException("존재하지 않는 게시글입니다!");
-        if (!board.getManagerId().equals(user.getId()))
-          throw new IllegalArgumentException("게시글을 볼 권한이 없습니다!");
 
         yield post;
       }
@@ -53,17 +51,29 @@ public class CommunityPostService {
       default -> throw new IllegalArgumentException("권한 잘못됨 에러");
     };
   }
+  public CommunityPost getPostById(Long postId) {
+    CommunityUser tmpUser = CommunityUser.builder()
+            .nickname("tmpUser")
+            .build();
+    return getPostById(tmpUser, postId);
+  }
 
-  public Long editPost(CommunityUser user, CommunityPost post) {
-    if (boardService.getBoardById(user, post.getBoardId()) == null) throw new IllegalArgumentException("유효하지 않은 게시판입니다!");
-    if ((post.getContent() == null || post.getContent().isBlank())
-            || (post.getTitle() == null || post.getTitle().isBlank()))
-      throw new IllegalArgumentException("제목이나 내용이 작성되지 않았습니다!");
+  public Long editPost(CommunityUser user, Long fromPostId, CommunityPost toPost) {
+    CommunityPost fromPost = postRepository.findById(fromPostId).orElse(null);
+    if (fromPost == null) throw new IllegalArgumentException("유효하지 않은 게시판입니다!");
 
-    if (!post.getAuthorId().equals(user.getId()))
+    if (!fromPost.getAuthorId().equals(user.getId()))
       throw new IllegalArgumentException("잘못된 접근입니다!");
 
-    return postRepository.save(post).getId();
+    if ((toPost.getContent() == null || toPost.getContent().isBlank())
+            || (toPost.getTitle() == null || toPost.getTitle().isBlank()))
+      throw new IllegalArgumentException("제목이나 내용이 작성되지 않았습니다!");
+
+    fromPost.updateTitle(toPost.getTitle());
+    fromPost.updateContent(toPost.getContent());
+    fromPost.updateTags(toPost.getTags());
+
+    return postRepository.save(fromPost).getId();
   }
 
   public void deletePost(CommunityUser user, Long postId) {
@@ -96,9 +106,9 @@ public class CommunityPostService {
     };
   }
 
-  public List<CommunityPost> getPostsWithSearch(CommunityUser user, Long boardId, SearchType type, String keyword, List<CommunityTag> list) {
+  public List<CommunityPost> getPostsWithSearch(CommunityUser user, Long boardId, SearchType type, String keyword, List<CommunityTag> tagList) {
     List<String> tags = new ArrayList<>();
-    for (CommunityTag tag : list) {
+    for (CommunityTag tag : tagList) {
       tags.add(tag.getName());
     }
 
