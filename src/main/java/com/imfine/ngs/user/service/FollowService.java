@@ -6,6 +6,7 @@ import com.imfine.ngs.user.entity.User;
 import com.imfine.ngs.user.repository.FollowRepository;
 import com.imfine.ngs.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ public class FollowService {
     private final UserRepository userRepository;
 
     @Transactional
+    @PreAuthorize("isAuthenticated()")
     public Follow follow(Long userId, TargetType targetType, Long targetId) {
         if (targetType == TargetType.USER) {
             if (userId != null && userId.equals(targetId)) {
@@ -46,6 +48,7 @@ public class FollowService {
     }
 
     @Transactional
+    @PreAuthorize("isAuthenticated()")
     public void unfollow(Long userId, TargetType targetType, Long targetId) {
         Follow follow = followRepository.findByUserIdAndTargetTypeAndTargetId(userId, targetType, targetId)
                 .orElseThrow(() -> new IllegalArgumentException("팔로우 하지 않은 상태입니다."));
