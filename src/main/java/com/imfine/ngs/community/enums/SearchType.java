@@ -4,9 +4,5 @@ public enum SearchType {
   TITLE_ONLY,
   CONTENT_ONLY,
   AUTHOR_ONLY,
-  TITLE_AND_CONTENT;
-
-  public SearchType toSearchType(SearchType type) {
-    return type;
-  }
+  TITLE_AND_CONTENT
 }
