@@ -1,5 +1,7 @@
 package com.imfine.ngs.payment;
 
+import com.imfine.ngs._global.error.exception.BusinessException;
+import com.imfine.ngs._global.error.model.ErrorCode;
 import com.imfine.ngs.order.entity.Order;
 import com.imfine.ngs.order.entity.OrderHistory;
 import com.imfine.ngs.order.repository.OrderHistoryRepository;
@@ -22,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -99,18 +102,18 @@ public class PaymentServiceTest {
         given(testOrder.getTotalPrice()).willReturn(testAmount);
 
         // when & then
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        BusinessException exception = assertThrows(BusinessException.class, () -> {
             paymentService.completePayment(testPaymentId);
         });
 
-        assertThat(exception.getMessage()).contains("결제 금액(" + paidAmount + ")이 주문 금액(" + testAmount + ")과 일치하지 않습니다.");
+        assertEquals(ErrorCode.PAYMENT_AMOUNT_MISMATCH, exception.getErrorCode());
         verify(testOrder).paymentFailed();
         verify(orderHistoryRepository).save(any(OrderHistory.class));
         verify(portOneApiClient).cancelPayment(testPaymentId); // 금액 불일치 시 결제 취소 호출 검증
     }
 
     @Test
-    @DisplayName("이미 결제 완료된 주문을 다시 결제 시도하면 성공 응답을 반환하고 추가 처리를 하지 않는다.")
+    @DisplayName("이미 결제 완료된 주문을 다시 결제 시도하면 예외가 발생한다.")
     void testPaymentAlreadyCompleted() {
         //given
         PortOnePaymentData portOnePaymentData = createPortOnePaymentData(testPaymentId, testMerchantUid, testAmount, "PAID");
@@ -118,16 +121,15 @@ public class PaymentServiceTest {
         given(orderRepository.findByMerchantUid(testMerchantUid)).willReturn(Optional.of(testOrder));
         given(testOrder.isPaid()).willReturn(true); // 이미 결제된 상태로 설정
 
-        //when
-        PaymentCompleteResponse response = paymentService.completePayment(testPaymentId);
+        //when & then
+        BusinessException exception = assertThrows(BusinessException.class, () -> {
+            paymentService.completePayment(testPaymentId);
+        });
 
-        //then
-        assertThat(response.getStatus()).isEqualTo("PAID");
-        assertThat(response.getMessage()).contains("이미 처리된 주문입니다.");
+        assertEquals(ErrorCode.PAYMENT_ALREADY_COMPLETED, exception.getErrorCode());
 
         // 추가적인 상태 변경이나 저장이 없어야 함
         verify(testOrder, never()).paymentCompleted();
-        verify(orderHistoryRepository, never()).save(any());
         verify(paymentRepository, never()).save(any());
     }
 
@@ -140,9 +142,9 @@ public class PaymentServiceTest {
         given(orderRepository.findByMerchantUid(testMerchantUid)).willReturn(Optional.empty());
 
         // when & then
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> paymentService.completePayment(testPaymentId));
+        BusinessException exception = assertThrows(BusinessException.class, () -> paymentService.completePayment(testPaymentId));
 
-        assertThat(exception.getMessage()).contains("일치하는 주문을 찾을 수 없습니다");
+        assertEquals(ErrorCode.ORDER_NOT_FOUND, exception.getErrorCode());
     }
 
     @Test
@@ -152,9 +154,9 @@ public class PaymentServiceTest {
         given(portOneApiClient.getPayment(testPaymentId)).willThrow(new RuntimeException("API 통신 오류"));
 
         // when & then
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> paymentService.completePayment(testPaymentId));
+        BusinessException exception = assertThrows(BusinessException.class, () -> paymentService.completePayment(testPaymentId));
 
-        assertThat(exception.getMessage()).contains("API 통신 오류");
+        assertEquals(ErrorCode.PORTONE_API_ERROR, exception.getErrorCode());
         verify(orderRepository, never()).findByMerchantUid(anyString());
     }
 
@@ -164,11 +166,13 @@ public class PaymentServiceTest {
         // given
         PortOnePaymentData portOnePaymentData = createPortOnePaymentData(testPaymentId, testMerchantUid, testAmount, "PENDING");
         given(portOneApiClient.getPayment(testPaymentId)).willReturn(portOnePaymentData);
+        given(orderRepository.findByMerchantUid(testMerchantUid)).willReturn(Optional.of(testOrder));
+
 
         // when & then
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> paymentService.completePayment(testPaymentId));
+        BusinessException exception = assertThrows(BusinessException.class, () -> paymentService.completePayment(testPaymentId));
 
-        assertThat(exception.getMessage()).contains("결제가 완료되지 않았습니다. 상태: PENDING");
-        verify(orderRepository, never()).findByMerchantUid(anyString());
+        assertEquals(ErrorCode.PAYMENT_NOT_COMPLETED, exception.getErrorCode());
+        verify(orderRepository).findByMerchantUid(testMerchantUid);
     }
 }

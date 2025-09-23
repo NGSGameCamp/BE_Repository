@@ -1,0 +1,42 @@
+package com.imfine.ngs.user.controller;
+
+import com.imfine.ngs._global.config.security.CustomUserDetails;
+import com.imfine.ngs.user.dto.request.ProfileRequest;
+import com.imfine.ngs.user.dto.response.ProfileResponse;
+import com.imfine.ngs.user.service.ProfileService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/profile")
+@RequiredArgsConstructor
+public class ProfileController {
+
+    private final ProfileService profileService;
+
+    @GetMapping("/me")
+    public ResponseEntity<ProfileResponse> getMyProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(profileService.getProfile(userDetails.getUsername()));
+    }
+
+    @GetMapping("/{email}")
+    public ResponseEntity<ProfileResponse> getUserProfile(@PathVariable String email) {
+        return ResponseEntity.ok(profileService.getProfile(email));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<Void> updateProfile(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                              @RequestBody ProfileRequest request) {
+        profileService.updateProfile(userDetails.getUsername(), request);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        profileService.deleteUser(userDetails.getUsername());
+        return ResponseEntity.noContent().build();
+    }
+
+}

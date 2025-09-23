@@ -1,5 +1,7 @@
 package com.imfine.ngs.order.service;
 
+import com.imfine.ngs._global.error.exception.BusinessException;
+import com.imfine.ngs._global.error.model.ErrorCode;
 import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.repository.GameRepository;
 import com.imfine.ngs.order.entity.Order;
@@ -20,7 +22,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderDetailsRepository orderDetailsRepository;
-    private final GameRepository gameRepository; // Game 조회를 위해 추가
+    private final GameRepository gameRepository;
 
     // 장바구니(PENDING 상태의 주문) 조회 또는 생성
     public Order getOrCreateCart(Long userId) {
@@ -32,14 +34,14 @@ public class OrderService {
     public Order addGameToCart(Long userId, Long gameId) {
         Order cart = getOrCreateCart(userId);
         Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new IllegalArgumentException("게임을 찾을 수 없습니다: " + gameId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ENTITY_NOT_FOUND));
 
         // 이미 장바구니에 담겼는지 확인
         boolean isAlreadyInCart = cart.getOrderDetails().stream()
                 .anyMatch(detail -> detail.getGame().equals(game));
 
         if (isAlreadyInCart) {
-            throw new IllegalArgumentException("이미 장바구니에 담긴 게임입니다.");
+            throw new BusinessException(ErrorCode.GAME_ALREADY_IN_CART);
         }
 
         OrderDetails orderDetails = new OrderDetails(cart, game);
@@ -52,12 +54,12 @@ public class OrderService {
     public Order removeGameFromCart(Long userId, Long gameId) {
         Order cart = getOrCreateCart(userId);
         Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new IllegalArgumentException("게임을 찾을 수 없습니다: " + gameId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ENTITY_NOT_FOUND));
 
         OrderDetails detailToRemove = cart.getOrderDetails().stream()
                 .filter(detail -> detail.getGame().equals(game))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("장바구니에 없는 게임입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.GAME_NOT_IN_CART));
 
         cart.getOrderDetails().remove(detailToRemove);
         orderDetailsRepository.delete(detailToRemove);
@@ -68,7 +70,7 @@ public class OrderService {
     @Transactional(readOnly = true)
     public Order findByOrderId(Long orderId) {
         return orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다: " + orderId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
     }
 
     @Transactional(readOnly = true)

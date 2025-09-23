@@ -13,13 +13,12 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/u")
-public class UserController {
+public class UserSupportController {
 
     private final SupportService supportService;
 
     @GetMapping("/support")
-    public List<Support> getSupportByUserId(int userId) {
-        return supportService.findSupportByUserId(userId);
+    public List<Support> getSupportByUserId(int userId) {return supportService.findSupportByUserId(userId);
     }
 
     @GetMapping("/support/{supportId}")

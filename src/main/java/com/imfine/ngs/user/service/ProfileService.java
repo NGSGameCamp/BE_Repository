@@ -1,6 +1,7 @@
 package com.imfine.ngs.user.service;
 
-import com.imfine.ngs.user.dto.response.UserProfileDto;
+import com.imfine.ngs.user.dto.request.ProfileRequest;
+import com.imfine.ngs.user.dto.response.ProfileResponse;
 import com.imfine.ngs.user.entity.User;
 import com.imfine.ngs.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,19 +13,36 @@ public class ProfileService {
 
     private final UserRepository userRepository;
 
-    public void updateNickname(String email, String newNickname) {
+    public void updateProfile(String email, ProfileRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디"));
 
-        user.updateNickname(newNickname);
+        if (request.getNickname() != null) {
+            user.updateNickname(request.getNickname());
+        }
+
+        if (request.getProfileUrl() != null) {
+            user.updateProfileUrl(request.getProfileUrl());
+        }
+
+        if (request.getPwd() != null) {
+            user.updatePassword(request.getPwd()); // 인코딩은 서비스 바깥에서 처리 or 여기에 인코더 주입
+        }
+
         userRepository.save(user);
     }
 
-    public UserProfileDto getUserProfile(String email) {
+    public ProfileResponse getProfile(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디"));
 
-        return new UserProfileDto(user.getEmail(), user.getNickname());
+        return ProfileResponse.builder()
+                .email(user.getEmail())
+                .name(user.getName())
+                .nickname(user.getNickname())
+                .profile_url(user.getProfileUrl())
+                .birth_at(user.getBirthAt())
+                .build();
     }
 
     public void deleteUser(String email) {
@@ -33,5 +51,5 @@ public class ProfileService {
 
         userRepository.delete(user);
     }
-}
 
+}
