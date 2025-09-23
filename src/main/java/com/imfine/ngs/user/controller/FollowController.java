@@ -1,5 +1,6 @@
 package com.imfine.ngs.user.controller;
 
+import com.imfine.ngs._global.config.security.jwt.JwtUserPrincipal;
 import com.imfine.ngs.user.dto.response.FollowResponse;
 import com.imfine.ngs.user.entity.Follow;
 import com.imfine.ngs.user.entity.TargetType;
@@ -7,6 +8,7 @@ import com.imfine.ngs.user.service.FollowService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,8 +24,8 @@ public class FollowController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<FollowResponse> follow(@PathVariable TargetType targetType,
                                                  @PathVariable Long targetId,
-                                                 @RequestParam Long userId) {
-        Follow follow = followService.follow(userId, targetType, targetId);
+                                                 @AuthenticationPrincipal JwtUserPrincipal principal) {
+        Follow follow = followService.follow(principal.getUserId(), targetType, targetId);
         return ResponseEntity.ok(FollowResponse.from(follow));
     }
 
@@ -31,8 +33,8 @@ public class FollowController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> unfollow(@PathVariable TargetType targetType,
                                          @PathVariable Long targetId,
-                                         @RequestParam Long userId) {
-        followService.unfollow(userId, targetType, targetId);
+                                         @AuthenticationPrincipal JwtUserPrincipal principal) {
+        followService.unfollow(principal.getUserId(), targetType, targetId);
         return ResponseEntity.ok().build();
     }
 
