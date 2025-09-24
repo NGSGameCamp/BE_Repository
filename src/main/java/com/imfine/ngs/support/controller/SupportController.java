@@ -33,6 +33,4 @@ public class SupportController {
 
         return ResponseEntity.ok(result);
     }
-
-
 }
