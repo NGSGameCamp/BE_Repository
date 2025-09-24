@@ -55,8 +55,6 @@ public class SupportServiceTest {
     @DisplayName("(USER) 고객센터에서 문의작성이 가능하다.")
     void insertSupportRepo() {
 
-        Principal principal = Mockito.mock(Principal.class);
-
         //given : 준비
         // 추후에 변경 필요
         long userId = 1L;
@@ -69,7 +67,7 @@ public class SupportServiceTest {
         SupportCategory supportCategory = supportCategoryService.findByName("REFUND");
 
         //when : 실행
-        Support saved = supportService.insertSupportRepo(principal, supportRequestDto, supportCategory);
+        Support saved = supportService.insertSupportRepo(userId, supportRequestDto, supportCategory);
 
         //then : 검증
         assertThat(saved).isNotNull();
