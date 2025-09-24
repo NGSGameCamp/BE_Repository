@@ -4,6 +4,8 @@ import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.enums.SortType;
 import com.imfine.ngs.game.service.search.GameSearchService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,13 +26,13 @@ public class GameSearchController {
 
     // 모든 게임 조회 api
     @GetMapping
-    public ResponseEntity<List<Game>> findAll(@RequestParam(required = false, defaultValue = "NAME_ASC") String sort) {
+    public ResponseEntity<Page<Game>> findAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(required = false, defaultValue = "NAME_ASC") String sort) {
 
         // 정렬 기준 설정
         SortType sortType = SortType.valueOf(sort);
 
         // 전체 조회 서비스 메서드 호출
-        List<Game> games = gameSearchService.findAll(sortType);
+        Page<Game> games = gameSearchService.findAll(page, size, sortType);
 
         // status 200 반환
         return ResponseEntity.ok(games);

@@ -12,6 +12,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDateTime;
@@ -22,6 +25,7 @@ import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 /**
@@ -99,11 +103,12 @@ class MainPageServiceTest {
     void getMainPageData_success() {
 
         // given
-        // 단일 조회용
-        // 왜 when을 두번 given 줄까?
-        when(searchService.findByCreatedAt(SortType.DATE_DESC)).thenReturn(testGames);
-        // 메인 화면에 줄 전체 Map<String, Object>
-        when(searchService.findAll(any(SortType.class))).thenReturn(testGames);
+        // Page 객체 생성
+        Page<Game> gamePage = new PageImpl<>(testGames, PageRequest.of(0, 100), testGames.size());
+
+        // 모든 서비스 메서드가 Page를 반환하도록 설정
+        when(searchService.findByCreatedAt(anyInt(), anyInt(), any(SortType.class))).thenReturn(gamePage);
+        when(searchService.findAll(anyInt(), anyInt(), any(SortType.class))).thenReturn(gamePage);
 
         // when
         // 메인 페이지의 value에 5개씩 Key가 저장되었는지 확인한다.
@@ -121,8 +126,8 @@ class MainPageServiceTest {
 
         // mainPageService에 담긴 객체를 searchService를 이용해 조회할 수 있나요?
         // 이 코드는 무엇일까?
-        verify(searchService, times(1)).findByCreatedAt(any(SortType.class));
-        verify(searchService, times(3)).findAll(any((SortType.class)));
+        verify(searchService, times(1)).findByCreatedAt(anyInt(), anyInt(), any(SortType.class));
+        verify(searchService, times(3)).findAll(anyInt(), anyInt(), any(SortType.class));
     }
 
     // 신작게임조회 - 3개월 이내 게임만 필터링
@@ -132,7 +137,8 @@ class MainPageServiceTest {
 
         // given
         List<Game> gameList = createMixedDateGames();
-        when(searchService.findByCreatedAt(SortType.DATE_DESC)).thenReturn(gameList);
+        Page<Game> gamePage = new PageImpl<>(gameList, PageRequest.of(0, 100), gameList.size());
+        when(searchService.findByCreatedAt(anyInt(), anyInt(), any(SortType.class))).thenReturn(gamePage);
 
         // when
         List<Game> newGames = mainPageService.getNewGames(5);
@@ -161,7 +167,8 @@ class MainPageServiceTest {
 
         // given
         // service.findAll
-        when(searchService.findAll(SortType.DATE_DESC)).thenReturn(testGames);
+        Page<Game> gamePage = new PageImpl<>(testGames, PageRequest.of(0, 100), testGames.size());
+        when(searchService.findAll(anyInt(), anyInt(), any(SortType.class))).thenReturn(gamePage);
 
         // when
         // mainPage.recommendAt();
@@ -186,7 +193,8 @@ class MainPageServiceTest {
         List<Game> findThreeGames = testGames.subList(0, 3);
 
         // search로 findAll한다.
-        when(searchService.findAll(SortType.DATE_DESC)).thenReturn(findThreeGames);
+        Page<Game> gamePage = new PageImpl<>(findThreeGames, PageRequest.of(0, 100), findThreeGames.size());
+        when(searchService.findAll(anyInt(), anyInt(), any(SortType.class))).thenReturn(gamePage);
 
         // when
         // mainService에서 getRecommend 메서드 호출
@@ -209,7 +217,8 @@ class MainPageServiceTest {
 
         // given
         // searchService.findAll()
-        when(searchService.findAll(SortType.NAME_ASC)).thenReturn(testGames);
+        Page<Game> gamePage = new PageImpl<>(testGames, PageRequest.of(0, 100), testGames.size());
+        when(searchService.findAll(anyInt(), anyInt(), any(SortType.class))).thenReturn(gamePage);
 
         // when
         //  mainService.getPopularGames
@@ -235,7 +244,8 @@ class MainPageServiceTest {
 
         // given
         // searchService.findAll
-        when(searchService.findAll(SortType.NAME_ASC)).thenReturn(testGames);
+        Page<Game> gamePage = new PageImpl<>(testGames, PageRequest.of(0, 100), testGames.size());
+        when(searchService.findAll(anyInt(), anyInt(), any(SortType.class))).thenReturn(gamePage);
 
         // when
         // mainService.getDisCount
@@ -259,9 +269,10 @@ class MainPageServiceTest {
 
         // given
         // searchService에서 날짜로 조회가 되나요?
-        when(searchService.findByCreatedAt(SortType.DATE_DESC)).thenReturn(testGames);
+        Page<Game> gamePage = new PageImpl<>(testGames, PageRequest.of(0, 100), testGames.size());
+        when(searchService.findByCreatedAt(anyInt(), anyInt(), any(SortType.class))).thenReturn(gamePage);
         // searchService에서 전부 조회가 되나요?
-        when(searchService.findByCreatedAt(any(SortType.class))).thenReturn(testGames);
+        when(searchService.findAll(anyInt(), anyInt(), any(SortType.class))).thenReturn(gamePage);
 
         // when
         // mainPageService.getMainPageGameData();

@@ -6,6 +6,9 @@ import com.imfine.ngs.game.enums.SortType;
 import com.imfine.ngs.game.repository.GameRepository;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -38,77 +41,78 @@ public class GameSearchService {
     }
 
     // 게임 전체 조회 로직
-    public List<Game> findAll(SortType sortType) {
+    public Page<Game> findAll(int Page, int size, SortType sortType) {
 
-        Sort sort = Sort.by(
+        Pageable pageable = PageRequest.of(Page, size, Sort.by(
                 Sort.Direction.fromString(sortType.getDirection()),
                 sortType.getField()
-        );
+        ));
 
-        return gameRepository.findAllActive(sort);
+
+        return gameRepository.findAllActive(pageable);
     }
 
     /*
         === 조건별 조회 ===
      */
     // 날짜 + 정렬 조회
-    public List<Game> findByCreatedAt(SortType sortType) {
+    public Page<Game> findByCreatedAt(int page, int size, SortType sortType) {
 
-        Sort sort = Sort.by(
+        Pageable pageable = PageRequest.of(page, size, Sort.by(
                 Sort.Direction.fromString(sortType.getDirection()),
                 sortType.getField()
-        );
+        ));
 
-        return gameRepository.findAllActive(sort);
+        return gameRepository.findAllActive(pageable);
     }
 
     // 이름 + 정렬 조회
-    public List<Game> findByGameName(String name, SortType sortType) {
+    public Page<Game> findByGameName(String name, int page, int size, SortType sortType) {
 
         if (name == null) {
             throw new NullPointerException("name is null");
         }
 
-        Sort sort = Sort.by(
+        Pageable pageable = PageRequest.of(page, size, Sort.by(
                 Sort.Direction.fromString(sortType.getDirection()),
                 sortType.getField()
-        );
+        ));
 
-        return gameRepository.findActiveByName(name, sort);
+        return gameRepository.findActiveByName(name, pageable);
     }
 
 
     // Env + 정렬 조회
-    public List<Game> findByEnv(EnvType env, SortType sortType) {
+    public Page<Game> findByEnv(int page, int size, EnvType env, SortType sortType) {
 
         // 유효성 검사
 
-        Sort sort = Sort.by(
+        Pageable pageable = PageRequest.of(page, size, Sort.by(
                 Sort.Direction.fromString(sortType.getDirection()),
                 sortType.getField()
-        );
+        ));
 
-        return gameRepository.findActiveByEnvType(env, sort);
+        return gameRepository.findActiveByEnvType(env, pageable);
     }
 
     // Tag + 정렬 조회
-    public List<Game> findByTag(String tag, SortType sortType) {
+    public Page<Game> findByTag(int page, int size, String tag, SortType sortType) {
 
         // 유효성 검사
         if (StringUtils.isEmpty(tag)) {
             throw new RuntimeException("tag is empty");
         }
 
-        Sort sort = Sort.by(
+        Pageable pageable = PageRequest.of(page, size, Sort.by(
                 Sort.Direction.fromString(sortType.getDirection()),
                 sortType.getField()
-        );
+        ));
 
-        return gameRepository.findActiveByTag(tag, sort);
+        return gameRepository.findActiveByTag(tag, pageable);
     }
 
     // Price + 정렬 조회
-    public List<Game> findByPriceBetween(long minPrice, long maxPrice, SortType sortType) {
+    public Page<Game> findByPriceBetween(long minPrice, long maxPrice, int page, int size, SortType sortType) {
 
         // 유효성 검사
         if (minPrice == 0) {
@@ -121,11 +125,11 @@ public class GameSearchService {
             throw new RuntimeException("minPrice or MaxPrice is less than or equal to maxPrice");
         }
 
-        Sort sort = Sort.by(
+        Pageable pageable = PageRequest.of(page, size, Sort.by(
                 Sort.Direction.fromString(sortType.getDirection()),
                 sortType.getField()
-        );
+        ));
 
-        return gameRepository.findActiveByPrice(minPrice, maxPrice, sort);
+        return gameRepository.findActiveByPrice(minPrice, maxPrice, pageable);
     }
 }
