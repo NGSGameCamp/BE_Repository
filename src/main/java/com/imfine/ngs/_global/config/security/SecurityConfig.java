@@ -1,6 +1,7 @@
 package com.imfine.ngs._global.config.security;
 
 import com.imfine.ngs._global.config.security.jwt.JwtAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,6 +50,9 @@ public class SecurityConfig {
             */
             .authorizeHttpRequests(auth -> auth
                     .anyRequest().permitAll()
+//                    .anyRequest().authenticated()
+//                    .requestMatchers("/api/auth/**", "/api/main").permitAll()
+//                    .requestMatchers(HttpMethod.GET, "/api/u/*", "/api/follow/following/*").permitAll()
 //                    .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

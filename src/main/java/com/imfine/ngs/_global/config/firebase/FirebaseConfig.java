@@ -14,12 +14,19 @@ public class FirebaseConfig {
 
     @Bean
     public FirebaseApp firebaseApp() throws IOException {
-        FileInputStream serviceAccount = new FileInputStream("src/main/resources/firebase-service-account.json");
 
-        FirebaseOptions options = FirebaseOptions.builder()
-                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                .setStorageBucket("ngsgamecamp.firebasestorage.app")
-                .build();
-        return FirebaseApp.initializeApp(options);
+        if (FirebaseApp.getApps().isEmpty()) {
+
+            FileInputStream serviceAccount = new FileInputStream("src/main/resources/firebase-service-account.json");
+
+            FirebaseOptions options = FirebaseOptions.builder()
+                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                    .setStorageBucket("ngsgamecamp.firebasestorage.app")
+                    .build();
+            return FirebaseApp.initializeApp(options);
+
+        } else {
+            return  FirebaseApp.getInstance();
+        }
     }
 }

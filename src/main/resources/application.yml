@@ -40,8 +40,7 @@ portone:
   api-secret: ${API_SECRET}
 
 firebase:
-  bucket: ngsgamecamp.firebasestorage.com
+  bucket: ${FIREBASE_BUKET}
 
-  config:
-    path: src/main/resources/firebase-service-account.json
-
+config:
+    path: ${FIREBASE_PATH}
