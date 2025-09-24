@@ -31,9 +31,10 @@ public class GameSearchService {
         gameRepository.save(game);
     }
 
-    // 게임 단일 조회 로직
-    public Game findById(Long id) {
-        return gameRepository.findById(id).orElse(null);
+    // 게임 단일 조회 로직 (활성 상태인 게임만 조회)
+    public Game findActiveById(Long id) {
+        return gameRepository.findByIdAndIsActive(id)
+                .orElseThrow(() -> new IllegalArgumentException("Game not found with id: " + id));
     }
 
     // 게임 전체 조회 로직
