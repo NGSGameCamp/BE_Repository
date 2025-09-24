@@ -49,11 +49,12 @@ public class SecurityConfig {
             );
             */
             .authorizeHttpRequests(auth -> auth
-                    .anyRequest().permitAll()
+//                    .anyRequest().permitAll()
 //                    .anyRequest().authenticated()
-//                    .requestMatchers("/api/auth/**", "/api/main").permitAll()
-//                    .requestMatchers(HttpMethod.GET, "/api/u/*", "/api/follow/following/*").permitAll()
-//                    .anyRequest().authenticated()
+                      .requestMatchers("/api/auth/**", "/api/main").permitAll()
+                      .requestMatchers(HttpMethod.GET, "/api/u/*", "/api/follow/following/*").permitAll()
+                      .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // 스웨거 경로 추가
+                      .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
