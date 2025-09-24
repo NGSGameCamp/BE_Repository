@@ -21,6 +21,7 @@ public class Support {
     long userId;
     long orderId;
     long categoryId;
+    String title;
     String content;
 
     @CreatedDate
@@ -28,10 +29,11 @@ public class Support {
     LocalDateTime createdAt;
 
     @Builder
-    public Support(Long userId, long orderId, long categoryId, String content, LocalDateTime createdAt) {
+    public Support(Long userId, long orderId, long categoryId, String title, String content, LocalDateTime createdAt) {
         this.userId = userId;
         this.orderId = orderId;
         this.categoryId = categoryId;
+        this.title = title;
         this.content = content;
         this.createdAt = createdAt;
     }
