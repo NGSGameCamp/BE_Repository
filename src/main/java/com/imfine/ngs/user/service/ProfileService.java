@@ -5,6 +5,7 @@ import com.imfine.ngs.user.dto.response.ProfileResponse;
 import com.imfine.ngs.user.entity.User;
 import com.imfine.ngs.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 public class ProfileService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public void updateProfile(String email, ProfileRequest request) {
         User user = userRepository.findByEmail(email)
@@ -26,7 +28,7 @@ public class ProfileService {
         }
 
         if (request.getPwd() != null) {
-            user.updatePassword(request.getPwd()); // 인코딩은 서비스 바깥에서 처리 or 여기에 인코더 주입
+            user.updatePassword(passwordEncoder.encode(request.getPwd()));
         }
 
         userRepository.save(user);
@@ -76,7 +78,7 @@ public class ProfileService {
             user.updateProfileUrl(request.getProfileUrl());
         }
         if (request.getPwd() != null) {
-            user.updatePassword(request.getPwd());
+            user.updatePassword(passwordEncoder.encode(request.getPwd()));
         }
         userRepository.save(user);
     }
