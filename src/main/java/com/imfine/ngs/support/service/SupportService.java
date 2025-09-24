@@ -13,6 +13,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -26,10 +27,12 @@ public class SupportService {
     private final OrderService orderService;
     private final OrderDetailsRepository orderDetailsRepository;
 
-    public Support insertSupportRepo(long userId, SupportRequestDto requestDto, SupportCategory category) {
+    public Support insertSupportRepo(Principal principal, SupportRequestDto requestDto, SupportCategory category) {
+        long userId = 1L;
 
         return supportRepository.save(Support.builder()
                 .userId(userId)
+                .title(requestDto.getTitle())
                 .content(requestDto.getContent())
                 .orderId(requestDto.getOrderId())
                 .categoryId(category.getId())

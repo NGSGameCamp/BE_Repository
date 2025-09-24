@@ -1,5 +1,6 @@
 package com.imfine.ngs.support.service;
 
+import com.imfine.ngs.support.dto.SupportRequestDto;
 import com.imfine.ngs.support.entity.Support;
 import com.imfine.ngs.support.entity.SupportAnswer;
 import com.imfine.ngs.support.entity.SupportCategory;
@@ -7,12 +8,13 @@ import com.imfine.ngs.support.repository.SupportAnswerRepository;
 import com.imfine.ngs.support.repository.SupportCategoryRepository;
 import com.imfine.ngs.support.repository.SupportRepository;
 import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.Comparator;
@@ -52,29 +54,27 @@ public class SupportServiceTest {
     @Test
     @DisplayName("(USER) 고객센터에서 문의작성이 가능하다.")
     void insertSupportRepo() {
-        supportCategoryRepository.save(
-            SupportCategory.builder()
-                .name("REFUND")
-                .description("환불카테고리")
-                .build()
-        );
+
+        Principal principal = Mockito.mock(Principal.class);
+
         //given : 준비
-        Support support = Support.builder()
-                .userId(1L)
+        long userId = 1L;
+        SupportRequestDto supportRequestDto = SupportRequestDto.builder()
                 .orderId(1L)
-                .categoryId(2L)
-                .content("test 입력")
-                .createdAt(LocalDateTime.now())
+                .title("title 입니다~~~")
+                .content("test content 입니다")
                 .build();
 
+        SupportCategory supportCategory = supportCategoryService.findByName("REFUND");
+
         //when : 실행
-//        Support saved = supportService.insertSupportRepo(support);
+        Support saved = supportService.insertSupportRepo(principal, supportRequestDto, supportCategory);
 
         //then : 검증
-//        assertThat(saved).isNotNull();
-//
-//        Support find = supportRepository.findById(saved.getId()).orElseThrow();
-//        assertThat(find.getId()).isEqualTo(11L);
+        assertThat(saved).isNotNull();
+        Support find = supportRepository.findById(saved.getId()).orElseThrow();
+        assertThat(find.getId()).isEqualTo(11L);
+        assertThat(find.getTitle()).isEqualTo(saved.getTitle());
     }
 
 
