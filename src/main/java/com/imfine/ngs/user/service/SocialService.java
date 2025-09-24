@@ -19,12 +19,16 @@ public class SocialService {
     public User socialLogin(String provider, String accessToken) {
         OauthUserInfo userInfo = oauthClient.getUserInfo(provider, accessToken);
 
-        return userRepository.findByEmail(userInfo.getEmail())
+        return upsertSocialUser(provider, userInfo.getEmail(), userInfo.getName());
+    }
+
+    public User upsertSocialUser(String provider, String email, String name) {
+        return userRepository.findByEmail(email)
                 .orElseGet(() -> {
                     User newUser = User.create(
-                            userInfo.getEmail(),
+                            email,
                             "SOCIAL",
-                            userInfo.getName(),
+                            name,
                             null
                     );
                     var defaultRole = userRoleRepository.findByRole("USER").orElseThrow();

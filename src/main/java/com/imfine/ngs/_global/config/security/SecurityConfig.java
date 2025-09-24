@@ -1,6 +1,8 @@
 package com.imfine.ngs._global.config.security;
 
 import com.imfine.ngs._global.config.security.jwt.JwtAuthenticationFilter;
+import com.imfine.ngs.user.oauth.OAuth2AuthenticationFailureHandler;
+import com.imfine.ngs.user.oauth.OAuth2AuthenticationSuccessHandler;
 import org.springframework.http.HttpMethod;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -24,6 +26,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 public class SecurityConfig {
 
   private final CorsConfigurationSource corsConfigurationSource;
+  private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+  private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
 
   @Bean
   public PasswordEncoder passwordEncoder() {
@@ -57,6 +61,12 @@ public class SecurityConfig {
                       .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+
+    http.oauth2Login(oauth -> oauth
+            .successHandler(oAuth2AuthenticationSuccessHandler)
+            .failureHandler(oAuth2AuthenticationFailureHandler)
+    );
 
 
     return http.build();
