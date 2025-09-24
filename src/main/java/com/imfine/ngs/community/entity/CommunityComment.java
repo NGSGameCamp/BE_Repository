@@ -27,7 +27,7 @@ public class CommunityComment {
   @Setter
   private Long authorId;
 
-  @Column(nullable = false, columnDefinition = "number default -1")
+  @Column(nullable = false, columnDefinition = "bigint default -1")
   private Long parentId;
 
   @Column(nullable = false)

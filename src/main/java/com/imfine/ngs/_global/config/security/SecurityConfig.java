@@ -49,9 +49,11 @@ public class SecurityConfig {
             );
             */
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/auth/**", "/api/main").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/u/*", "/api/follow/following/*").permitAll()
-                    .anyRequest().authenticated()
+                    .anyRequest().permitAll()
+//                    .anyRequest().authenticated()
+//                    .requestMatchers("/api/auth/**", "/api/main").permitAll()
+//                    .requestMatchers(HttpMethod.GET, "/api/u/*", "/api/follow/following/*").permitAll()
+//                    .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
