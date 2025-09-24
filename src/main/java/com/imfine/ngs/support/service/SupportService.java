@@ -52,9 +52,7 @@ public class SupportService {
 
     public Support findById(long id) {
         return supportRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        id + ": 존재하지 않는 문의글입니다."
-                ));
+                .orElseThrow(() -> new EntityNotFoundException(id + ": 존재하지 않는 문의글입니다."));
     }
 
     // 정렬하는 메서드
@@ -63,8 +61,7 @@ public class SupportService {
         Comparator<Support> comparator = switch (sortBy.toUpperCase()) {
             case "DESC" -> Comparator.comparing(Support::getCreatedAt).reversed();
             case "ASC" -> Comparator.comparing(Support::getCreatedAt);
-            default -> throw new IllegalArgumentException("Invalid sort criteria: " + sortBy +
-                    ". Allowed values are: DESC, ASC");
+            default -> throw new IllegalArgumentException("Invalid sort criteria: " + sortBy + ". Allowed values are: DESC, ASC");
         };
 
         return supports.stream().sorted(comparator).collect(Collectors.toList());
