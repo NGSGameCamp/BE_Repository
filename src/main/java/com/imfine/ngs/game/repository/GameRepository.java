@@ -3,7 +3,8 @@ package com.imfine.ngs.game.repository;
 import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.enums.EnvType;
 import org.hibernate.metamodel.mapping.WhereRestrictable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,16 +24,16 @@ public interface GameRepository extends JpaRepository<Game, Long> {
      */
     // 전체 활성 게임 조회 (동적 정렬 메서드)
     @Query("SELECT g FROM Game g WHERE g.isActive = true")
-    List<Game> findAllActive(Sort sort);
+    Page<Game> findAllActive(Pageable pageable);
 
     // 게임 이름으로 조회
     @Query("SELECT g FROM Game g WHERE g.isActive = true AND LOWER(g.name) LIKE LOWER(CONCAT('%', :name, '%'))")
-    List<Game> findActiveByName(@Param("name") String name, Sort sort);
+    Page<Game> findActiveByName(@Param("name") String name, Pageable pageable);
 
     // TODO: String tag를 Tag 타입으로 변경해야한다.
     // 게임 태그로 조회
     @Query("SELECT g FROM Game g WHERE g.isActive = true AND g.tag = :tag")
-    List<Game> findActiveByTag(@Param("tag") String tag, Sort sort);
+    Page<Game> findActiveByTag(@Param("tag") String tag, Pageable pageable);
 
     // TODO: String env를 EnvType
     // 게임 env로 조회
@@ -41,11 +42,11 @@ public interface GameRepository extends JpaRepository<Game, Long> {
             "JOIN le.env e " +
             "WHERE g.isActive = true AND e.envType = :envType"
     )
-    List<Game> findActiveByEnvType(@Param("envType") EnvType env, Sort sort);
+    Page<Game> findActiveByEnvType(@Param("envType") EnvType env, Pageable pageable);
 
     // 게임 범위로 조회
     @Query("SELECT g FROM Game g WHERE g.isActive = true AND g.price BETWEEN  :minPrice AND :maxPrice")
-    List<Game> findActiveByPrice(long minPrice, long maxPrice, Sort sort);
+    Page<Game> findActiveByPrice(long minPrice, long maxPrice, Pageable pageable);
 
     // 단일 게임 조회 (활성 상태만)
     @Query("SELECT g FROM Game g WHERE g.id = :id AND g.isActive = true")

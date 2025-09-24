@@ -5,6 +5,7 @@ import com.imfine.ngs.game.enums.SortType;
 import com.imfine.ngs.game.service.search.GameSearchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -15,7 +16,7 @@ import java.util.stream.Collectors;
  * {@link com.imfine.ngs.game.controller.NGSController} 메인 페이지 서비스 클래스.
  * 차후 추천, 인기, 할인의 리팩토링이 필요하다.
  * TODO: MainPageService가  {@link GameSearchService}에 의존하고 있다. 이를 인터페이스를 활용하여 분리할 수 없을까?
- *
+ * TODO: 서비스의 코드 중복을 제거할 수 있다.
  * @author chan
  */
 @Slf4j
@@ -90,7 +91,8 @@ public class MainPageService {
         log.debug("신작 게임 {} 개 조회", limit);
 
         // 최신 날짜 기준으로 게임 조회
-        List<Game> allGames = searchService.findByCreatedAt(SortType.DATE_DESC);
+        Page<Game> gamePage = searchService.findByCreatedAt(0, limit, SortType.DATE_DESC);
+        List<Game> allGames = gamePage.getContent();
 
         // 최근 90일 이내 게임 필터링 (선택)
         LocalDateTime threeMonthAgo = LocalDateTime.now().minusMonths(3);
@@ -120,7 +122,8 @@ public class MainPageService {
         log.debug("추천 게임 {}개 조회", limit);
 
         // 전체 게임 조회
-        List<Game> allGames = searchService.findAll(SortType.DATE_DESC);
+        Page<Game> gamePage = searchService.findAll(0, limit, SortType.DATE_DESC);
+        List<Game> allGames = gamePage.getContent();
 
         // 리스트가 limit보다 작으면 전체 반환
         if (allGames.size() < limit) {
@@ -155,7 +158,8 @@ public class MainPageService {
         log.debug("조회한 인기 게임 개수: {}", limit);
 
         // 전체 게임 조회
-        List<Game> allGames = searchService.findAll(SortType.NAME_ASC);
+        Page<Game> gamePage = searchService.findAll(0, limit, SortType.DATE_DESC);
+        List<Game> allGames = gamePage.getContent();
 
         // 리스트가 limit보다 작으면 전체 반환
         if (allGames.size() < limit) {
@@ -189,7 +193,8 @@ public class MainPageService {
         log.debug("조회한 할인 중인 게임 갯수 {}", limit);
 
         // 전체 게임 조회
-        List<Game> allGames = searchService.findAll(SortType.NAME_ASC);
+        Page<Game> gamePage = searchService.findAll(0, limit, SortType.DATE_DESC);
+        List<Game> allGames = gamePage.getContent();
 
         // 리스트가 limit보다 작으면 전체 반환
         if (allGames.size() < limit) {
