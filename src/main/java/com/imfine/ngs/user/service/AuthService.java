@@ -47,7 +47,7 @@ public class AuthService {
 
         String role = user.getRole() != null ? user.getRole().getRole() : null;
         String token = jwtUtil.generateToken(user.getId(), role);
-        return new SignInResponse(token, user.getId());
+        return new SignInResponse(token, user.getId(), user.getEmail(), user.getNickname());
     }
 
     public void updatePwd(String email, String oldPwd, String newPwd) {
