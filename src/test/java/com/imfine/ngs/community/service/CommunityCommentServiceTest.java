@@ -163,13 +163,13 @@ public class CommunityCommentServiceTest {
             .parentId(commentId)
             .content("this is test comment")
             .build();
-    Long commentCnt = commentService.count();
+    Long commentCnt = commentService.countAll();
 
     // When
     commentService.addComment(wrongUser, comment);
 
     // Then
-    assertThat(commentService.count()).isEqualTo(commentCnt+1);
+    assertThat(commentService.countAll()).isEqualTo(commentCnt+1);
   }
 
   // 댓글 수정 파트
@@ -301,7 +301,7 @@ public class CommunityCommentServiceTest {
   @DisplayName("원하는 Author의 모든 Comment 가져오게 하기")
   void getCommentsOnSpecificAuthor() {
     // When
-    List<CommunityComment> comments = commentService.getCommentsByAuthorId(correctUser.getId());
+    List<CommunityComment> comments = commentService.getCommentsByAuthorId(correctUser.getId()).getContent();
 
     // Then
     assertThat(comments).allMatch(comment -> comment.getAuthorId().equals(correctUser.getId()));

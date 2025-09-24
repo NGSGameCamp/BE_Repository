@@ -5,10 +5,7 @@ import com.imfine.ngs.game.enums.SortType;
 import com.imfine.ngs.game.service.search.GameSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -37,6 +34,22 @@ public class GameSearchController {
 
         // status 200 반환
         return ResponseEntity.ok(games);
+    }
+
+    /**
+     * 단일 게임 조회 API
+     *
+     * @param id 게임 ID
+     * @return 게임 정보 (활성 상태인 게임만 조회 가능)
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Game> findById(@PathVariable Long id) {
+        try {
+            Game game = gameSearchService.findActiveById(id);
+            return ResponseEntity.ok(game);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     // 게임 이름으로 조회

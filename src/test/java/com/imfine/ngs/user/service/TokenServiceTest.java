@@ -66,4 +66,3 @@ class TokenServiceTest {
         assertEquals(saved.getId(), idFromToken);
     }
 }
-

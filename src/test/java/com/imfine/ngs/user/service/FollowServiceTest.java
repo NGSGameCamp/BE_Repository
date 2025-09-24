@@ -3,8 +3,12 @@ package com.imfine.ngs.user.service;
 import com.imfine.ngs.user.entity.Follow;
 import com.imfine.ngs.user.entity.TargetType;
 import com.imfine.ngs.user.entity.User;
+import com.imfine.ngs.user.entity.UserRole;
+import com.imfine.ngs.user.entity.UserStatus;
 import com.imfine.ngs.user.repository.FollowRepository;
 import com.imfine.ngs.user.repository.UserRepository;
+import com.imfine.ngs.user.repository.UserRoleRepository;
+import com.imfine.ngs.user.repository.UserStatusRepository;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,21 +32,37 @@ public class FollowServiceTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private UserRoleRepository userRoleRepository;
+
+    @Autowired
+    private UserStatusRepository userStatusRepository;
+
     @Test
     @DisplayName("팔로우 성공")
     void followSucess() {
-        User follower = userRepository.save(User.builder()
+        UserRole role = userRoleRepository.findByRole("USER").orElseThrow();
+        UserStatus status = userStatusRepository.findByName("ACTIVE").orElseThrow();
+
+        User follower = User.builder()
                 .email("a@b.com")
                 .pwd("1234")
                 .name("Hun")
                 .nickname("hunny")
-                .build());
-        User target = userRepository.save(User.builder()
+                .build();
+        follower.assignRole(role);
+        follower.assignStatus(status);
+        follower = userRepository.save(follower);
+
+        User target = User.builder()
                 .email("c@d.com")
                 .pwd("1234")
                 .name("Hue")
                 .nickname("huey")
-                .build());
+                .build();
+        target.assignRole(role);
+        target.assignStatus(status);
+        target = userRepository.save(target);
 
         Follow follow = followService.follow(follower.getId(), TargetType.USER, target.getId());
 
@@ -54,18 +74,28 @@ public class FollowServiceTest {
     @Test
     @DisplayName("언팔로우 성공")
     void unfollowSucess() {
-        User follower = userRepository.save(User.builder()
+        UserRole role2 = userRoleRepository.findByRole("USER").orElseThrow();
+        UserStatus status2 = userStatusRepository.findByName("ACTIVE").orElseThrow();
+
+        User follower = User.builder()
                 .email("e@f.com")
                 .pwd("1234")
                 .name("Hun2")
                 .nickname("hunny2")
-                .build());
-        User target = userRepository.save(User.builder()
+                .build();
+        follower.assignRole(role2);
+        follower.assignStatus(status2);
+        follower = userRepository.save(follower);
+
+        User target = User.builder()
                 .email("g@h.com")
                 .pwd("1234")
                 .name("Hue2")
                 .nickname("huey2")
-                .build());
+                .build();
+        target.assignRole(role2);
+        target.assignStatus(status2);
+        target = userRepository.save(target);
 
         followService.follow(follower.getId(), TargetType.USER, target.getId());
 

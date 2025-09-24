@@ -1,6 +1,8 @@
 package com.imfine.ngs.community.repository;
 
 import com.imfine.ngs.community.entity.CommunityBoard;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,11 +13,9 @@ import java.util.Optional;
 public interface CommunityBoardRepository extends JpaRepository<CommunityBoard, Long> {
   boolean existsById(Long id);
 
-  Optional<CommunityBoard> findByTitle(String title);
+  Page<CommunityBoard> findCommunityBoardsByTitleContains(String title, Pageable pageable);
 
-  List<CommunityBoard> findCommunityBoardsByTitleContains(String title);
+  Page<CommunityBoard> findCommunityBoardsByIsDeletedIsFalse(Pageable pageable);
 
-  List<CommunityBoard> findCommunityBoardsByIsDeletedIsFalse();
-
-  List<CommunityBoard> findCommunityBoardsByIsDeletedAndTitleContains(boolean isDeleted, String keyword);
+  Page<CommunityBoard> findCommunityBoardsByIsDeletedAndTitleContains(boolean isDeleted, String keyword, Pageable pageable);
 }

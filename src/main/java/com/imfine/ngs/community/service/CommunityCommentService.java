@@ -7,6 +7,10 @@ import com.imfine.ngs.community.entity.CommunityPost;
 import com.imfine.ngs.community.repository.CommunityCommentRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,8 +34,10 @@ public class CommunityCommentService {
     return commentRepository.save(comment).getId();
   }
 
-  Long count() { return commentRepository.count(); }
-  Long count(Long postId) { return (long) commentRepository.findCommunityCommentsByPostId(postId).size();}
+  Long countAll() { return commentRepository.count(); }
+  Long count(Long postId) {
+    return commentRepository.countByPostId(postId);
+  }
 
   public CommunityComment getCommentById(CommunityUser user, Long commentId) {
     CommunityComment comment = commentRepository.findById(commentId).orElse(null);
@@ -122,12 +128,15 @@ public class CommunityCommentService {
     };
   }
   public List<CommunityComment> getCommentsByPostId(Long postId) {
+    // TODO
     CommunityUser tmpUser = CommunityUser.builder().build();
+
     return getCommentsByPostId(tmpUser, postId);
   }
 
 
-  public List<CommunityComment> getCommentsByAuthorId(Long userId) {
-    return commentRepository.findCommunityCommentsByAuthorId(userId);
+  public Page<CommunityComment> getCommentsByAuthorId(Long userId) {
+    Pageable pageable = PageRequest.of(0, 1, Sort.Direction.DESC, "createdAt");
+    return commentRepository.findCommunityCommentsByAuthorId(userId, pageable);
   }
 }

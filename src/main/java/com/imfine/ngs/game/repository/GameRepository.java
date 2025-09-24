@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * {@link Game} 저장소 인터페이스.
@@ -45,4 +46,8 @@ public interface GameRepository extends JpaRepository<Game, Long> {
     // 게임 범위로 조회
     @Query("SELECT g FROM Game g WHERE g.isActive = true AND g.price BETWEEN  :minPrice AND :maxPrice")
     List<Game> findActiveByPrice(long minPrice, long maxPrice, Sort sort);
+
+    // 단일 게임 조회 (활성 상태만)
+    @Query("SELECT g FROM Game g WHERE g.id = :id AND g.isActive = true")
+    Optional<Game> findByIdAndIsActive(@Param("id") Long id);
 }

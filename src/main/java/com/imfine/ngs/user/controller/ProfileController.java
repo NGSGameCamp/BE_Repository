@@ -1,6 +1,6 @@
 package com.imfine.ngs.user.controller;
 
-import com.imfine.ngs._global.config.security.CustomUserDetails;
+import com.imfine.ngs._global.config.security.jwt.JwtUserPrincipal;
 import com.imfine.ngs.user.dto.request.ProfileRequest;
 import com.imfine.ngs.user.dto.response.ProfileResponse;
 import com.imfine.ngs.user.service.ProfileService;
@@ -17,29 +17,29 @@ public class ProfileController {
 
     private final ProfileService profileService;
 
-    @GetMapping("/{user_id}")
+    @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ProfileResponse> getMyProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.ok(profileService.getProfile(userDetails.getUsername()));
+    public ResponseEntity<ProfileResponse> getMyProfile(@AuthenticationPrincipal JwtUserPrincipal principal) {
+        return ResponseEntity.ok(profileService.getProfileById(principal.getUserId()));
     }
 
-    @GetMapping("/details")
-    public ResponseEntity<ProfileResponse> getUserProfile(@PathVariable String email) {
-        return ResponseEntity.ok(profileService.getProfile(email));
+    @GetMapping("/{userId}")
+    public ResponseEntity<ProfileResponse> getUserProfile(@PathVariable Long userId) {
+        return ResponseEntity.ok(profileService.getProfileById(userId));
     }
 
-    @PutMapping("/edit")
+    @PutMapping("/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> updateProfile(@AuthenticationPrincipal CustomUserDetails userDetails,
+    public ResponseEntity<Void> updateProfile(@AuthenticationPrincipal JwtUserPrincipal principal,
                                               @RequestBody ProfileRequest request) {
-        profileService.updateProfile(userDetails.getUsername(), request);
+        profileService.updateProfileById(principal.getUserId(), request);
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/leave")
+    @DeleteMapping("/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> deleteProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        profileService.deleteUser(userDetails.getUsername());
+    public ResponseEntity<Void> deleteProfile(@AuthenticationPrincipal JwtUserPrincipal principal) {
+        profileService.deleteUserById(principal.getUserId());
         return ResponseEntity.noContent().build();
     }
 
