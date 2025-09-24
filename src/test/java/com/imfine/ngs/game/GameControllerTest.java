@@ -1,5 +1,7 @@
 package com.imfine.ngs.game;
 
+import com.imfine.ngs._global.config.security.jwt.JwtAuthenticationFilter;
+import com.imfine.ngs._global.config.security.jwt.JwtUtil;
 import com.imfine.ngs.game.controller.search.GameSearchController;
 import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.service.search.GameSearchService;
@@ -18,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -45,6 +48,12 @@ public class GameControllerTest {
     private WebContentGenerator webContentGenerator;
     @Autowired
     private GameSearchService gameSearchService;
+
+    @MockitoBean
+    private JwtUtil jwtUtil;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     // setup
     @BeforeEach
@@ -97,8 +106,34 @@ public class GameControllerTest {
     }
 
     // 게임 아이디로 단일 조회
+    @DisplayName("게임 단일 조회 성공 테스트")
+    @Test
+    void findGameByIdSuccess() throws Exception {
+        // given
+        when(gameSearchService.findActiveById(1L)).thenReturn(testGame);
+
+        // when & then
+        mockMvc.perform(get("/api/games/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.name").value("Test Game"))
+                .andExpect(jsonPath("$.price").value(50000L))
+                .andExpect(jsonPath("$.tag").value("Action"))
+                .andExpect(jsonPath("$.active").value(true));
+    }
 
     // 게임 아이디로 단일 조회 실패
+    @DisplayName("존재하지 않는 게임 조회시 404 반환")
+    @Test
+    void findGameByIdNotFound() throws Exception {
+        // given
+        when(gameSearchService.findActiveById(999L))
+                .thenThrow(new IllegalArgumentException("Game not found with id: 999"));
+
+        // when & then
+        mockMvc.perform(get("/api/games/999"))
+                .andExpect(status().isNotFound());
+    }
 
     // 게임 이름으로 조회
 
