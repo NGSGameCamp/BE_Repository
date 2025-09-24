@@ -58,6 +58,7 @@ public class SupportServiceTest {
         Principal principal = Mockito.mock(Principal.class);
 
         //given : 준비
+        // 추후에 변경 필요
         long userId = 1L;
         SupportRequestDto supportRequestDto = SupportRequestDto.builder()
                 .orderId(1L)
