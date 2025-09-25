@@ -79,6 +79,11 @@ server:
 #jwt
 jwt:
   secret : ${JWT_SECRET}
+  cookie:
+    # 현재 개발환경(http)이라서 Lax에 false이지만 나중에 운영환경(https)들어가면 None에 true로 바꿔주면 됩니다.
+    same-site: Lax   # None | Lax | Strict
+    secure: false      # true requires HTTPS for browsers to send the cookie
+    max-age-seconds: 21600  # 6 hours
   
 portone:
   api-secret: ${API_SECRET}

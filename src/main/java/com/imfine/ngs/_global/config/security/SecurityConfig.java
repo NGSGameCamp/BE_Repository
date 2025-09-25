@@ -42,10 +42,6 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
 
-    /* todo: 권한에 따른 접근 권한 설정 하기
-     *  현재 주석 처리 된 부분 활성화하시고 아래코드 주석처리하시면 필터랑 인증 사라집니다. 현재 /auth로 매핑된 로그인/회원가입만 허용되어서 나중에 비회원으로 할 수 있는 내용들 추가 검토 후 추가하겠습니다.
-     */
-
     http
             /*
             .authorizeHttpRequests(auth -> auth
@@ -55,7 +51,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
 //                    .anyRequest().permitAll()
 //                    .anyRequest().authenticated()
-                      .requestMatchers("/api/auth/**", "/api/main").permitAll()
+                      .requestMatchers("/api/auth/**", "/api/main, /login/oauth2/**").permitAll()
                       .requestMatchers(HttpMethod.GET, "/api/u/*", "/api/follow/following/*").permitAll()
                       .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // 스웨거 경로 추가
                       .anyRequest().authenticated()

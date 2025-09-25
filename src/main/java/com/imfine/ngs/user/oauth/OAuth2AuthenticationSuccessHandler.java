@@ -7,6 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -26,6 +27,15 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
     private final JwtUtil jwtUtil;
     private final SocialService socialService;
+
+    @Value("${jwt.cookie.same-site:None}")
+    private String cookieSameSite;
+
+    @Value("${jwt.cookie.secure:true}")
+    private boolean cookieSecure;
+
+    @Value("${jwt.cookie.max-age-seconds:21600}")
+    private long cookieMaxAgeSeconds;
 
     private static String nvl(String s, String d) { return (s == null || s.isBlank()) ? d : s; }
 
@@ -82,20 +92,22 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         User user = socialService.upsertSocialUser(provider, email, name);
         String role = user.getRole() != null ? user.getRole().getRole() : null;
         String token = jwtUtil.generateToken(user.getId(), role);
-        setAuthCookie(response, token, request.isSecure());
+        setAuthCookie(response, token);
         String redirect = successRedirectBase();
         response.setStatus(HttpServletResponse.SC_FOUND);
         response.setHeader("Location", redirect);
     }
 
-    private void setAuthCookie(HttpServletResponse response, String token, boolean secure) {
+    private void setAuthCookie(HttpServletResponse response, String token) {
         StringBuilder cookie = new StringBuilder();
         cookie.append("ACCESS_TOKEN=").append(URLEncoder.encode(token, StandardCharsets.UTF_8));
         cookie.append("; Path=/");
-        cookie.append("; Max-Age=").append(Duration.ofHours(6).toSeconds());
+        cookie.append("; Max-Age=").append(cookieMaxAgeSeconds);
         cookie.append("; HttpOnly");
-        cookie.append("; SameSite=None");
-        if (secure) cookie.append("; Secure");
+        if (cookieSameSite != null && !cookieSameSite.isBlank()) {
+            cookie.append("; SameSite=").append(cookieSameSite);
+        }
+        if (cookieSecure) cookie.append("; Secure");
         response.addHeader("Set-Cookie", cookie.toString());
     }
 
