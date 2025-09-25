@@ -1,5 +1,6 @@
 package com.imfine.ngs.support.service;
 
+import com.imfine.ngs._global.config.security.jwt.JwtUserPrincipal;
 import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.order.entity.Order;
 import com.imfine.ngs.order.entity.OrderDetails;
@@ -9,6 +10,7 @@ import com.imfine.ngs.support.dto.SupportRequestDto;
 import com.imfine.ngs.support.entity.Support;
 import com.imfine.ngs.support.entity.SupportCategory;
 import com.imfine.ngs.support.repository.SupportRepository;
+import io.jsonwebtoken.Jwt;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,8 +29,17 @@ public class SupportService {
     private final OrderService orderService;
     private final OrderDetailsRepository orderDetailsRepository;
 
-    public Support insertSupportRepo(Principal principal, SupportRequestDto requestDto, SupportCategory category) {
-        long userId = 1L;
+    // 추후 세션에서 가져올 예정. 임시로 대체
+    private Long getCurrentUserId(JwtUserPrincipal principal) {
+        if (principal != null) {
+            System.out.println("getUserId : " + principal.getUserId());
+            return principal.getUserId();
+        } else {
+            throw new IllegalArgumentException("principal is null");
+        }
+    }
+
+    public Support insertSupportRepo(long userId, SupportRequestDto requestDto, SupportCategory category) {
 
         return supportRepository.save(Support.builder()
                 .userId(userId)

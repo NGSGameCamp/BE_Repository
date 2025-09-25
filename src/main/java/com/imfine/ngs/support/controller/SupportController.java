@@ -1,5 +1,6 @@
 package com.imfine.ngs.support.controller;
 
+import com.google.api.Authentication;
 import com.imfine.ngs._global.config.security.jwt.JwtUserPrincipal;
 import com.imfine.ngs.support.dto.SupportRequestDto;
 import com.imfine.ngs.support.entity.Support;
@@ -8,6 +9,7 @@ import com.imfine.ngs.support.service.SupportCategoryService;
 import com.imfine.ngs.support.service.SupportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -20,27 +22,15 @@ public class SupportController {
     private final SupportService supportService;
     private final SupportCategoryService supportCategoryService;
 
-    JwtUserPrincipal principal;
-
-    // 추후 세션에서 가져올 예정. 임시로 대체
-    private Long getCurrentUserId(Principal principal) {
-        if (principal != null) {
-            return Long.parseLong(principal.getName());
-        } else {
-            throw new IllegalArgumentException("principal is null");
-        }
-    }
-
     @PostMapping("{category}")
-    public ResponseEntity<Support> createSupportGame(@PathVariable String category, @RequestBody SupportRequestDto support, Principal principal) {
+    public ResponseEntity<Support> createSupportGame(
+            @PathVariable String category, @RequestBody SupportRequestDto support,
+            @AuthenticationPrincipal JwtUserPrincipal principal) {
 
-        System.out.println(support.getTitle());
+        Long userId = principal.getUserId();
         SupportCategory supportCategory = supportCategoryService.findByNameIgnoreCase(category);
-
-        Support result = supportService.insertSupportRepo(principal, support, supportCategory);
+        Support result = supportService.insertSupportRepo(userId, support, supportCategory);
 
         return ResponseEntity.ok(result);
     }
-
-
 }
