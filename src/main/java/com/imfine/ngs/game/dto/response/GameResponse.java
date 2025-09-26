@@ -11,8 +11,6 @@ import lombok.experimental.SuperBuilder;
  */
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @SuperBuilder
 public class GameResponse extends BaseGameResponse {
     // BaseGameResponse의 모든 필드를 상속받음
