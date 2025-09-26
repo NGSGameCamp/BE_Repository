@@ -34,7 +34,10 @@ public class CommunityPostService {
     return postRepository.save(post).getId();
   }
 
-  public Long count() { return postRepository.count(); }
+  public Long count() {
+    return postRepository.count();
+  }
+
   public Long count(Long boardId) {
     // TODO
     Pageable pageable = PageRequest.of(0, 1);
@@ -57,6 +60,7 @@ public class CommunityPostService {
       default -> throw new IllegalArgumentException("권한 잘못됨 에러");
     };
   }
+
   public CommunityPost getPostById(Long postId) {
     CommunityUser tmpUser = CommunityUser.builder()
             .nickname("tmpUser")
@@ -90,13 +94,15 @@ public class CommunityPostService {
         if (!post.getAuthorId().equals(user.getId()))
           throw new IllegalArgumentException("잘못된 접근입니다!");
       }
-      case "MANAGER" -> {}
+      case "MANAGER" -> {
+      }
       default -> throw new IllegalArgumentException("권한 잘못됨 에러");
     }
 
     post.updateIsDeleted(true);
     postRepository.save(post);
   }
+
   public Page<CommunityPost> getPostsWithSearch(CommunityUser user, Long boardId, CommunityPostSearchForm searchForm) {
     CommunityBoard board = boardService.getBoardById(user, boardId);
     SearchType type = searchForm.type;
@@ -114,7 +120,8 @@ public class CommunityPostService {
         }
         yield postRepository.searchKeywordsWithTags(boardId, type.name(), keyword, tags, tags.size(), false, pageable);
       }
-      case "MANAGER" -> postRepository.searchKeywordsWithTags(boardId, type.name(), keyword, tags, tags.size(), true, pageable);
+      case "MANAGER" ->
+              postRepository.searchKeywordsWithTags(boardId, type.name(), keyword, tags, tags.size(), true, pageable);
       default -> throw new IllegalArgumentException("권한 잘못됨 에러");
     };
   }

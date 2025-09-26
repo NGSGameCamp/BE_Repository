@@ -69,7 +69,7 @@ public class CommunityCommentServiceTest {
     for (int i = 0; i < 5; ++i) {
       CommunityBoard board = CommunityBoard.builder()
               .title("This is test board for post test" + i)
-              .gameId((long) (Math.random()*100000))
+              .gameId((long) (Math.random() * 100000))
               .managerId(boardManager.getId())
               .build();
 
@@ -80,11 +80,11 @@ public class CommunityCommentServiceTest {
     }
 
     // 게시글 5개 생성
-    for (int i = 0 ; i < 5; ++i) {
+    for (int i = 0; i < 5; ++i) {
       CommunityPost post = CommunityPost.builder()
               .boardId(boardId)
               .authorId(boardManager.getId())
-              .title("commentTestPost"+1)
+              .title("commentTestPost" + 1)
               .content("this is test post for comment test" + i)
               .build();
 
@@ -94,7 +94,7 @@ public class CommunityCommentServiceTest {
         postId = tmp;
     }
     // 댓글 30개 생성
-    for (int i = 0 ; i < 30; ++i) {
+    for (int i = 0; i < 30; ++i) {
       CommunityComment comment = CommunityComment.builder()
               .postId(postId)
               .authorId(correctUser.getId())
@@ -169,7 +169,7 @@ public class CommunityCommentServiceTest {
     commentService.addComment(wrongUser, comment);
 
     // Then
-    assertThat(commentService.countAll()).isEqualTo(commentCnt+1);
+    assertThat(commentService.countAll()).isEqualTo(commentCnt + 1);
   }
 
   // 댓글 수정 파트
@@ -239,6 +239,7 @@ public class CommunityCommentServiceTest {
     // Then
     assertThat(commentService.getCommentById(boardManager, commentId).getIsDeleted()).isTrue();
   }
+
   // 댓글 조회 파트
   // ============================================================
   @Test
@@ -282,8 +283,9 @@ public class CommunityCommentServiceTest {
     // Then
     assertThat(tmp).isNotNull();
   }
-    // 여러 개 조회
-      //
+
+  // 여러 개 조회
+  //
   @Test
   @DisplayName("원하는 Post의 모든 Comment 가져오게 하기")
   void getCommentsOnSpecificPost() {
@@ -296,7 +298,8 @@ public class CommunityCommentServiceTest {
     // Then
     assertThat(comments).allMatch(comment -> comment.getPostId().equals(post.getId()));
   }
-      //
+
+  //
   @Test
   @DisplayName("원하는 Author의 모든 Comment 가져오게 하기")
   void getCommentsOnSpecificAuthor() {
