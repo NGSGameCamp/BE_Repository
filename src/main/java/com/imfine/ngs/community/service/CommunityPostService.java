@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.imfine.ngs.community.Constants.DEFAULT_PAGE_SIZE;
+
 @Service
 @RequiredArgsConstructor
 public class CommunityPostService {
@@ -39,8 +41,7 @@ public class CommunityPostService {
   }
 
   public Long count(Long boardId) {
-    // TODO
-    Pageable pageable = PageRequest.of(0, 1);
+    Pageable pageable = PageRequest.of(0, DEFAULT_PAGE_SIZE);
     return (long) postRepository.findCommunityPostsByBoardId(boardId, pageable).getContent().size();
   }
 

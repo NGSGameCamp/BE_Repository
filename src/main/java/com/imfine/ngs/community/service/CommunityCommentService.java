@@ -133,8 +133,10 @@ public class CommunityCommentService {
     };
   }
 
+  /* TODO: comment는 page를 어떻게 구현할까?
+   *  프론트에서 알아서 처리하기?
+   */
   public List<CommunityComment> getCommentsByPostId(Long postId) {
-    // TODO
     CommunityUser tmpUser = CommunityUser.builder().build();
 
     return getCommentsByPostId(tmpUser, postId);
