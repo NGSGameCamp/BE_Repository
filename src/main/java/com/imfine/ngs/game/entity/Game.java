@@ -5,8 +5,10 @@ import com.imfine.ngs.game.entity.env.LinkedEnv;
 import com.imfine.ngs.game.entity.env.util.LinkedEnvId;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -34,18 +36,31 @@ public class Game {
     private String name; // 게임 이름
 
     @Column(nullable = false)
-    private Long price; // 게임 가격
+    private BigInteger price; // 게임 가격
 
-//    private String env;
-
-    private String tag;
+    // TODO: GameTag로 변경
+    private String tag; // 게임 태그(ex: 액션, RPG...etc)
 
     @OneToMany(mappedBy = "game")
     private Set<LinkedEnv> env = new HashSet<>(); // 게임 OS
 
-    private boolean isActive;
+    private String thumbnailURL; // 썸네일 이미지 URL
+
+    // TODO: GameStatus 테이블의 id를 가져와야한다. -> private Long gameStatusId
+    private boolean isActive; // gameStatus
+
+    // TODO: Publisher 테이블의 id를 가져와야한다.
+//    private Long publisherId;
+
+    private String introduction; // 게임 소개
+
+    private String spec; // 게임 사양
 
     @CreatedDate
     private LocalDateTime createdAt; // 게임 등록 날짜
+
+    @CreatedDate
+    private LocalDateTime updatedAt; // 게임 업데이트 날짜
+
 }
 
