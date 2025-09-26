@@ -1,14 +1,10 @@
 package com.imfine.ngs.game.entity;
 
-import com.imfine.ngs.game.entity.env.Env;
 import com.imfine.ngs.game.entity.env.LinkedEnv;
-import com.imfine.ngs.game.entity.env.util.LinkedEnvId;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -36,11 +32,12 @@ public class Game {
     private String name; // 게임 이름
 
     @Column(nullable = false)
-    private BigInteger price; // 게임 가격
+    private Long price; // 게임 가격
 
     // TODO: GameTag로 변경
     private String tag; // 게임 태그(ex: 액션, RPG...etc)
 
+    @Builder.Default
     @OneToMany(mappedBy = "game")
     private Set<LinkedEnv> env = new HashSet<>(); // 게임 OS
 
