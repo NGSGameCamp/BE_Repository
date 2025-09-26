@@ -15,17 +15,20 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CommunityBoardService {
   private final CommunityBoardRepository boardRepository;
+
   // Create
   public Long addBoard(CommunityBoard board) {
     return boardRepository.save(board).getId();
   }
 
   // Read
-  public int count() { return (int) boardRepository.count(); }
+  public int count() {
+    return (int) boardRepository.count();
+  }
 
   public CommunityBoard getBoardById(CommunityUser user, Long boardId) {
     String role = user.getRole();
-    return switch(role) {
+    return switch (role) {
       case "USER" -> {
         CommunityBoard board = boardRepository.findById(boardId).orElse(null);
         if (board != null && !board.getIsDeleted())
@@ -41,6 +44,7 @@ public class CommunityBoardService {
       default -> throw new IllegalArgumentException("권한 잘못됨 에러");
     };
   }
+
   /*
    * 이런 식으로 유저를 특정하지 않는 검색이 필요한지 모르겠음........
    *  일단 빼고 생각해보자..
@@ -59,6 +63,7 @@ public class CommunityBoardService {
     Pageable pageable = PageRequest.of(0, 1);
     return getAllBoards(user, pageable);
   }
+
   public Page<CommunityBoard> getAllBoards(CommunityUser user, Pageable pageable) {
     return switch (user.getRole()) {
       case "USER" -> boardRepository.findCommunityBoardsByIsDeletedIsFalse(pageable);
@@ -72,6 +77,7 @@ public class CommunityBoardService {
     Pageable pageable = PageRequest.of(0, 1);
     return getBoardsByKeyword(user, keyword, pageable);
   }
+
   public Page<CommunityBoard> getBoardsByKeyword(CommunityUser user, String keyword, Pageable pageable) {
     return switch (user.getRole()) {
       case "USER" -> boardRepository.findCommunityBoardsByIsDeletedAndTitleContains(false, keyword, pageable);
@@ -112,14 +118,15 @@ public class CommunityBoardService {
         if (!board.getManagerId().equals(user.getId()))
           throw new IllegalArgumentException("수정 권한이 없습니다!");
       }
-      case "MANAGER" -> {}
+      case "MANAGER" -> {
+      }
       default -> throw new IllegalArgumentException("권한 잘못됨 에러");
     }
     board.updateDescription(description);
     boardRepository.save(board);
   }
 
-//  public void setManager(Long boardId, Long fromUserId, Long toUserId) {
+  //  public void setManager(Long boardId, Long fromUserId, Long toUserId) {
 //    CommunityBoard board = getBoardById(boardId);
 //    CommunityUser tmpUser = userRepo.findById(fromUserId).isPresent() ? userRepo.findById(fromUserId).get() : null;
 //    if (board == null)
@@ -139,7 +146,8 @@ public class CommunityBoardService {
         if (!board.getManagerId().equals(user.getId()))
           throw new IllegalArgumentException("수정 권한이 없습니다!");
       }
-      case "MANAGER" -> {}
+      case "MANAGER" -> {
+      }
       default -> throw new IllegalArgumentException("권한 잘못됨 에러");
     }
     board.updateManagerId(newManager.getId());

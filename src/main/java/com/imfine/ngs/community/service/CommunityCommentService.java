@@ -34,7 +34,10 @@ public class CommunityCommentService {
     return commentRepository.save(comment).getId();
   }
 
-  Long countAll() { return commentRepository.count(); }
+  Long countAll() {
+    return commentRepository.count();
+  }
+
   Long count(Long postId) {
     return commentRepository.countByPostId(postId);
   }
@@ -58,6 +61,7 @@ public class CommunityCommentService {
       default -> throw new IllegalArgumentException("권한 잘못됨 에러");
     };
   }
+
   public CommunityComment getCommentById(Long commentId) {
     CommunityUser tmpUser = CommunityUser.builder()
             .nickname("tmpUSer")
@@ -79,7 +83,7 @@ public class CommunityCommentService {
     return commentRepository.save(comment).getId();
   }
 
-//  void deleteComment(Long userId, Long commentId) {
+  //  void deleteComment(Long userId, Long commentId) {
 //    CommunityComment comment = commentRepository.findById(commentId).orElse(null);
 //    CommunityUser tmpUser = userRepo.findById(userId).orElse(null);
 //
@@ -104,7 +108,8 @@ public class CommunityCommentService {
         if (comment.getIsDeleted())
           throw new IllegalArgumentException("유효하지 않은 댓글입니다!");
       }
-      case "MANAGER" -> {}
+      case "MANAGER" -> {
+      }
       default -> throw new IllegalArgumentException("권한 잘못됨 에러");
     }
 
@@ -127,6 +132,7 @@ public class CommunityCommentService {
       default -> throw new IllegalArgumentException("권한 잘못됨 에러");
     };
   }
+
   public List<CommunityComment> getCommentsByPostId(Long postId) {
     // TODO
     CommunityUser tmpUser = CommunityUser.builder().build();

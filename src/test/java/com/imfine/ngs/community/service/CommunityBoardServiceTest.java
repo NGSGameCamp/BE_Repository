@@ -125,7 +125,8 @@ public class CommunityBoardServiceTest {
     assertThatThrownBy(() -> boardService.setDescription(wrongUser, boardId, desc))
             .isInstanceOf(IllegalArgumentException.class);
   }
-    //
+
+  //
   @Test
   @DisplayName("담당자나 관리자가 아닌 사람이 관리자를 변경시키는 경우 에러")
   void changeManagerWithWrongUser() {
@@ -158,7 +159,7 @@ public class CommunityBoardServiceTest {
     assertThat(boardService.getBoardById(manager, boardId).getDescription()).isEqualTo(desc2);
   }
 
-    // 관리자 또는 담당자가 담당자를 변경할 경우엔 변경되어야 함
+  // 관리자 또는 담당자가 담당자를 변경할 경우엔 변경되어야 함
   @Test
   @DisplayName("관리자 또는 담당자가 담당자를 변경할 경우엔 변경되어야 함")
   void changeManagerWithManager() {

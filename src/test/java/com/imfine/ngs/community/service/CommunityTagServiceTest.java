@@ -21,7 +21,7 @@ public class CommunityTagServiceTest {
   private final CommunityTagService tagService;
 
   @Autowired
-  CommunityTagServiceTest (
+  CommunityTagServiceTest(
           CommunityTagService communityTagService
   ) {
     this.tagService = communityTagService;

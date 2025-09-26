@@ -62,25 +62,25 @@ public class CommunityPostServiceTest {
       CommunityBoard board = CommunityBoard.builder()
               .title("This is test board for post test" + i)
               .gameId((long) i)
-              .managerId(i+10L)
+              .managerId(i + 10L)
               .build();
 
       Long tmp = boardService.addBoard(board);
       if (i == 2) {
         boardId = tmp;
         boardManager = CommunityUser.builder()
-                .id(i+10L)
+                .id(i + 10L)
                 .nickname("board manager")
                 .build();
       }
     }
 
     correctUser = CommunityUser.builder()
-            .id((long) (Math.random()*10203212))
+            .id((long) (Math.random() * 10203212))
             .nickname("Right User")
             .build();
     wrongUser = CommunityUser.builder()
-            .id(correctUser.getId()+1)
+            .id(correctUser.getId() + 1)
             .nickname("Wrong User")
             .build();
     // 포스트 생성
@@ -106,6 +106,7 @@ public class CommunityPostServiceTest {
       }
     }
   }
+
   // 게시글 작성 파트
   // ============================================================
   @Test
@@ -163,7 +164,7 @@ public class CommunityPostServiceTest {
     postService.addPost(correctUser, post);
 
     // Then
-    assertThat(postService.count()).isEqualTo(postCnt+1);
+    assertThat(postService.count()).isEqualTo(postCnt + 1);
   }
 
   // 게시글 삭제 파트
@@ -185,6 +186,7 @@ public class CommunityPostServiceTest {
     // Then
     assertThat(postService.getPostById(manager, postId).getIsDeleted()).isTrue();
   }
+
   // 게시글 수정 파트
   // ============================================================
   @Test
@@ -363,7 +365,7 @@ public class CommunityPostServiceTest {
     // Then
     assertThat(result).allMatch(post ->
             post.getContent().contains(keyword)
-            || post.getTitle().contains(keyword)
+                    || post.getTitle().contains(keyword)
     );
   }
 
