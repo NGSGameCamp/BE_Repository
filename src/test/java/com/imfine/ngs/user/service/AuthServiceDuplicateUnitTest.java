@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class AuthServiceEmailDuplicateUnitTest {
+class AuthServiceDuplicateUnitTest {
 
     @Mock private UserRepository userRepository;
     @Mock private UserRoleRepository userRoleRepository;
@@ -41,6 +41,23 @@ class AuthServiceEmailDuplicateUnitTest {
 
         // when/then
         assertThrows(IllegalArgumentException.class, () -> authService.signUp(request));
+    }
+
+    @Test
+    @DisplayName("회원가입 실패 - 닉네임 중복")
+    void signUpFailWhenNicknameDuplicated() {
+        SignUpRequest request = new SignUpRequest();
+        request.setEmail("a@b.com");
+        request.setName("Hun");
+        request.setPwd("1234");
+        request.setPwdCheck("1234");
+        request.setNickname("Hun");
+
+        when(userRepository.existsByNickname("Hun")).thenReturn(true);
+
+        assertThrows(IllegalArgumentException.class, () -> authService.signUp(request));
+
+
     }
 }
 

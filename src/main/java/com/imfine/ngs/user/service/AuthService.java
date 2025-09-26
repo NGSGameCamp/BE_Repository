@@ -29,7 +29,18 @@ public class AuthService {
             throw new IllegalArgumentException("비밀번호 불일치");
         }
 
-        User user = User.create(request.getEmail(), passwordEncoder.encode(request.getPwd()), request.getName(), null);
+        if (request.getNickname() != null && !request.getNickname().isBlank()) {
+            if (userRepository.existsByNickname(request.getNickname())) {
+                throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+            }
+        }
+
+        User user = User.create(
+                request.getEmail(),
+                passwordEncoder.encode(request.getPwd()),
+                request.getName(),
+                request.getNickname()
+        );
         var defaultRole = userRoleRepository.findByRole("USER").orElseThrow();
         var defaultStatus = userStatusRepository.findByName("ACTIVE").orElseThrow();
         user.assignRole(defaultRole);
@@ -40,6 +51,8 @@ public class AuthService {
     public boolean isEmailAvailable(String email) {
         return !userRepository.existsByEmail(email);
     }
+
+    public boolean isNicknameAvailable(String nickname) {return !userRepository.existsByNickname(nickname);}
 
     public SignInResponse signIn(SignInRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
@@ -54,17 +67,21 @@ public class AuthService {
         return new SignInResponse(token, user.getId(), user.getEmail(), user.getNickname());
     }
 
-    public void updatePwd(String email, String oldPwd, String newPwd) {
-        if (oldPwd == null || newPwd == null) {
-            throw new IllegalArgumentException("이전 비밀번호/새로운 비밀번호 미입력");
+    public void updatePwdByUserId(Long userId, String oldPwd, String newPwd) {
+        if (oldPwd == null || oldPwd.isBlank() || newPwd == null || newPwd.isBlank()) {
+            throw new IllegalArgumentException("이전/새 비밀번호를 입력해주세요.");
         }
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디"));
-        if (!user.getPwd().equals(oldPwd)) {
-            throw new IllegalArgumentException("이전 비밀번호와 동일 하지않음");
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자"));
+
+        if (!passwordEncoder.matches(oldPwd, user.getPwd())) {
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+        }
+        if (passwordEncoder.matches(newPwd, user.getPwd())) {
+            throw new IllegalArgumentException("새 비밀번호가 기존 비밀번호와 동일합니다.");
         }
 
-        user.updatePassword(newPwd);
+        user.updatePassword(passwordEncoder.encode(newPwd));
         userRepository.save(user);
     }
 }
