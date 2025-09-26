@@ -10,4 +10,5 @@ public class SignUpRequest {
     private String pwd;
     private String pwdCheck;
     private String name;
+    private String nickname;
 }

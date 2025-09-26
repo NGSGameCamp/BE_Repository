@@ -1,8 +1,10 @@
 package com.imfine.ngs.user.controller;
 
-import com.imfine.ngs._global.config.security.CustomUserDetails;
+import com.imfine.ngs._global.config.security.jwt.JwtUserPrincipal;
 import com.imfine.ngs.user.dto.request.SignInRequest;
 import com.imfine.ngs.user.dto.request.SignUpRequest;
+import com.imfine.ngs.user.dto.response.NicknameAvailabilityResponse;
+import com.imfine.ngs.user.dto.request.UpdatePwdRequest;
 import com.imfine.ngs.user.dto.response.SignInResponse;
 import com.imfine.ngs.user.dto.response.EmailAvailabilityResponse;
 import com.imfine.ngs.user.service.AuthService;
@@ -11,6 +13,8 @@ import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -35,6 +39,23 @@ public class AuthController {
     public ResponseEntity<EmailAvailabilityResponse> checkEmail(@RequestParam("email") @Email String email) {
         boolean available = authService.isEmailAvailable(email);
         return ResponseEntity.ok(new EmailAvailabilityResponse(email, available));
+    }
+
+    @GetMapping("/nickname/check")
+    public ResponseEntity<NicknameAvailabilityResponse> checkNickname(@RequestParam("nickname") String nickname) {
+        boolean available = authService.isNicknameAvailable(nickname);
+        return ResponseEntity.ok(new NicknameAvailabilityResponse(nickname, available));
+    }
+
+    @PutMapping("/updatePwd")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> updatePassword(@AuthenticationPrincipal JwtUserPrincipal principal,
+                                               @RequestBody @Valid UpdatePwdRequest request) {
+        if (request.getNewPwdCheck() != null && !request.getNewPwd().equals(request.getNewPwdCheck())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        authService.updatePwdByUserId(principal.getUserId(), request.getOldPwd(), request.getNewPwd());
+        return ResponseEntity.noContent().build();
     }
 
 }
