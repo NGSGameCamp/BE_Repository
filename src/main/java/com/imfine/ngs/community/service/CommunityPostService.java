@@ -24,7 +24,7 @@ public class CommunityPostService {
   private final CommunityPostRepository postRepository;
   private final CommunityBoardService boardService;
 
-  Long addPost(CommunityUser user, CommunityPost post) {
+  public Long addPost(CommunityUser user, CommunityPost post) {
     CommunityBoard board = boardService.getBoardById(user, post.getBoardId());
 
     if (board == null) throw new IllegalArgumentException("유효하지 않은 보드입니다!");
