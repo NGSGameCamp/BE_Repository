@@ -1,7 +1,11 @@
 package com.imfine.ngs.game.dto.response;
 
+import com.imfine.ngs.game.entity.Game;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 게임 {@link com.imfine.ngs.game.entity.Game} 기본 정보 응답 dto 클래스.
@@ -10,11 +14,9 @@ import lombok.experimental.SuperBuilder;
  * @author chan
  */
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @SuperBuilder
 public class GameResponse extends BaseGameResponse {
     // BaseGameResponse의 모든 필드를 상속받음
     // 추가 필드가 필요한 경우 여기에 정의
+
 }

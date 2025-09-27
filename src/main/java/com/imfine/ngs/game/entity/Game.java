@@ -8,7 +8,6 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -36,7 +35,7 @@ public class Game {
     private String name; // 게임 이름
 
     @Column(nullable = false)
-    private BigInteger price; // 게임 가격
+    private Long price; // 게임 가격
 
     // TODO: GameTag로 변경
     private String tag; // 게임 태그(ex: 액션, RPG...etc)
@@ -44,7 +43,7 @@ public class Game {
     @OneToMany(mappedBy = "game")
     private Set<LinkedEnv> env = new HashSet<>(); // 게임 OS
 
-    private String thumbnailURL; // 썸네일 이미지 URL
+    private String thumbnailUrl; // 썸네일 이미지 URL
 
     // TODO: GameStatus 테이블의 id를 가져와야한다. -> private Long gameStatusId
     private boolean isActive; // gameStatus
@@ -52,7 +51,7 @@ public class Game {
     // TODO: Publisher 테이블의 id를 가져와야한다.
 //    private Long publisherId;
 
-    private String introduction; // 게임 소개
+    private String description; // 게임 설명
 
     private String spec; // 게임 사양
 
