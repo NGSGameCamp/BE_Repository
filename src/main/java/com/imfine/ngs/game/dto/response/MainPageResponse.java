@@ -1,6 +1,7 @@
 package com.imfine.ngs.game.dto.response;
 
 import lombok.*;
+
 import java.util.List;
 
 /**
@@ -9,18 +10,12 @@ import java.util.List;
  * @author chan
  */
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class MainPageResponse {
 
-    private List<GameResponse> popularGames;
-    private List<GameResponse> newGames;
-    private List<GameResponse> recommendedGames;
-    private List<GameResponse> discountedGames;
+    private PagedSectionResponse popularSection; // 인기 게임
+    private PagedSectionResponse newSection; // 신규 게임
+    private PagedSectionResponse recommendedSection; // 추천 게임
+    private PagedSectionResponse discountSection; // 할인 게임
 
-    private int popularCount;
-    private int newCount;
-    private int recommendedCount;
-    private int discountedCount;
 }

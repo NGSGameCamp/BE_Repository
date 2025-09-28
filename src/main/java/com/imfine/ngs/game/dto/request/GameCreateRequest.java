@@ -1,7 +1,6 @@
 package com.imfine.ngs.game.dto.request;
 
 import com.imfine.ngs.game.enums.EnvType;
-import com.imfine.ngs.game.enums.GameTag;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import java.util.Set;
@@ -28,7 +27,7 @@ public class GameCreateRequest {
     private Long price;
 
     @NotNull(message = "게임 태그는 필수입니다")
-    private GameTag tag;
+    private String tag;
 
     @NotEmpty(message = "최소 하나의 환경을 선택해야 합니다")
     private Set<EnvType> environments;
