@@ -3,7 +3,6 @@ package com.imfine.ngs.user.controller;
 import com.imfine.ngs._global.config.security.jwt.JwtUserPrincipal;
 import com.imfine.ngs.user.dto.request.SignInRequest;
 import com.imfine.ngs.user.dto.request.SignUpRequest;
-import com.imfine.ngs.user.dto.response.NicknameAvailabilityResponse;
 import com.imfine.ngs.user.dto.request.UpdatePwdRequest;
 import com.imfine.ngs.user.dto.response.SignInResponse;
 import com.imfine.ngs.user.dto.response.EmailAvailabilityResponse;
@@ -41,11 +40,7 @@ public class AuthController {
         return ResponseEntity.ok(new EmailAvailabilityResponse(email, available));
     }
 
-    @GetMapping("/nickname/check")
-    public ResponseEntity<NicknameAvailabilityResponse> checkNickname(@RequestParam("nickname") String nickname) {
-        boolean available = authService.isNicknameAvailable(nickname);
-        return ResponseEntity.ok(new NicknameAvailabilityResponse(nickname, available));
-    }
+    
 
     @PutMapping("/updatePwd")
     @PreAuthorize("isAuthenticated()")
@@ -54,7 +49,7 @@ public class AuthController {
         if (request.getNewPwdCheck() != null && !request.getNewPwd().equals(request.getNewPwdCheck())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-        authService.updatePwdByUserId(principal.getUserId(), request.getOldPwd(), request.getNewPwd());
+        authService.updatePasswordByUserId(principal.getUserId(), request.getOldPwd(), request.getNewPwd());
         return ResponseEntity.noContent().build();
     }
 
