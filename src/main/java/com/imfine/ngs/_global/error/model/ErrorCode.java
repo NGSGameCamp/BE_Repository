@@ -12,6 +12,7 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C004", "Server Error"),
     INVALID_TYPE_VALUE(HttpStatus.BAD_REQUEST, "C005", " Invalid Type Value"),
     HANDLE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "C006", "Access is Denied"),
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "C007", "Unauthorized"),
 
     // Order
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "Order not found"),
