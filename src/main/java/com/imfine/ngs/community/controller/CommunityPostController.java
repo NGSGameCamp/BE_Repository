@@ -1,14 +1,17 @@
 package com.imfine.ngs.community.controller;
 
 import com.imfine.ngs._global.config.security.jwt.JwtUserPrincipal;
+import com.imfine.ngs.community.controller.mapper.CommunityMapper;
 import com.imfine.ngs.community.dto.CommunityPostSearchForm;
 import com.imfine.ngs.community.dto.CommunityUser;
-import com.imfine.ngs.community.dto.request.CommunityPostCreateRequest;
-import com.imfine.ngs.community.dto.request.CommunityPostUpdateRequest;
+import com.imfine.ngs.community.dto.request.*;
+import com.imfine.ngs.community.dto.response.CommunityBoardCreateResponse;
 import com.imfine.ngs.community.dto.response.CommunityPostResponse;
+import com.imfine.ngs.community.entity.CommunityBoard;
 import com.imfine.ngs.community.entity.CommunityPost;
 import com.imfine.ngs.community.entity.CommunityTag;
 import com.imfine.ngs.community.enums.SearchType;
+import com.imfine.ngs.community.service.CommunityBoardService;
 import com.imfine.ngs.community.service.CommunityPostService;
 import com.imfine.ngs.community.service.CommunityTagService;
 import com.imfine.ngs.user.repository.UserRepository;
@@ -26,188 +29,170 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/community")
 @RequiredArgsConstructor
 public class CommunityPostController {
-
-  private final CommunityPostService communityPostService;
-  private final CommunityTagService communityTagService;
-  private final UserRepository userRepository;
-
-  @PostMapping("/boards/{boardId}/posts")
+  private final CommunityMapper mapper;
+  private final CommunityPostService postService;
+  
+  /**
+   * 게시글을 작성합니다.
+   * @param boardId
+   * @param request
+   * @param principal
+   * @return
+   */
+  @PostMapping("/post/{boardId}/create")
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<CommunityPostResponse> createPost(
-      @PathVariable Long boardId,
-      @RequestBody @Valid CommunityPostCreateRequest request,
-      @AuthenticationPrincipal JwtUserPrincipal principal
+          @PathVariable Long boardId,
+          @RequestBody @Valid CommunityPostCreateRequest request,
+          JwtUserPrincipal principal
   ) {
-    CommunityUser communityUser = requireCommunityUser(principal);
-    List<CommunityTag> tags = resolveTagsForMutation(request.getTags());
+    CommunityUser communityUser = mapper.getCommunityUserOrThrow(principal);
+    List<CommunityTag> tags = mapper.toTagsForMutation(request.getTags());
 
     CommunityPost newPost = CommunityPost.builder()
-        .boardId(boardId)
-        .authorId(communityUser.getId())
-        .title(request.getTitle())
-        .content(request.getContent())
-        .tags(tags)
-        .build();
+            .boardId(boardId)
+            .authorId(communityUser.getId())
+            .title(request.getTitle())
+            .content(request.getContent())
+            .tags(tags)
+            .build();
 
     try {
-      Long createdId = communityPostService.addPost(communityUser, newPost);
-      CommunityPost created = communityPostService.getPostById(communityUser, createdId);
-      return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
+      Long createdId = postService.addPost(communityUser, newPost);
+      CommunityPost created = postService.getPostById(communityUser, createdId);
+      return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toCommunityPostResponse(created));
     } catch (IllegalArgumentException ex) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
     }
   }
 
-  @GetMapping("/posts/{postId}")
-  public ResponseEntity<CommunityPostResponse> getPost(
-      @PathVariable Long postId,
-      @AuthenticationPrincipal JwtUserPrincipal principal
-  ) {
-    CommunityUser communityUser = resolveCommunityUser(principal);
-    try {
-      CommunityPost post = communityPostService.getPostById(communityUser, postId);
-      return ResponseEntity.ok(toResponse(post));
-    } catch (IllegalArgumentException ex) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage(), ex);
-    }
-  }
-
-  @PutMapping("/posts/{postId}")
-  @PreAuthorize("isAuthenticated()")
-  public ResponseEntity<CommunityPostResponse> updatePost(
-      @PathVariable Long postId,
-      @RequestBody @Valid CommunityPostUpdateRequest request,
-      @AuthenticationPrincipal JwtUserPrincipal principal
-  ) {
-    CommunityUser communityUser = requireCommunityUser(principal);
-    List<CommunityTag> tags = resolveTagsForMutation(request.getTags());
-
-    CommunityPost targetPost = CommunityPost.builder()
-        .boardId(null)
-        .authorId(communityUser.getId())
-        .title(request.getTitle())
-        .content(request.getContent())
-        .tags(tags)
-        .build();
-
-    try {
-      Long updatedId = communityPostService.editPost(communityUser, postId, targetPost);
-      CommunityPost updated = communityPostService.getPostById(communityUser, updatedId);
-      return ResponseEntity.ok(toResponse(updated));
-    } catch (IllegalArgumentException ex) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
-    }
-  }
-
-  @DeleteMapping("/posts/{postId}")
-  @PreAuthorize("isAuthenticated()")
-  public ResponseEntity<Void> deletePost(
-      @PathVariable Long postId,
-      @AuthenticationPrincipal JwtUserPrincipal principal
-  ) {
-    CommunityUser communityUser = requireCommunityUser(principal);
-    try {
-      communityPostService.deletePost(communityUser, postId);
-      return ResponseEntity.noContent().build();
-    } catch (IllegalArgumentException ex) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
-    }
-  }
-
-  @GetMapping("/boards/{boardId}/posts")
+  /**
+   * 게시글들을 검색어와 태그에 따라 조회합니다.
+   * @param boardId
+   * @param principal
+   * @param searchType
+   * @param keyword
+   * @param tagNames
+   * @param page
+   * @param size
+   * @return
+   */
+  @GetMapping("/posts/{boardId}/all")
   public ResponseEntity<Page<CommunityPostResponse>> getPosts(
-      @PathVariable Long boardId,
-      @AuthenticationPrincipal JwtUserPrincipal principal,
-      @RequestParam(value = "type", required = false) SearchType searchType,
-      @RequestParam(value = "keyword", required = false) String keyword,
-      @RequestParam(value = "tags", required = false) List<String> tagNames,
-      @RequestParam(value = "page", defaultValue = "0") int page,
-      @RequestParam(value = "size", defaultValue = "20") int size
+          @PathVariable Long boardId,
+          @AuthenticationPrincipal JwtUserPrincipal principal,
+          @RequestParam(value = "type", required = false) SearchType searchType,
+          @RequestParam(value = "keyword", required = false) String keyword,
+          @RequestParam(value = "tags", required = false) List<String> tagNames,
+          @RequestParam(value = "page", defaultValue = "0") int page,
+          @RequestParam(value = "size", defaultValue = "20") int size
   ) {
-    CommunityUser communityUser = resolveCommunityUser(principal);
+    CommunityUser communityUser = mapper.getCommunityUserOrAnonymous(principal);
     Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "created_at");
-    List<CommunityTag> tags = resolveTagsForSearch(tagNames);
+    List<CommunityTag> tags = mapper.toTagsForSearch(tagNames);
 
     CommunityPostSearchForm searchForm = CommunityPostSearchForm.builder()
-        .type(searchType != null ? searchType : SearchType.TITLE_ONLY)
-        .keyword(keyword != null ? keyword : "")
-        .tagList(tags)
-        .pageable(pageable)
-        .build();
+            .type(searchType != null ? searchType : SearchType.TITLE_ONLY)
+            .keyword(keyword != null ? keyword : "")
+            .tagList(tags)
+            .pageable(pageable)
+            .build();
 
     try {
-      Page<CommunityPost> posts = communityPostService.getPostsWithSearch(communityUser, boardId, searchForm);
-      Page<CommunityPostResponse> response = posts.map(this::toResponse);
+      Page<CommunityPost> posts = postService.getPostsWithSearch(communityUser, boardId, searchForm);
+      Page<CommunityPostResponse> response = posts.map(mapper::toCommunityPostResponse);
       return ResponseEntity.ok(response);
     } catch (IllegalArgumentException ex) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
     }
   }
 
-  private CommunityPostResponse toResponse(CommunityPost post) {
-    CommunityUser author = resolveAuthor(post.getAuthorId());
-    return CommunityPostResponse.from(post, author);
-  }
-
-  private CommunityUser resolveCommunityUser(JwtUserPrincipal principal) {
-    if (principal == null) {
-      return CommunityUser.builder().role("USER").build();
+  /**
+   * 단일 게시글을 조회합니다.
+   * @param postId
+   * @param principal
+   * @return
+   */
+  @GetMapping("/posts/{postId}")
+  public ResponseEntity<CommunityPostResponse> getPost(
+      @PathVariable Long postId,
+      @AuthenticationPrincipal JwtUserPrincipal principal
+  ) {
+    CommunityUser communityUser = mapper.getCommunityUserOrAnonymous(principal);
+    try {
+      CommunityPost post = postService.getPostById(communityUser, postId);
+      return ResponseEntity.ok(mapper.toCommunityPostResponse(post));
+    } catch (IllegalArgumentException ex) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage(), ex);
     }
-
-    return userRepository.findById(principal.getUserId())
-        .map(CommunityUser::getInstance)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "사용자를 찾을 수 없습니다."));
   }
 
-  private CommunityUser resolveAuthor(Long authorId) {
-    return userRepository.findById(authorId)
-        .map(CommunityUser::getInstance)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "작성자를 찾을 수 없습니다."));
-  }
+  /**
+   * 게시글을 수정합니다.
+   * @param postId
+   * @param request
+   * @param principal
+   * @return
+   */
+  @PutMapping("/posts/edit/{postId}")
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<Void> updatePost(
+      @PathVariable Long postId,
+      @RequestBody @Valid CommunityPostUpdateRequest request,
+      @AuthenticationPrincipal JwtUserPrincipal principal
+  ) {
+    CommunityUser communityUser = mapper.getCommunityUserOrThrow(principal);
+    List<CommunityTag> tags = mapper.toTagsForMutation(request.getTags());
 
-  private CommunityUser requireCommunityUser(JwtUserPrincipal principal) {
-    if (principal == null) {
-      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증이 필요합니다.");
+    CommunityPost targetPost = CommunityPost.builder()
+        .boardId(request.getBoardId())
+        .authorId(communityUser.getId())
+        .title(request.getTitle())
+        .content(request.getContent())
+        .tags(tags)
+        .build();
+
+    try {
+      postService.editPost(communityUser, postId, targetPost);
+      return ResponseEntity.noContent().build();
+    } catch (IllegalArgumentException ex) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
     }
-    return resolveCommunityUser(principal);
   }
 
-  private List<CommunityTag> resolveTagsForMutation(List<String> tagNames) {
-    if (tagNames == null || tagNames.isEmpty()) {
-      return Collections.emptyList();
+  /**
+   * 게시글을 제거합니다.
+   * @param postId
+   * @param principal
+   * @return
+   */
+  @DeleteMapping("/posts/delete/{postId}")
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<Void> deletePost(
+      @PathVariable Long postId,
+      @AuthenticationPrincipal JwtUserPrincipal principal
+  ) {
+    CommunityUser communityUser = mapper.getCommunityUserOrThrow(principal);
+    try {
+      postService.deletePost(communityUser, postId);
+      return ResponseEntity.noContent().build();
+    } catch (IllegalArgumentException ex) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
     }
-
-    return tagNames.stream()
-        .filter(StringUtils::hasText)
-        .map(String::trim)
-        .map(communityTagService::getTagByName)
-        .collect(Collectors.toList());
   }
 
-  private List<CommunityTag> resolveTagsForSearch(List<String> tagNames) {
-    if (tagNames == null || tagNames.isEmpty()) {
-      return Collections.emptyList();
-    }
+  // =======================
+  // ======== Tags ========
+  // =======================
 
-    return tagNames.stream()
-        .filter(StringUtils::hasText)
-        .map(String::trim)
-        .map(name -> CommunityTag.builder().name(name).build())
-        .collect(Collectors.toList());
-  }
+  // TODO: 유사한 태그 조회
+
+  // TODO: 태그 있는지 조회
 }

@@ -176,14 +176,16 @@ class CommunityPostControllerTest {
     when(communityPostService.editPost(any(), eq(99L), any())).thenReturn(99L);
     when(communityPostService.getPostById(any(), eq(99L))).thenReturn(updatedPost);
 
-    ResponseEntity<CommunityPostResponse> response =
+    ResponseEntity<Void> response =
         communityPostController.updatePost(99L, request, principal);
 
+    CommunityPost result = communityPostService.getPostById(updatedPost.getId());
+
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    assertThat(response.getBody()).isNotNull();
-    assertThat(response.getBody().getContent()).isEqualTo("New content");
-    assertThat(response.getBody().getAuthor().getId()).isEqualTo(mockUser.getId());
-    assertThat(response.getBody().getTags()).containsExactlyInAnyOrder("tag-1", "tag-2");
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).isEqualTo("New content");
+    assertThat(result.getAuthorId()).isEqualTo(mockUser.getId());
+    assertThat(result.getTags().toArray()).containsExactlyInAnyOrder("tag-1", "tag-2");
   }
 
   @Test
@@ -210,7 +212,7 @@ class CommunityPostControllerTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(response.getBody()).isNotNull();
     assertThat(response.getBody().getContent()).hasSize(1);
-    CommunityPostResponse body = response.getBody().getContent().get(0);
+    CommunityPostResponse body = response.getBody().getContent().getFirst();
     assertThat(body.getId()).isEqualTo(44L);
     assertThat(body.getAuthor()).isNotNull();
     assertThat(body.getAuthor().getId()).isEqualTo(mockUser.getId());
