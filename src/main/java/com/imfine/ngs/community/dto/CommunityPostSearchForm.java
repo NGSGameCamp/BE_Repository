@@ -10,6 +10,8 @@ import org.springframework.data.domain.Sort;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.imfine.ngs.community.Constants.DEFAULT_PAGE_SIZE;
+
 @Builder
 public class CommunityPostSearchForm {
   @Builder.Default
@@ -19,5 +21,5 @@ public class CommunityPostSearchForm {
   @Builder.Default
   public final List<CommunityTag> tagList = new ArrayList<>();
   @Builder.Default
-  public final Pageable pageable = PageRequest.of(0, 30, Sort.Direction.DESC, "created_at");
+  public final Pageable pageable = PageRequest.of(0, DEFAULT_PAGE_SIZE, Sort.Direction.DESC, "created_at");
 }

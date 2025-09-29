@@ -9,7 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import static com.imfine.ngs.community.Constants.*;
 
 @Service
 @RequiredArgsConstructor
@@ -45,11 +45,6 @@ public class CommunityBoardService {
     };
   }
 
-  /*
-   * 이런 식으로 유저를 특정하지 않는 검색이 필요한지 모르겠음........
-   *  일단 빼고 생각해보자..
-   *    -> 필요하네..
-   */
   public CommunityBoard getBoardById(Long boardId) {
     // 가라 유저
     CommunityUser tmpUser = CommunityUser.builder()
@@ -58,11 +53,10 @@ public class CommunityBoardService {
     return getBoardById(tmpUser, boardId);
   }
 
-  public Page<CommunityBoard> getAllBoards(CommunityUser user) {
-    // TODO
-    Pageable pageable = PageRequest.of(0, 1);
-    return getAllBoards(user, pageable);
-  }
+//  public Page<CommunityBoard> getAllBoards(CommunityUser user) {
+//    Pageable pageable = PageRequest.of(0, DEFAULT_PAGE_SIZE);
+//    return getAllBoards(user, pageable);
+//  }
 
   public Page<CommunityBoard> getAllBoards(CommunityUser user, Pageable pageable) {
     return switch (user.getRole()) {
@@ -73,8 +67,7 @@ public class CommunityBoardService {
   }
 
   public Page<CommunityBoard> getBoardsByKeyword(CommunityUser user, String keyword) {
-    // TODO
-    Pageable pageable = PageRequest.of(0, 1);
+    Pageable pageable = PageRequest.of(0, DEFAULT_PAGE_SIZE);
     return getBoardsByKeyword(user, keyword, pageable);
   }
 

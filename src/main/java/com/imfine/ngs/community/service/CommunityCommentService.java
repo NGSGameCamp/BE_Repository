@@ -22,7 +22,7 @@ public class CommunityCommentService {
   private final CommunityPostService postService;
   private final CommunityBoardService boardService;
 
-  Long addComment(CommunityUser user, CommunityComment comment) {
+  public Long addComment(CommunityUser user, CommunityComment comment) {
     if (comment.getContent() == null || comment.getContent().isBlank())
       throw new IllegalArgumentException("내용이 없습니다!");
     if (postService.getPostById(user, comment.getPostId()) == null)
@@ -34,11 +34,11 @@ public class CommunityCommentService {
     return commentRepository.save(comment).getId();
   }
 
-  Long countAll() {
+  public Long countAll() {
     return commentRepository.count();
   }
 
-  Long count(Long postId) {
+  public Long count(Long postId) {
     return commentRepository.countByPostId(postId);
   }
 
@@ -93,7 +93,7 @@ public class CommunityCommentService {
 //      commentRepository.save(comment);
 //    }
 //  }
-  void deleteComment(CommunityUser user, Long commentId) {
+  public void deleteComment(CommunityUser user, Long commentId) {
     CommunityComment comment = getCommentById(user, commentId);
     if (comment == null) throw new IllegalArgumentException("유효하지 않은 댓글입니다!");
 
@@ -133,16 +133,18 @@ public class CommunityCommentService {
     };
   }
 
+  /* TODO: comment는 page를 어떻게 구현할까?
+   *  프론트에서 알아서 처리하기?
+   */
   public List<CommunityComment> getCommentsByPostId(Long postId) {
-    // TODO
     CommunityUser tmpUser = CommunityUser.builder().build();
 
     return getCommentsByPostId(tmpUser, postId);
   }
 
 
-  public Page<CommunityComment> getCommentsByAuthorId(Long userId) {
-    Pageable pageable = PageRequest.of(0, 1, Sort.Direction.DESC, "createdAt");
+  public Page<CommunityComment> getCommentsByAuthorId(Long userId, int page, int size) {
+    Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
     return commentRepository.findCommunityCommentsByAuthorId(userId, pageable);
   }
 }

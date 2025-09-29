@@ -18,13 +18,11 @@ public class CommunityUser {
   @Builder.Default
   private String role = "USER";
 
-  private CommunityUser getInstance(User user) {
+  public static CommunityUser of(User user) {
     return CommunityUser.builder()
             .id(user.getId())
             .nickname(user.getName())
             .role(user.getRole().getRole())
             .build();
   }
-
-
 }

@@ -65,5 +65,4 @@ public interface GameRepository extends JpaRepository<Game, Long> {
 
     // 신작 게임 조회 (특정 날짜 이후 생성된 활성 게임)
     Page<Game> findByGameStatusAndCreatedAtAfter(GameStatusType gameStatus, LocalDateTime date, Pageable pageable);
-
 }

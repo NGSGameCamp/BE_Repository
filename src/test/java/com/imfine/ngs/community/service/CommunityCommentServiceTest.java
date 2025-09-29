@@ -304,7 +304,7 @@ public class CommunityCommentServiceTest {
   @DisplayName("원하는 Author의 모든 Comment 가져오게 하기")
   void getCommentsOnSpecificAuthor() {
     // When
-    List<CommunityComment> comments = commentService.getCommentsByAuthorId(correctUser.getId()).getContent();
+    List<CommunityComment> comments = commentService.getCommentsByAuthorId(correctUser.getId(), 0, 100).getContent();
 
     // Then
     assertThat(comments).allMatch(comment -> comment.getAuthorId().equals(correctUser.getId()));
