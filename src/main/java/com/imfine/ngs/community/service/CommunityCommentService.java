@@ -22,7 +22,7 @@ public class CommunityCommentService {
   private final CommunityPostService postService;
   private final CommunityBoardService boardService;
 
-  Long addComment(CommunityUser user, CommunityComment comment) {
+  public Long addComment(CommunityUser user, CommunityComment comment) {
     if (comment.getContent() == null || comment.getContent().isBlank())
       throw new IllegalArgumentException("내용이 없습니다!");
     if (postService.getPostById(user, comment.getPostId()) == null)
@@ -34,11 +34,11 @@ public class CommunityCommentService {
     return commentRepository.save(comment).getId();
   }
 
-  Long countAll() {
+  public Long countAll() {
     return commentRepository.count();
   }
 
-  Long count(Long postId) {
+  public Long count(Long postId) {
     return commentRepository.countByPostId(postId);
   }
 

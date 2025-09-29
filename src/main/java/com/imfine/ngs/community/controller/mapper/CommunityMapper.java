@@ -3,8 +3,10 @@ package com.imfine.ngs.community.controller.mapper;
 import com.imfine.ngs._global.config.security.jwt.JwtUserPrincipal;
 import com.imfine.ngs.community.dto.CommunityUser;
 import com.imfine.ngs.community.dto.request.CommunityBoardCreateRequest;
+import com.imfine.ngs.community.dto.request.CommunityCommentRequest;
 import com.imfine.ngs.community.dto.response.CommunityPostResponse;
 import com.imfine.ngs.community.entity.CommunityBoard;
+import com.imfine.ngs.community.entity.CommunityComment;
 import com.imfine.ngs.community.entity.CommunityPost;
 import com.imfine.ngs.community.entity.CommunityTag;
 import com.imfine.ngs.community.service.CommunityTagService;
@@ -101,5 +103,11 @@ public class CommunityMapper {
             .filter(StringUtils::hasText)
             .map(String::trim)
             .collect(Collectors.toList());
+  }
+
+  // TODO: request -> Community Comment
+  public CommunityComment toCommunityComment(CommunityCommentRequest request) {
+
+    return null;
   }
 }

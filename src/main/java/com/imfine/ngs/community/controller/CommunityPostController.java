@@ -5,20 +5,13 @@ import com.imfine.ngs.community.controller.mapper.CommunityMapper;
 import com.imfine.ngs.community.dto.CommunityPostSearchForm;
 import com.imfine.ngs.community.dto.CommunityUser;
 import com.imfine.ngs.community.dto.request.*;
-import com.imfine.ngs.community.dto.response.CommunityBoardCreateResponse;
 import com.imfine.ngs.community.dto.response.CommunityPostResponse;
-import com.imfine.ngs.community.entity.CommunityBoard;
 import com.imfine.ngs.community.entity.CommunityPost;
 import com.imfine.ngs.community.entity.CommunityTag;
 import com.imfine.ngs.community.enums.SearchType;
-import com.imfine.ngs.community.service.CommunityBoardService;
 import com.imfine.ngs.community.service.CommunityPostService;
-import com.imfine.ngs.community.service.CommunityTagService;
-import com.imfine.ngs.user.repository.UserRepository;
 import jakarta.validation.Valid;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,7 +21,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -38,7 +30,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class CommunityPostController {
   private final CommunityMapper mapper;
   private final CommunityPostService postService;
-  
+
   /**
    * 게시글을 작성합니다.
    * @param boardId
@@ -51,7 +43,7 @@ public class CommunityPostController {
   public ResponseEntity<CommunityPostResponse> createPost(
           @PathVariable Long boardId,
           @RequestBody @Valid CommunityPostCreateRequest request,
-          JwtUserPrincipal principal
+          @AuthenticationPrincipal JwtUserPrincipal principal
   ) {
     CommunityUser communityUser = mapper.getCommunityUserOrThrow(principal);
     List<CommunityTag> tags = mapper.toTagsForMutation(request.getTags());

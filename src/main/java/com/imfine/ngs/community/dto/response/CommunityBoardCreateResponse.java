@@ -4,5 +4,5 @@ import lombok.Builder;
 
 @Builder
 public class CommunityBoardCreateResponse {
-  Long boardId;
+  private Long boardId;
 }
