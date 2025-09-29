@@ -1,7 +1,7 @@
 //package com.imfine.ngs.publisher;
 //
 //import com.imfine.ngs.game.entity.Game;
-//import com.imfine.ngs.game.entity.GameNotice;
+//import com.imfine.ngs.game.entity.notice.GameNotice;
 //import com.imfine.ngs.game.entity.env.Env;
 //import com.imfine.ngs.game.entity.env.LinkedEnv;
 //import com.imfine.ngs.game.entity.env.util.LinkedEnvId;

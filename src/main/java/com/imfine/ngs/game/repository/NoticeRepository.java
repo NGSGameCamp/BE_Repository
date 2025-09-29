@@ -1,6 +1,6 @@
 package com.imfine.ngs.game.repository;
 
-import com.imfine.ngs.game.entity.GameNotice;
+import com.imfine.ngs.game.entity.notice.GameNotice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

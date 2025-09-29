@@ -1,14 +1,14 @@
 package com.imfine.ngs.game.entity;
 
-import com.imfine.ngs.game.entity.env.Env;
+import com.imfine.ngs.game.entity.bundle.BundleGameList;
+import com.imfine.ngs.game.entity.discount.SingleGameDiscount;
 import com.imfine.ngs.game.entity.env.LinkedEnv;
-import com.imfine.ngs.game.entity.env.util.LinkedEnvId;
+import com.imfine.ngs.game.entity.notice.GameNotice;
+import com.imfine.ngs.game.entity.review.Review;
 import com.imfine.ngs.game.entity.tag.LinkedTag;
 import com.imfine.ngs.game.enums.GameStatusType;
 import jakarta.persistence.*;
 import lombok.*;
-import org.apache.http.client.UserTokenHandler;
-import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
@@ -19,7 +19,6 @@ import java.util.Set;
 
 /**
  * 게임({@link Game}) 엔티티 클래스.
- * 현재는 테스트코드를 위해 간소화 된 상태이다.
  *
  * @author chan
  */
@@ -65,6 +64,18 @@ public class Game {
 
     @CreatedDate
     private LocalDateTime updatedAt; // 게임 업데이트 날짜
+
+    @OneToMany(mappedBy = "game")
+    private Set<BundleGameList> bundles = new HashSet<>(); // 번들 관계
+
+    @OneToMany(mappedBy = "game")
+    private List<SingleGameDiscount> discounts = new ArrayList<>(); // 할인 정보
+
+    @OneToMany(mappedBy = "game")
+    private List<Review> reviews = new ArrayList<>(); // 리뷰
+
+    @OneToMany(mappedBy = "game")
+    private List<GameNotice> notices = new ArrayList<>(); // 공지사항
 
 }
 
