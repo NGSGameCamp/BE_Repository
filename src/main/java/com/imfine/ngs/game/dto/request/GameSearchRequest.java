@@ -1,5 +1,7 @@
 package com.imfine.ngs.game.dto.request;
 
+import com.imfine.ngs.game.entity.Game;
+import com.imfine.ngs.game.enums.GameTagType;
 import com.imfine.ngs.game.enums.SortType;
 import com.imfine.ngs.game.validation.ValidPriceRange;
 import jakarta.validation.constraints.*;
@@ -28,8 +30,7 @@ public class GameSearchRequest {
     /**
      * 게임 태그 (장르)
      */
-    @Pattern(regexp = "^[A-Z_]+$", message = "태그는 대문자와 언더스코어만 허용됩니다")
-    private String tag;
+    private GameTagType tag;
 
     /**
      * 최소 가격

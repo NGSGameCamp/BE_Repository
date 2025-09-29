@@ -1,10 +1,13 @@
 package com.imfine.ngs.game.dto.response.util;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.imfine.ngs.game.dto.response.GameTagResponse;
+import com.imfine.ngs.game.enums.GameStatusType;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 /**
  * 게임 응답 DTO의 기본 클래스.
@@ -22,8 +25,8 @@ public abstract class BaseGameResponse {
     protected Long id;
     protected String name;
     protected Long price;
-    protected String tag;
-    protected boolean isActive;
+    protected Set<GameTagResponse> tags;
+    protected GameStatusType gameStatus;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     protected LocalDateTime createdAt;

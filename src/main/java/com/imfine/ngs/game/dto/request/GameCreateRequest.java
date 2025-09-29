@@ -1,8 +1,11 @@
 package com.imfine.ngs.game.dto.request;
 
 import com.imfine.ngs.game.enums.EnvType;
+import com.imfine.ngs.game.enums.GameStatusType;
+import com.imfine.ngs.game.enums.GameTagType;
 import jakarta.validation.constraints.*;
 import lombok.*;
+
 import java.util.Set;
 
 /**
@@ -26,16 +29,19 @@ public class GameCreateRequest {
     @Max(value = 1000000, message = "가격은 1,000,000원 이하여야 합니다")
     private Long price;
 
-    @NotNull(message = "게임 태그는 필수입니다")
-    private String tag;
+    @NotEmpty(message = "최소 하나의 게임 태그를 선택해야 합니다")
+    private Set<GameTagType> tags;
 
     @NotEmpty(message = "최소 하나의 환경을 선택해야 합니다")
     private Set<EnvType> environments;
+
+    @Builder.Default
+    private GameStatusType gameStatus = GameStatusType.ACTIVE;
 
     @Size(max = 2000, message = "설명은 2000자를 초과할 수 없습니다")
     private String description;
 
     @Pattern(regexp = "^(https?://)?.+\\.(jpg|jpeg|png|gif|webp)$",
-             message = "유효한 이미지 URL을 입력해주세요")
+            message = "유효한 이미지 URL을 입력해주세요")
     private String thumbnailUrl;
 }

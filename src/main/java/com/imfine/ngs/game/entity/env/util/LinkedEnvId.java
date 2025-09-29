@@ -12,7 +12,6 @@ import java.util.Objects;
  * {@link LinkedEnv}의 복합키
  */
 @Getter
-@Setter
 @Embeddable
 public class LinkedEnvId implements Serializable {
 

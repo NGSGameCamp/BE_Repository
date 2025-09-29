@@ -24,13 +24,14 @@ public class GameSummaryResponse extends BaseGameResponse {
      */
     private int environmentCount;
 
+    private int tagCount;
     /**
      * 간단한 게임 정보 표시용 문자열
      *
      * @return 게임 요약 정보
      */
     public String getSummary() {
-        return String.format("[%d] %s - %s (%d개 플랫폼)",
-                id, name, getFormattedPrice(), environmentCount);
+        return String.format("[%d] %s - %s (%d개 플랫폼, %d개 태그)",
+                id, name, getFormattedPrice(), environmentCount, tagCount);
     }
 }
