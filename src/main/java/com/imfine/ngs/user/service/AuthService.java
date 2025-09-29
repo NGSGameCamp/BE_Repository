@@ -1,6 +1,8 @@
 package com.imfine.ngs.user.service;
 
 import com.imfine.ngs._global.config.security.jwt.JwtUtil;
+import com.imfine.ngs._global.error.exception.BusinessException;
+import com.imfine.ngs._global.error.model.ErrorCode;
 import com.imfine.ngs.user.dto.request.SignInRequest;
 import com.imfine.ngs.user.dto.request.SignUpRequest;
 import com.imfine.ngs.user.dto.response.SignInResponse;
@@ -22,16 +24,27 @@ public class AuthService {
 
 
     public void signUp(SignUpRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+        final String email = request.getEmail().trim();
+        final String name = request.getName().trim();
+        final String nickname = request.getNickname() == null ? null : request.getNickname().trim();
+
+        if (userRepository.existsByEmail(email)) {
+            throw new BusinessException(ErrorCode.USER_EMAIL_DUPLICATE);
         }
         if (!request.getPwd().equals(request.getPwdCheck())) {
-            throw new IllegalArgumentException("비밀번호 불일치");
+            throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
         }
 
-        User user = User.create(request.getEmail(), passwordEncoder.encode(request.getPwd()), request.getName(), null);
-        var defaultRole = userRoleRepository.findByRole("USER").orElseThrow();
-        var defaultStatus = userStatusRepository.findByName("ACTIVE").orElseThrow();
+        User user = User.create(
+                email,
+                passwordEncoder.encode(request.getPwd()),
+                name,
+                nickname
+        );
+        var defaultRole = userRoleRepository.findByRole("USER")
+                .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_NOT_FOUND));
+        var defaultStatus = userStatusRepository.findByName("ACTIVE")
+                .orElseThrow(() -> new BusinessException(ErrorCode.STATUS_NOT_FOUND));
         user.assignRole(defaultRole);
         user.assignStatus(defaultStatus);
         userRepository.save(user);
@@ -42,11 +55,12 @@ public class AuthService {
     }
 
     public SignInResponse signIn(SignInRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        final String email = request.getEmail().trim();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_INVALID_CREDENTIALS));
 
         if (!passwordEncoder.matches(request.getPwd(), user.getPwd())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new BusinessException(ErrorCode.AUTH_INVALID_CREDENTIALS);
         }
 
         String role = user.getRole() != null ? user.getRole().getRole() : null;
@@ -54,17 +68,21 @@ public class AuthService {
         return new SignInResponse(token, user.getId(), user.getEmail(), user.getNickname());
     }
 
-    public void updatePwd(String email, String oldPwd, String newPwd) {
-        if (oldPwd == null || newPwd == null) {
-            throw new IllegalArgumentException("이전 비밀번호/새로운 비밀번호 미입력");
+    public void updatePasswordByUserId(Long userId, String oldPwd, String newPwd) {
+        if (oldPwd == null || oldPwd.isBlank() || newPwd == null || newPwd.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디"));
-        if (!user.getPwd().equals(oldPwd)) {
-            throw new IllegalArgumentException("이전 비밀번호와 동일 하지않음");
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ENTITY_NOT_FOUND));
+
+        if (!passwordEncoder.matches(oldPwd, user.getPwd())) {
+            throw new BusinessException(ErrorCode.AUTH_INVALID_CREDENTIALS);
+        }
+        if (passwordEncoder.matches(newPwd, user.getPwd())) {
+            throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
         }
 
-        user.updatePassword(newPwd);
+        user.updatePassword(passwordEncoder.encode(newPwd));
         userRepository.save(user);
     }
 }

@@ -7,6 +7,8 @@ import com.imfine.ngs.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.imfine.ngs._global.error.exception.BusinessException;
+import com.imfine.ngs._global.error.model.ErrorCode;
 
 @Service
 @RequiredArgsConstructor
@@ -17,7 +19,7 @@ public class ProfileService {
 
     public void updateProfile(String email, ProfileRequest request) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ENTITY_NOT_FOUND));
 
         if (request.getNickname() != null) {
             user.updateNickname(request.getNickname());
@@ -36,7 +38,7 @@ public class ProfileService {
 
     public ProfileResponse getProfile(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ENTITY_NOT_FOUND));
 
         return ProfileResponse.builder()
                 .email(user.getEmail())
@@ -49,7 +51,7 @@ public class ProfileService {
 
     public void deleteUser(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ENTITY_NOT_FOUND));
 
         userRepository.delete(user);
     }
@@ -57,7 +59,7 @@ public class ProfileService {
     // id 기반 메서드 (JWT principal과 사용)
     public ProfileResponse getProfileById(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ENTITY_NOT_FOUND));
         return ProfileResponse.builder()
                 .email(user.getEmail())
                 .name(user.getName())
@@ -69,7 +71,7 @@ public class ProfileService {
 
     public void updateProfileById(Long userId, ProfileRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ENTITY_NOT_FOUND));
 
         if (request.getNickname() != null) {
             user.updateNickname(request.getNickname());
