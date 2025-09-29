@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Value;
+import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -23,6 +25,15 @@ public class AuthController {
 
     private final AuthService authService;
 
+    @Value("${jwt.cookie.same-site}")
+    private String cookieSameSite;
+
+    @Value("${jwt.cookie.secure}")
+    private boolean cookieSecure;
+
+    @Value("${jwt.cookie.max-age-seconds}")
+    private long cookieMaxAgeSeconds;
+
     @PostMapping("/signup")
     public ResponseEntity<Void> signUp(@RequestBody @Valid SignUpRequest request) {
         authService.signUp(request);
@@ -30,8 +41,20 @@ public class AuthController {
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<SignInResponse> signIn(@RequestBody @Valid SignInRequest request) {
-        return ResponseEntity.ok(authService.signIn(request));
+    public ResponseEntity<SignInResponse> signIn(@RequestBody @Valid SignInRequest request, HttpServletResponse response) {
+        SignInResponse body = authService.signIn(request);
+        // Issue HttpOnly cookie as well (header auth still supported and takes precedence)
+        StringBuilder cookie = new StringBuilder();
+        cookie.append("ACCESS_TOKEN=").append(body.getAccessToken());
+        cookie.append("; Path=/");
+        cookie.append("; Max-Age=").append(cookieMaxAgeSeconds);
+        cookie.append("; HttpOnly");
+        if (cookieSameSite != null && !cookieSameSite.isBlank()) {
+            cookie.append("; SameSite=").append(cookieSameSite);
+        }
+        if (cookieSecure) cookie.append("; Secure");
+        response.addHeader("Set-Cookie", cookie.toString());
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping("/email/check")

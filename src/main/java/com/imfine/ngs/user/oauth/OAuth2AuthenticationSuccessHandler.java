@@ -16,9 +16,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
+ 
 import java.util.Map;
 
 @Component
@@ -28,13 +26,13 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     private final JwtUtil jwtUtil;
     private final SocialService socialService;
 
-    @Value("${jwt.cookie.same-site:None}")
+    @Value("${jwt.cookie.same-site}")
     private String cookieSameSite;
 
-    @Value("${jwt.cookie.secure:true}")
+    @Value("${jwt.cookie.secure}")
     private boolean cookieSecure;
 
-    @Value("${jwt.cookie.max-age-seconds:21600}")
+    @Value("${jwt.cookie.max-age-seconds}")
     private long cookieMaxAgeSeconds;
 
     private static String nvl(String s, String d) { return (s == null || s.isBlank()) ? d : s; }
@@ -100,7 +98,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
     private void setAuthCookie(HttpServletResponse response, String token) {
         StringBuilder cookie = new StringBuilder();
-        cookie.append("ACCESS_TOKEN=").append(URLEncoder.encode(token, StandardCharsets.UTF_8));
+        cookie.append("ACCESS_TOKEN=").append(token);
         cookie.append("; Path=/");
         cookie.append("; Max-Age=").append(cookieMaxAgeSeconds);
         cookie.append("; HttpOnly");
@@ -112,6 +110,6 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     }
 
     private String successRedirectBase() {
-        return System.getenv().getOrDefault("OAUTH2_REDIRECT_URL", "http://localhost:3000/auth/callback");
+        return System.getenv().getOrDefault("OAUTH2_REDIRECT_URL", "http://localhost:3000/");
     }
 }
