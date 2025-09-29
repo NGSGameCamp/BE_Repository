@@ -1,5 +1,6 @@
 package com.imfine.ngs.game.dto.response;
 
+import com.imfine.ngs.game.dto.response.util.BaseGameResponse;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 

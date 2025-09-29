@@ -37,7 +37,6 @@ public interface GameRepository extends JpaRepository<Game, Long> {
     @Query("SELECT g FROM Game g WHERE g.isActive = true AND g.tag = :tag")
     Page<Game> findActiveByTag(@Param("tag") String tag, Pageable pageable);
 
-    // TODO: String env를 EnvType
     // 게임 env로 조회
     @Query("SELECT DISTINCT g FROM Game g " +
             "JOIN g.env le " +
@@ -63,19 +62,19 @@ public interface GameRepository extends JpaRepository<Game, Long> {
     // 신작 게임 조회 (특정 날짜 이후 생성된 활성 게임)
     Page<Game> findByIsActiveTrueAndCreatedAtAfter(LocalDateTime date, Pageable pageable);
 
-    // 인기 게임 조회 (추후 구현 - viewCount 기준)
-    @Query("SELECT g FROM Game g WHERE g.isActive = true ORDER BY g.viewCount DESC")
-    Page<Game> findPopularGames(Pageable pageable);
+//    // 인기 게임 조회 (추후 구현 - viewCount 기준)
+//    @Query("SELECT g FROM Game g WHERE g.isActive = true ORDER BY g.viewCount DESC")
+//    Page<Game> findPopularGames(Pageable pageable);
+//
+//    // 할인 게임 조회 (추후 구현 - discountRate > 0)
+//    @Query("SELECT g FROM Game g WHERE g.isActive = true AND g.discountRate > 0")
+//    Page<Game> findDiscountedGames(Pageable pageable);
 
-    // 할인 게임 조회 (추후 구현 - discountRate > 0)
-    @Query("SELECT g FROM Game g WHERE g.isActive = true AND g.discountRate > 0")
-    Page<Game> findDiscountedGames(Pageable pageable);
+//    // N+1 문제 해결을 위한 EntityGraph 사용 메서드
+//    @EntityGraph(attributePaths = {"env", "env.env"})
+//    @Query("SELECT g FROM Game g WHERE g.id = :id AND g.isActive = true")
+//    Optional<Game> findByIdWithEnvironments(@Param("id") Long id);
 
-    // N+1 문제 해결을 위한 EntityGraph 사용 메서드
-    @EntityGraph(attributePaths = {"env", "env.env"})
-    @Query("SELECT g FROM Game g WHERE g.id = :id AND g.isActive = true")
-    Optional<Game> findByIdWithEnvironments(@Param("id") Long id);
-
-    @EntityGraph(attributePaths = {"env", "env.env"})
-    Page<Game> findAllWithEnvironments(Pageable pageable);
+//    @EntityGraph(attributePaths = {"env", "env.env"})
+//    Page<Game> findAllWithEnvironments(Pageable pageable);
 }

@@ -5,7 +5,7 @@ import com.imfine.ngs._global.config.security.jwt.JwtAuthenticationFilter;
 import com.imfine.ngs._global.config.security.jwt.JwtUtil;
 import com.imfine.ngs.game.controller.NGSController;
 import com.imfine.ngs.game.dto.response.GameSummaryResponse;
-import com.imfine.ngs.game.dto.response.PagedSectionResponse;
+import com.imfine.ngs.game.dto.response.util.PagedSectionResponse;
 import com.imfine.ngs.game.service.MainPageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

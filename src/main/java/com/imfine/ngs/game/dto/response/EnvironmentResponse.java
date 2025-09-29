@@ -1,4 +1,4 @@
-package com.imfine.ngs.game.dto.response.env;
+package com.imfine.ngs.game.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
