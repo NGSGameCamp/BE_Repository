@@ -12,7 +12,6 @@ import lombok.Setter;
  * @author chan
  */
 @Getter
-@Setter
 @Table(name = "linked_envs")
 @Entity
 public class Env {
@@ -21,5 +20,6 @@ public class Env {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     private EnvType envType;
 }

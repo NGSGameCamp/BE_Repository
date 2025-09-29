@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
  * @author chan
  */
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

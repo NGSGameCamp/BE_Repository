@@ -1,5 +1,6 @@
-package com.imfine.ngs.game.dto.response;
+package com.imfine.ngs.game.dto.response.util;
 
+import com.imfine.ngs.game.dto.response.GameSummaryResponse;
 import lombok.Builder;
 import lombok.Getter;
 

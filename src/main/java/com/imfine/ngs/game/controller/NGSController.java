@@ -1,6 +1,6 @@
 package com.imfine.ngs.game.controller;
 
-import com.imfine.ngs.game.dto.response.PagedSectionResponse;
+import com.imfine.ngs.game.dto.response.util.PagedSectionResponse;
 import com.imfine.ngs.game.service.MainPageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,7 +33,7 @@ public class NGSController {
      * NGS 메인 페이지 초기 로드 (각 섹션 0 페이지)
      * // 추천 엔티티 추가
      */
-    @Operation(summary = "게임 목록 조회", description = "게임 검색 API")
+    @Operation(summary = "게임 추천 게임 조회", description = "게임 검색 API")
     @ResponseStatus(HttpStatus.OK)
     @GetMapping
     public PagedSectionResponse NGSMainPage(@PageableDefault(sort = "name") Pageable pageable) {
