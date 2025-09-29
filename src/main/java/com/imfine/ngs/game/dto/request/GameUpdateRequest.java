@@ -1,6 +1,8 @@
 package com.imfine.ngs.game.dto.request;
 
 import com.imfine.ngs.game.enums.EnvType;
+import com.imfine.ngs.game.enums.GameStatusType;
+import com.imfine.ngs.game.enums.GameTagType;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import java.util.Set;
@@ -25,11 +27,11 @@ public class GameUpdateRequest {
     @Max(value = 1000000, message = "가격은 1,000,000원 이하여야 합니다")
     private Long price;
 
-    private String tag;
+    private Set<GameTagType> tags;
 
     private Set<EnvType> environments;
 
-    private Boolean isActive;
+    private GameStatusType gameStatus;
 
     @Size(max = 2000, message = "설명은 2000자를 초과할 수 없습니다")
     private String description;

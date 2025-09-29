@@ -4,6 +4,7 @@ import com.imfine.ngs.game.dto.mapper.GameMapper;
 import com.imfine.ngs.game.dto.response.GameSummaryResponse;
 import com.imfine.ngs.game.dto.response.util.PagedSectionResponse;
 import com.imfine.ngs.game.entity.Game;
+import com.imfine.ngs.game.enums.GameStatusType;
 import com.imfine.ngs.game.repository.GameRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +41,7 @@ public class MainPageService {
                  pageable.getPageNumber(), pageable.getPageSize());
 
         // TODO: 실제 인기도 기반 조회 구현 (현재는 임시)
-        Page<Game> games = gameRepository.findByIsActiveTrue(pageable);
+        Page<Game> games = gameRepository.findByGameStatus(GameStatusType.ACTIVE, pageable);
         return buildPagedResponse(games);
     }
 
@@ -55,8 +56,8 @@ public class MainPageService {
                  pageable.getPageNumber(), pageable.getPageSize());
 
         LocalDateTime threeMonthsAgo = LocalDateTime.now().minusDays(90);
-        Page<Game> games = gameRepository.findByIsActiveTrueAndCreatedAtAfter(
-            threeMonthsAgo, pageable);
+        Page<Game> games = gameRepository.findByGameStatusAndCreatedAtAfter(
+            GameStatusType.ACTIVE, threeMonthsAgo, pageable);
         return buildPagedResponse(games);
     }
 
@@ -72,7 +73,7 @@ public class MainPageService {
                  pageable.getPageNumber(), pageable.getPageSize());
 
         // TODO: 실제 추천 알고리즘 구현 (현재는 임시)
-        Page<Game> games = gameRepository.findByIsActiveTrue(pageable);
+        Page<Game> games = gameRepository.findByGameStatus(GameStatusType.ACTIVE, pageable);
         return buildPagedResponse(games);
     }
 
@@ -88,7 +89,7 @@ public class MainPageService {
                  pageable.getPageNumber(), pageable.getPageSize());
 
         // TODO: 실제 할인 정보 기반 조회 구현
-        Page<Game> games = gameRepository.findByIsActiveTrue(pageable);
+        Page<Game> games = gameRepository.findByGameStatus(GameStatusType.ACTIVE, pageable);
         return buildPagedResponse(games);
     }
 
@@ -105,8 +106,9 @@ public class MainPageService {
      * @return PagedSectionResponse DTO
      */
     private PagedSectionResponse buildPagedResponse(Page<Game> games) {
+
         List<GameSummaryResponse> gameSummaries = games.getContent().stream()
-                .map(gameMapper::toSummaryResponse)
+                .map(gameMapper::toSummaryResponseWithTags)
                 .toList();
 
         return PagedSectionResponse.builder()

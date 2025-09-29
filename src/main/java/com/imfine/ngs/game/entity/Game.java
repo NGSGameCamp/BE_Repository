@@ -3,13 +3,18 @@ package com.imfine.ngs.game.entity;
 import com.imfine.ngs.game.entity.env.Env;
 import com.imfine.ngs.game.entity.env.LinkedEnv;
 import com.imfine.ngs.game.entity.env.util.LinkedEnvId;
+import com.imfine.ngs.game.entity.tag.LinkedTag;
+import com.imfine.ngs.game.enums.GameStatusType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.apache.http.client.UserTokenHandler;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -20,7 +25,6 @@ import java.util.Set;
  */
 @Table(name = "games")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -37,16 +41,17 @@ public class Game {
     @Column(nullable = false)
     private Long price; // 게임 가격
 
-    // TODO: GameTag로 변경
-    private String tag; // 게임 태그(ex: 액션, RPG...etc)
+    @OneToMany(mappedBy = "game")
+    @Builder.Default
+    private Set<LinkedTag> tags = new HashSet<>(); // 게임 태그(ex: 액션, RPG...etc)
 
     @OneToMany(mappedBy = "game")
+    @Builder.Default
     private Set<LinkedEnv> env = new HashSet<>(); // 게임 OS
 
     private String thumbnailUrl; // 썸네일 이미지 URL
 
-    // TODO: GameStatus 테이블의 id를 가져와야한다. -> private Long gameStatusId
-    private boolean isActive; // gameStatus
+    private GameStatusType gameStatus; // gameStatus
 
     // TODO: Publisher 테이블의 id를 가져와야한다.
 //    private Long publisherId;
