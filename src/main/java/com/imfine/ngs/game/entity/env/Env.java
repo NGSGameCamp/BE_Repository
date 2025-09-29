@@ -12,7 +12,6 @@ import lombok.Setter;
  * @author chan
  */
 @Getter
-@Table(name = "linked_envs")
 @Entity
 public class Env {
 
