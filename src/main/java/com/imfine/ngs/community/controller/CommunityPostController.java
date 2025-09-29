@@ -34,16 +34,16 @@ public class CommunityPostController {
   /**
    * 게시글을 작성합니다.
    * @param boardId
-   * @param request
    * @param principal
+   * @param request
    * @return
    */
   @PostMapping("/post/{boardId}/create")
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<CommunityPostResponse> createPost(
           @PathVariable Long boardId,
-          @RequestBody @Valid CommunityPostCreateRequest request,
-          @AuthenticationPrincipal JwtUserPrincipal principal
+          @AuthenticationPrincipal JwtUserPrincipal principal,
+          @RequestBody @Valid CommunityPostCreateRequest request
   ) {
     CommunityUser communityUser = mapper.getCommunityUserOrThrow(principal);
     List<CommunityTag> tags = mapper.toTagsForMutation(request.getTags());
@@ -76,7 +76,7 @@ public class CommunityPostController {
    * @param size
    * @return
    */
-  @GetMapping("/posts/{boardId}/all")
+  @GetMapping("/post/{boardId}/all")
   public ResponseEntity<Page<CommunityPostResponse>> getPosts(
           @PathVariable Long boardId,
           @AuthenticationPrincipal JwtUserPrincipal principal,
@@ -112,7 +112,7 @@ public class CommunityPostController {
    * @param principal
    * @return
    */
-  @GetMapping("/posts/{postId}")
+  @GetMapping("/post/{postId}")
   public ResponseEntity<CommunityPostResponse> getPost(
       @PathVariable Long postId,
       @AuthenticationPrincipal JwtUserPrincipal principal
@@ -133,7 +133,7 @@ public class CommunityPostController {
    * @param principal
    * @return
    */
-  @PutMapping("/posts/edit/{postId}")
+  @PutMapping("/post/edit/{postId}")
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<Void> updatePost(
       @PathVariable Long postId,
@@ -165,15 +165,15 @@ public class CommunityPostController {
    * @param principal
    * @return
    */
-  @DeleteMapping("/posts/delete/{postId}")
+  @DeleteMapping("/post/delete/{postId}")
   @PreAuthorize("isAuthenticated()")
   public ResponseEntity<Void> deletePost(
       @PathVariable Long postId,
       @AuthenticationPrincipal JwtUserPrincipal principal
   ) {
-    CommunityUser communityUser = mapper.getCommunityUserOrThrow(principal);
+    CommunityUser user = mapper.getCommunityUserOrThrow(principal);
     try {
-      postService.deletePost(communityUser, postId);
+      postService.deletePost(user, postId);
       return ResponseEntity.noContent().build();
     } catch (IllegalArgumentException ex) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);

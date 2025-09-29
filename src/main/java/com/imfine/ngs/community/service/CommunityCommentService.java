@@ -93,7 +93,7 @@ public class CommunityCommentService {
 //      commentRepository.save(comment);
 //    }
 //  }
-  void deleteComment(CommunityUser user, Long commentId) {
+  public void deleteComment(CommunityUser user, Long commentId) {
     CommunityComment comment = getCommentById(user, commentId);
     if (comment == null) throw new IllegalArgumentException("유효하지 않은 댓글입니다!");
 
@@ -143,8 +143,8 @@ public class CommunityCommentService {
   }
 
 
-  public Page<CommunityComment> getCommentsByAuthorId(Long userId) {
-    Pageable pageable = PageRequest.of(0, 1, Sort.Direction.DESC, "createdAt");
+  public Page<CommunityComment> getCommentsByAuthorId(Long userId, int page, int size) {
+    Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAt");
     return commentRepository.findCommunityCommentsByAuthorId(userId, pageable);
   }
 }

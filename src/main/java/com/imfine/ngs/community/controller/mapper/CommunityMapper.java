@@ -4,6 +4,8 @@ import com.imfine.ngs._global.config.security.jwt.JwtUserPrincipal;
 import com.imfine.ngs.community.dto.CommunityUser;
 import com.imfine.ngs.community.dto.request.CommunityBoardCreateRequest;
 import com.imfine.ngs.community.dto.request.CommunityCommentRequest;
+import com.imfine.ngs.community.dto.response.CommunityBoardResponse;
+import com.imfine.ngs.community.dto.response.CommunityCommentResponse;
 import com.imfine.ngs.community.dto.response.CommunityPostResponse;
 import com.imfine.ngs.community.entity.CommunityBoard;
 import com.imfine.ngs.community.entity.CommunityComment;
@@ -12,6 +14,7 @@ import com.imfine.ngs.community.entity.CommunityTag;
 import com.imfine.ngs.community.service.CommunityTagService;
 import com.imfine.ngs.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Component;
@@ -42,6 +45,16 @@ public class CommunityMapper {
             .build();
   }
 
+  public CommunityBoardResponse toCommunityBoardResponse(CommunityBoard board) {
+    return CommunityBoardResponse.builder()
+            .id(board.getId())
+            .title(board.getTitle())
+            .description(board.getDescription())
+            .createdAt(board.getCreatedAt())
+            .updatedAt(board.getUpdatedAt())
+            .build();
+  }
+
   public CommunityPostResponse toCommunityPostResponse(CommunityPost post) {
     CommunityUser author = getAuthorOrThrow(post.getAuthorId());
     return CommunityPostResponse.from(post, author);
@@ -49,7 +62,7 @@ public class CommunityMapper {
 
   private CommunityUser loadUser(Long userId, HttpStatus status, String message) {
     return userRepository.findById(userId)
-            .map(CommunityUser::getInstance)
+            .map(CommunityUser::of)
             .orElseThrow(() -> new ResponseStatusException(status, message));
   }
 
@@ -105,9 +118,33 @@ public class CommunityMapper {
             .collect(Collectors.toList());
   }
 
-  // TODO: request -> Community Comment
-  public CommunityComment toCommunityComment(CommunityCommentRequest request) {
+  public CommunityComment toComment(CommunityCommentRequest request) {
+    return CommunityComment.builder()
+            .postId(request.getPostId())
+            .authorId(request.getAuthor().getId())
+            .parentId(request.getParentId())
+            .content(request.getContent())
+            .build();
+  }
 
-    return null;
+  // TODO: CommunityComment -> CommunityCommentResponse
+  public CommunityCommentResponse toCommentResponse(CommunityComment comment) {
+    return CommunityCommentResponse.builder()
+            .parentId(comment.getParentId())
+            .user(getAuthorOrThrow(comment.getAuthorId()))
+            .content(comment.getContent())
+            .createdAt(comment.getCreatedAt())
+            .updatedAt(comment.getUpdatedAt())
+            .build();
+  }
+
+  public List<CommunityCommentResponse> toCommentResponses(List<CommunityComment> comments) {
+    return comments.stream()
+            .map(this::toCommentResponse)
+            .collect(Collectors.toList());
+  }
+
+  public Page<CommunityCommentResponse> toCommentResponses(Page<CommunityComment> comments) {
+    return comments.map(this::toCommentResponse);
   }
 }

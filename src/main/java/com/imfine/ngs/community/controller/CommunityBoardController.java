@@ -7,10 +7,14 @@ import com.imfine.ngs.community.dto.request.CommunityBoardCreateRequest;
 import com.imfine.ngs.community.dto.request.CommunityBoardDescriptionDto;
 import com.imfine.ngs.community.dto.request.CommunityBoardManagerDto;
 import com.imfine.ngs.community.dto.response.CommunityBoardCreateResponse;
+import com.imfine.ngs.community.dto.response.CommunityBoardResponse;
 import com.imfine.ngs.community.entity.CommunityBoard;
 import com.imfine.ngs.community.service.CommunityBoardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,7 +23,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-@Controller
+@RestController
 @RequestMapping("/api/community")
 @RequiredArgsConstructor
 public class CommunityBoardController {
@@ -32,10 +36,10 @@ public class CommunityBoardController {
    * @param boardReq
    * @return
    */
-  @PostMapping("/boards/create")
+  @PostMapping("/board/create")
   public ResponseEntity<CommunityBoardCreateResponse> createBoard(
           @AuthenticationPrincipal JwtUserPrincipal principal,
-          CommunityBoardCreateRequest boardReq
+          @RequestBody @Valid CommunityBoardCreateRequest boardReq
   ) {
     CommunityUser user = mapper.getCommunityUserOrThrow(principal);
     CommunityBoard board = mapper.toCommunityBoard(boardReq, user, principal);
@@ -49,6 +53,25 @@ public class CommunityBoardController {
     }
   }
 
+  // TODO: 게시판 목록 전체 조회
+  @GetMapping("/board/all")
+  public ResponseEntity<Page<CommunityBoardResponse>> getBoards(
+          @AuthenticationPrincipal JwtUserPrincipal principal,
+          @RequestParam int page,
+          @RequestParam int size
+  ) {
+    CommunityUser user = mapper.getCommunityUserOrThrow(principal);
+    Pageable pageable = PageRequest.of(page, size);
+
+    try {
+      Page<CommunityBoard> boards = boardService.getAllBoards(user, pageable);
+      Page<CommunityBoardResponse> response = boards.map(mapper::toCommunityBoardResponse);
+      return ResponseEntity.ok(response);
+    }  catch (IllegalArgumentException ex) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+  }
+
   /**
    * 게시판의 설명을 변경합니다.
    * @param boardId
@@ -57,7 +80,7 @@ public class CommunityBoardController {
    * @return
    */
   @PreAuthorize("isAuthenticated()")
-  @PatchMapping("/boards/title/{boardId}")
+  @PatchMapping("/board/title/{boardId}")
   public ResponseEntity<Void> updateBoardDescription(
           @PathVariable Long boardId,
           @AuthenticationPrincipal JwtUserPrincipal principal,
@@ -81,7 +104,7 @@ public class CommunityBoardController {
    * @return
    */
   @PreAuthorize("isAuthenticated()")
-  @PatchMapping("/boards/manager/{boardId}")
+  @PatchMapping("/board/manager/{boardId}")
   public ResponseEntity<Void> updateBoardManager(
           @PathVariable Long boardId,
           @AuthenticationPrincipal JwtUserPrincipal principal,
@@ -105,7 +128,7 @@ public class CommunityBoardController {
    * @return
    */
   @PreAuthorize("isAuthenticated()")
-  @DeleteMapping("/boards/delete/{boardId}")
+  @DeleteMapping("/board/delete/{boardId}")
   public ResponseEntity<Void> deleteBoard(
           @PathVariable Long boardId,
           @AuthenticationPrincipal JwtUserPrincipal principal

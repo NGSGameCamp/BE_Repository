@@ -18,7 +18,7 @@ public class CommunityUser {
   @Builder.Default
   private String role = "USER";
 
-  public static CommunityUser getInstance(User user) {
+  public static CommunityUser of(User user) {
     return CommunityUser.builder()
             .id(user.getId())
             .nickname(user.getName())

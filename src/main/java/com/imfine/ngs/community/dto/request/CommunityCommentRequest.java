@@ -1,11 +1,16 @@
 package com.imfine.ngs.community.dto.request;
 
+import com.imfine.ngs.community.dto.CommunityUser;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class CommunityCommentRequest {
-  @NotBlank(message = "대상 게시글이 없습니다!")
+  @Setter
+  private CommunityUser author;
+
+  @Setter
   private Long postId;
 
   private Long parentId;

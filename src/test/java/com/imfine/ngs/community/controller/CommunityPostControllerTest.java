@@ -8,6 +8,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.imfine.ngs._global.config.security.jwt.JwtUserPrincipal;
+import com.imfine.ngs.community.controller.mapper.CommunityMapper;
+import com.imfine.ngs.community.dto.CommunityUser;
 import com.imfine.ngs.community.dto.request.CommunityPostCreateRequest;
 import com.imfine.ngs.community.dto.request.CommunityPostUpdateRequest;
 import com.imfine.ngs.community.dto.response.CommunityPostResponse;
@@ -46,6 +48,9 @@ class CommunityPostControllerTest {
   @Mock
   private UserRepository userRepository;
 
+  @Mock
+  private CommunityMapper mapper;
+
   @InjectMocks
   private CommunityPostController communityPostController;
 
@@ -64,6 +69,8 @@ class CommunityPostControllerTest {
         .role(UserRole.builder().role("USER").description("User role").build())
         .status(UserStatus.builder().name("ACTIVE").description("Active user").build())
         .build();
+
+    when(mapper.getCommunityUserOrThrow(principal)).thenReturn(CommunityUser.of(mockUser));
   }
 
   @Test
@@ -90,7 +97,7 @@ class CommunityPostControllerTest {
     when(communityPostService.getPostById(any(), eq(10L))).thenReturn(createdPost);
 
     ResponseEntity<CommunityPostResponse> response =
-        communityPostController.createPost(5L, request, principal);
+        communityPostController.createPost(5L, principal, request);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     assertThat(response.getBody()).isNotNull();
@@ -109,7 +116,7 @@ class CommunityPostControllerTest {
     request.setTitle("Title");
     request.setContent("Content");
 
-    assertThatThrownBy(() -> communityPostController.createPost(1L, request, null))
+    assertThatThrownBy(() -> communityPostController.createPost(1L, null, request))
         .isInstanceOf(ResponseStatusException.class)
         .hasMessageContaining("인증이 필요합니다.");
   }
