@@ -13,6 +13,13 @@ public enum ErrorCode {
     INVALID_TYPE_VALUE(HttpStatus.BAD_REQUEST, "C005", " Invalid Type Value"),
     HANDLE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "C006", "Access is Denied"),
 
+    // Auth/User
+    AUTH_INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A001", "Invalid credentials"),
+    PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "A002", "Password mismatch"),
+    USER_EMAIL_DUPLICATE(HttpStatus.CONFLICT, "U001", "Email already exists"),
+    ROLE_NOT_FOUND(HttpStatus.NOT_FOUND, "U002", "Role not found"),
+    STATUS_NOT_FOUND(HttpStatus.NOT_FOUND, "U003", "Status not found"),
+
     // Order
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "Order not found"),
     GAME_ALREADY_IN_CART(HttpStatus.BAD_REQUEST, "O002", "Game is already in the cart"),
