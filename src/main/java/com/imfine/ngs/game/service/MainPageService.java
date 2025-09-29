@@ -1,22 +1,28 @@
 package com.imfine.ngs.game.service;
 
+import com.imfine.ngs.game.dto.mapper.GameMapper;
+import com.imfine.ngs.game.dto.response.GameResponse;
+import com.imfine.ngs.game.dto.response.GameSummaryResponse;
+import com.imfine.ngs.game.dto.response.MainPageResponse;
+import com.imfine.ngs.game.dto.response.PagedSectionResponse;
 import com.imfine.ngs.game.entity.Game;
-import com.imfine.ngs.game.enums.SortType;
-import com.imfine.ngs.game.service.search.GameSearchService;
+import com.imfine.ngs.game.repository.GameRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
 
 /**
  * {@link com.imfine.ngs.game.controller.NGSController} 메인 페이지 서비스 클래스.
  * 차후 추천, 인기, 할인의 리팩토링이 필요하다.
- * TODO: MainPageService가  {@link GameSearchService}에 의존하고 있다. 이를 인터페이스를 활용하여 분리할 수 없을까?
- * TODO: 서비스의 코드 중복을 제거할 수 있다.
+ * 페이지네이션과 DTO를 활용한 메인 페이지 서비스
+ *
  * @author chan
  */
 @Slf4j
@@ -24,196 +30,96 @@ import java.util.stream.Collectors;
 @Service
 public class MainPageService {
 
-    private final GameSearchService searchService;
-
-    // NGS MainPage 조회
-    // 1. 신작 게임 조회 (추가된 최신 날짜 게임 5개)
-    // 2. 추천 게임 조회 (무작위 게임 5개 추가)
-    // 3. 인기 TOP 게임 조회 (무작위 게임 5개 추가)
-    // 4. 할인 중인 게임 조회 (무작위 게임 5개 추가)
+    private final GameRepository gameRepository;
+    private final GameMapper gameMapper;
 
     /**
-     * NGS MainPage 조회
-     * 신작, 추천, 인기 TOP, 할인 중인 게임 데이터를 한번에 조회
-     * TODO: 예외는 GlobalExceptionHandler가 처리한다.
+     * 인기 게임 페이지 조회
      *
-     * @param newLimit       신작 게임 개수
-     * @param recommendLimit 추천 게임 개수
-     * @param popularLimit   인기 게임 개수
-     * @param discountLimit  할인 게임 개수
-     * @return 메인페이지 게임 데이터
+     * @param pageable 페이지 정보
+     * @return 인기 게임 페이지 응답
      */
-    public Map<String, Object> findAllMainPageGameData(
-            int newLimit,
-            int recommendLimit,
-            int popularLimit,
-            int discountLimit
-    ) {
+    public PagedSectionResponse getPopularGames(Pageable pageable) {
+        log.debug("인기 게임 페이지 조회 - page: {}, size: {}",
+                 pageable.getPageNumber(), pageable.getPageSize());
 
-        Map<String, Object> mainPageGameData = new HashMap<>();
-
-        // 1. 신작 게임 조회
-        List<Game> newGames = getNewGames(newLimit);
-        mainPageGameData.put("newGames", newGames);
-
-        // 2. 추천 게임 조회
-        List<Game> recommendedGames = getRecommendGames(recommendLimit);
-        mainPageGameData.put("recommendedGames", recommendedGames);
-
-        // 3. 인기 게임 조회
-        List<Game> popularGames = getPopularGames(popularLimit);
-        mainPageGameData.put("popularGames", popularGames);
-
-        // 4. 할인 게임 조회
-        List<Game> discountGames = getDiscountGames(discountLimit);
-        mainPageGameData.put("discountGames", discountGames);
-
-        log.debug("메인 페이지 데이터 조회 성공!");
-
-        // 메인 페이지 게임 데이터 반환
-        return mainPageGameData;
-    }
-
-    // 기본값으로 메인페이지 데이터 5개 조회
-    public Map<String, Object> findAllMainPageGameData() {
-        return findAllMainPageGameData(5, 5, 5, 5);
+        // TODO: 실제 인기도 기반 조회 구현 (현재는 임시)
+        Page<Game> games = gameRepository.findByIsActiveTrue(pageable);
+        return buildPagedResponse(games);
     }
 
     /**
-     * 신작 게임 조회 (90일간 추가된 게임을 조회한다.)
+     * 신작 게임 페이지 조회 (최근 90일)
      *
-     * @param limit 조회할 신작 게임 개수
-     * @return 신작 게임 리스트
+     * @param pageable 페이지 정보
+     * @return 신작 게임 페이지 응답
      */
-    // 신작 게임 조회
-    public List<Game> getNewGames(int limit) {
+    public PagedSectionResponse getNewGames(Pageable pageable) {
+        log.debug("신작 게임 페이지 조회 - page: {}, size: {}",
+                 pageable.getPageNumber(), pageable.getPageSize());
 
-        log.debug("신작 게임 {} 개 조회", limit);
+        LocalDateTime threeMonthsAgo = LocalDateTime.now().minusDays(90);
+        Page<Game> games = gameRepository.findByIsActiveTrueAndCreatedAtAfter(
+            threeMonthsAgo, pageable);
+        return buildPagedResponse(games);
+    }
 
-        // 최신 날짜 기준으로 게임 조회
-        Page<Game> gamePage = searchService.findByCreatedAt(0, limit, SortType.DATE_DESC);
-        List<Game> allGames = gamePage.getContent();
+    /**
+     * 추천 게임 페이지 조회
+     * TODO: 실제 추천 알고리즘 구현
+     *
+     * @param pageable 페이지 정보
+     * @return 추천 게임 페이지 응답
+     */
+    public PagedSectionResponse getRecommendGames(Pageable pageable) {
+        log.debug("추천 게임 페이지 조회 - page: {}, size: {}",
+                 pageable.getPageNumber(), pageable.getPageSize());
 
-        // 최근 90일 이내 게임 필터링 (선택)
-        LocalDateTime threeMonthAgo = LocalDateTime.now().minusMonths(3);
+        // TODO: 실제 추천 알고리즘 구현 (현재는 임시)
+        Page<Game> games = gameRepository.findByIsActiveTrue(pageable);
+        return buildPagedResponse(games);
+    }
 
-        List<Game> newGames = allGames.stream()
-                .filter(game -> game.getCreatedAt() != null && game.getCreatedAt().isAfter(threeMonthAgo))
-                .limit(limit)
+    /**
+     * 할인 게임 페이지 조회
+     * TODO: 실제 할인 정보 기반 조회 구현
+     *
+     * @param pageable 페이지 정보
+     * @return 할인 게임 페이지 응답
+     */
+    public PagedSectionResponse getDiscountGames(Pageable pageable) {
+        log.debug("할인 게임 페이지 조회 - page: {}, size: {}",
+                 pageable.getPageNumber(), pageable.getPageSize());
+
+        // TODO: 실제 할인 정보 기반 조회 구현
+        Page<Game> games = gameRepository.findByIsActiveTrue(pageable);
+        return buildPagedResponse(games);
+    }
+
+//    public Page<Game> getGames(Pageable pageable) {
+//        Page<Game> games = gameRepository.findAll(pageable);
+//        return games;
+//    }
+
+    /**
+     * Page<Game>을 PagedSectionResponse로 변환하는 helper 메서드
+     * 프론트엔드에서 어떤 섹션인지 이미 알고 있으므로 sectionType은 불필요
+     *
+     * @param games Game 엔티티 페이지 정보
+     * @return PagedSectionResponse DTO
+     */
+    private PagedSectionResponse buildPagedResponse(Page<Game> games) {
+        List<GameSummaryResponse> gameSummaries = games.getContent().stream()
+                .map(gameMapper::toSummaryResponse)
                 .toList();
 
-        log.debug("조회하여 가져온 3달간 추가된 신작 게임 리스트: {}", newGames);
-
-        return newGames;
+        return PagedSectionResponse.builder()
+                .games(gameSummaries)
+                .currentPage(games.getNumber())
+                .totalPages(games.getTotalPages())
+                .totalElements(games.getTotalElements())
+                .hasNext(games.hasNext())
+                .hasPrevious(games.hasPrevious())
+                .build();
     }
-
-    // 추천 게임 조회
-
-    /**
-     * 추천 게임 조회 메서드 (사용자 알고리즘 기반)
-     * TODO: 현재는 무작위 게임 5개를 반환한다.
-     *
-     * @param limit 조회할 추천 게임 개수
-     * @return 추천 게임 리스트
-     */
-    public List<Game> getRecommendGames(int limit) {
-
-        // 로그
-        log.debug("추천 게임 {}개 조회", limit);
-
-        // 전체 게임 조회
-        Page<Game> gamePage = searchService.findAll(0, limit, SortType.DATE_DESC);
-        List<Game> allGames = gamePage.getContent();
-
-        // 리스트가 limit보다 작으면 전체 반환
-        if (allGames.size() < limit) {
-            return allGames;
-        }
-
-        // 추천 게임 조회 -> 현재는 무작위로 5개를 가져온다.
-        List<Game> shuffle = new ArrayList<>(allGames);
-        Collections.shuffle(shuffle);
-
-        var recommendGameList = shuffle.stream()
-                .limit(limit)
-                .toList();
-
-        log.debug("조회한 추천 게임(현재는 무작위 5개): {}", recommendGameList);
-
-        return recommendGameList;
-    }
-
-    // 인기 TOP 게임 조회
-
-    /**
-     * 인기 TOP 게임 조회 - 현재는 무작위, 추후 REVIEW 테이블의 socre 를 통해 조회
-     * TODO: REVIEW 엔티티 생성 후 score 필드를 통해 검색
-     *
-     * @param limit 조회할 추천 게임 수
-     * @return 인기 게임 리스트
-     */
-    public List<Game> getPopularGames(int limit) {
-
-        // (로그) 가져온 게임 개수
-        log.debug("조회한 인기 게임 개수: {}", limit);
-
-        // 전체 게임 조회
-        Page<Game> gamePage = searchService.findAll(0, limit, SortType.DATE_DESC);
-        List<Game> allGames = gamePage.getContent();
-
-        // 리스트가 limit보다 작으면 전체 반환
-        if (allGames.size() < limit) {
-            return allGames;
-        }
-
-        // 무작위 게임 반환
-        List<Game> gameList = new ArrayList<>(allGames);
-        Collections.shuffle(gameList);
-
-        List<Game> popularGames = gameList.stream()
-                .limit(limit)
-                .toList();
-
-        // (로그) 반환한 게임 리스트 객체
-        log.debug("조회한 인기순 게임(현재는 무작위 5개): {}", popularGames);
-
-        return popularGames;
-    }
-
-    /**
-     * 할인 중인 게임 조회 - 현재는 무작위 게임 반환, 차후 SINGLE_GAME_DISCOUNT 테이블 추가 후 created_at을 통해 검사
-     * TODO: SINGLE_GAME_DISCOUNT 테이블 추가
-     *
-     * @param limit 조회한 할인 중인 게임 수
-     * @return 할인 중 게임 리스트
-     */
-    public List<Game> getDiscountGames(int limit) {
-
-        // (로그) 가져온 게임 개수
-        log.debug("조회한 할인 중인 게임 갯수 {}", limit);
-
-        // 전체 게임 조회
-        Page<Game> gamePage = searchService.findAll(0, limit, SortType.DATE_DESC);
-        List<Game> allGames = gamePage.getContent();
-
-        // 리스트가 limit보다 작으면 전체 반환
-        if (allGames.size() < limit) {
-            return allGames;
-        }
-
-        // 무작위 정렬
-        List<Game> gameList = new ArrayList<>(allGames);
-        Collections.shuffle(gameList);
-
-        // 정렬한 객체 생성
-        List<Game> discountGames = gameList.stream()
-                .limit(limit)
-                .toList();
-
-        // (로그) 가져온 할인 중 게임
-        log.debug("조회한 할인 중인 게임: {}", discountGames);
-
-        return discountGames;
-    }
-
 }
