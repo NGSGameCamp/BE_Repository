@@ -1,5 +1,6 @@
-package com.imfine.ngs.game.entity;
+package com.imfine.ngs.game.entity.notice;
 
+import com.imfine.ngs.game.entity.Game;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -8,14 +9,13 @@ import java.time.LocalDateTime;
 
 /**
  * 게임({@link Game}의 공지사항 엔티티 클래스.
- * 현재는 간소화된 상태이다.
  *
  * @author chan
  */
 @Getter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Entity
 public class GameNotice {
 
@@ -29,15 +29,10 @@ public class GameNotice {
     @JoinColumn(name = "game_id")
     private Game game;
 
-    // title
-    private String title;
-
-    // content
-    private String content;
-
     // category
-    // TODO: NoticeCategory를 사용해야한다.
-    private String category;
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private NoticeCategory category;
 
     // createdAt
     @CreatedDate
