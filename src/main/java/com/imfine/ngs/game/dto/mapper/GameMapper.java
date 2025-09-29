@@ -3,9 +3,8 @@ package com.imfine.ngs.game.dto.mapper;
 import com.imfine.ngs.game.dto.request.GameCreateRequest;
 import com.imfine.ngs.game.dto.request.GameUpdateRequest;
 import com.imfine.ngs.game.dto.response.GameDetailResponse;
-import com.imfine.ngs.game.dto.response.GameResponse;
 import com.imfine.ngs.game.dto.response.GameSummaryResponse;
-import com.imfine.ngs.game.dto.response.env.EnvironmentResponse;
+import com.imfine.ngs.game.dto.response.EnvironmentResponse;
 import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.entity.env.LinkedEnv;
 import com.imfine.ngs.game.enums.EnvType;
@@ -59,12 +58,6 @@ public interface GameMapper {
     @Mapping(target = "averageRating", ignore = true)
     @Mapping(target = "reviewCount", ignore = true)
     GameDetailResponse toDetailResponse(Game game);
-
-    /**
-     * Game 엔티티를 GameResponse로 변환
-     */
-    @Mapping(source = "active", target = "isActive")
-    GameResponse toResponse(Game game);
 
     /**
      * LinkedEnv를 EnvironmentResponse로 변환

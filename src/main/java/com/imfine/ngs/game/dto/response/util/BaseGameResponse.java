@@ -1,4 +1,4 @@
-package com.imfine.ngs.game.dto.response;
+package com.imfine.ngs.game.dto.response.util;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
