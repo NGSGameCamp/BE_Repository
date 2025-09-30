@@ -1,23 +1,18 @@
 package com.imfine.ngs.game.service;
 
-import com.imfine.ngs.game.dto.request.EnvRequest;
 import com.imfine.ngs.game.dto.request.GameCreateRequest;
-import com.imfine.ngs.game.dto.request.GameTagRequest;
+import com.imfine.ngs.game.dto.response.EnvResponse;
+import com.imfine.ngs.game.dto.response.GameCreateResponse;
+import com.imfine.ngs.game.dto.response.GameTagResponse;
 import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.entity.env.Env;
-import com.imfine.ngs.game.entity.env.LinkedEnv;
 import com.imfine.ngs.game.entity.tag.GameTag;
-import com.imfine.ngs.game.entity.tag.LinkedTag;
 import com.imfine.ngs.game.repository.GameRepository;
-import com.imfine.ngs.game.repository.tag.GameTagRepository;
-import com.imfine.ngs.game.repository.tag.LinkedTagRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * 배급사(publisher)가 게임({@link com.imfine.ngs.game.entity.Game} 관리 서비스 클래스.
@@ -35,7 +30,7 @@ public class GameRegistrationService {
     private final LinkedEnvService linkedEnvService;
 
     // 게임 등록
-    public Game createGame(GameCreateRequest gameCreateRequest) {
+    public GameCreateResponse createGame(GameCreateRequest gameCreateRequest) {
         if(gameCreateRequest == null) {
             throw new IllegalArgumentException("Data is null");
         }
@@ -57,6 +52,23 @@ public class GameRegistrationService {
         List<Env> envs = envService.findByEnvTypes(gameCreateRequest.getEnvRequest());
         linkedEnvService.createLinkedEnvs(envs, saveGame);
 
-        return saveGame;
+        return createResponse(saveGame, gameTags, envs);
+    }
+
+    public GameCreateResponse createResponse(Game saveGame, List<GameTag> tags, List<Env> envs) {
+        return GameCreateResponse.builder()
+                .name(saveGame.getName())
+                .price(saveGame.getPrice())
+                .gameStatus(saveGame.getGameStatus())
+                .description(saveGame.getDescription())
+                .thumbnailUrl(saveGame.getThumbnailUrl())
+                .spec(saveGame.getSpec())
+                .gameTagResponse(tags.stream()
+                        .map(tag -> GameTagResponse.builder().gameTagType(tag.getTagType().name()).build())
+                        .toList())
+                .envResponse(envs.stream()
+                        .map(env -> EnvResponse.builder().envType(env.getEnvType().name()).build())
+                        .toList())
+                .build();
     }
 }
