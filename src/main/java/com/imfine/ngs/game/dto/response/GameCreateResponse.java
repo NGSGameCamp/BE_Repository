@@ -14,6 +14,7 @@ public class GameCreateResponse {
     private Long price;
     private GameStatusType gameStatus;
     private String description;
+    private String introduction;
     private String thumbnailUrl;
     private String spec;
     private List<GameTagResponse> gameTagResponse;

@@ -23,6 +23,8 @@ import java.util.Set;
 @Getter
 @Setter
 @NoArgsConstructor
+@Builder
+@AllArgsConstructor
 public class GameCreateRequest {
 
     @NotBlank(message = "게임 이름은 필수입니다")
@@ -49,14 +51,6 @@ public class GameCreateRequest {
 
     private List<EnvRequest> envRequest;
 
-    @Builder
-    public GameCreateRequest(String name, Long price, String description, String thumbnailUrl, String spec, List<GameTagRequest> gameTagRequest, List<EnvRequest> envRequest) {
-        this.name = name;
-        this.price = price;
-        this.description = description;
-        this.thumbnailUrl = thumbnailUrl;
-        this.spec = spec;
-        this.gameTagRequest = gameTagRequest;
-        this.envRequest = envRequest;
-    }
+    private String introduction;
+
 }

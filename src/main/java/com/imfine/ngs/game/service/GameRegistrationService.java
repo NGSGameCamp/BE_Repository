@@ -42,6 +42,7 @@ public class GameRegistrationService {
                 .description(gameCreateRequest.getDescription())
                 .thumbnailUrl(gameCreateRequest.getThumbnailUrl())
                 .spec(gameCreateRequest.getSpec())
+                .introduction(gameCreateRequest.getIntroduction())
                 .createdAt(LocalDateTime.now())
                 .build());
 
@@ -70,6 +71,7 @@ public class GameRegistrationService {
                         .map(env -> EnvResponse.builder().envType(env.getEnvType().name()).build())
                         .toList())
                 .createAt(saveGame.getCreatedAt())
+                .introduction(saveGame.getIntroduction())
                 .build();
     }
 }
