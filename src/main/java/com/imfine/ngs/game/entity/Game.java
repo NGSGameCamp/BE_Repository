@@ -34,11 +34,10 @@ public class Game {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // 게임 식별 아이디
 
-    @Column(nullable = false)
     private String name; // 게임 이름
-
-    @Column(nullable = false)
     private Long price; // 게임 가격
+    private String description; // 게임 설명
+    private String spec; // 게임 사양
 
     @OneToMany(mappedBy = "game")
     @Builder.Default
@@ -51,13 +50,6 @@ public class Game {
     private String thumbnailUrl; // 썸네일 이미지 URL
 
     private GameStatusType gameStatus; // gameStatus
-
-    // TODO: Publisher 테이블의 id를 가져와야한다.
-//    private Long publisherId;
-
-    private String description; // 게임 설명
-
-    private String spec; // 게임 사양
 
     @CreatedDate
     private LocalDateTime createdAt; // 게임 등록 날짜
