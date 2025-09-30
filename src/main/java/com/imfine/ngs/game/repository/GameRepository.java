@@ -1,6 +1,7 @@
 package com.imfine.ngs.game.repository;
 
 import com.imfine.ngs.game.dto.request.GameCreateRequest;
+import com.imfine.ngs.game.dto.response.GameDetailResponse;
 import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.enums.EnvType;
 import com.imfine.ngs.game.enums.GameStatusType;
@@ -23,6 +24,14 @@ import java.util.Optional;
  * @author chan
  */
 public interface GameRepository extends JpaRepository<Game, Long> {
+
+    // 기존 findGameDetailById 제거하고 새 메서드 추가
+    @Query("SELECT DISTINCT g FROM Game g " +
+            "LEFT JOIN FETCH g.tags t " +
+            "LEFT JOIN FETCH t.gameTag " +
+            "LEFT JOIN FETCH g.reviews " +
+            "WHERE g.id = :id")
+    Optional<Game> findByIdWithDetails(@Param("id") Long id);
 
     /*
         === 활성화 여부로 게임 조회 가능

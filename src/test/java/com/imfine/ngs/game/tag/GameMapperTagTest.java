@@ -1,3 +1,4 @@
+/*
 package com.imfine.ngs.game.tag;
 
 import com.imfine.ngs.game.dto.mapper.GameMapper;
@@ -13,13 +14,16 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
+*/
 /**
  * {@link GameMapper} 태그 변환 테스트 클래스.
  * LinkedTag를 GameTagResponse로 변환하는 매핑 로직을 검증합니다.
  *
+ * 현재 GameMapper를 GameDetailMapper로 대체하여 주석 처리됨
+ *
  * @author chan
  */
+/*
 class GameMapperTagTest {
 
     private final GameMapper gameMapper = Mappers.getMapper(GameMapper.class);
@@ -164,13 +168,14 @@ class GameMapperTagTest {
     /**
      * Reflection을 사용한 필드 설정 헬퍼 메서드
      */
-    private void setField(Object target, String fieldName, Object value) {
-        try {
-            var field = target.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            field.set(target, value);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to set field: " + fieldName, e);
-        }
-    }
-}
+//    private void setField(Object target, String fieldName, Object value) {
+//        try {
+//            var field = target.getClass().getDeclaredField(fieldName);
+//            field.setAccessible(true);
+//            field.set(target, value);
+//        } catch (Exception e) {
+//            throw new RuntimeException("Failed to set field: " + fieldName, e);
+//        }
+//    }
+// }
+// */
