@@ -69,6 +69,7 @@ public class GameRegistrationService {
                 .envResponse(envs.stream()
                         .map(env -> EnvResponse.builder().envType(env.getEnvType().name()).build())
                         .toList())
+                .createAt(saveGame.getCreatedAt())
                 .build();
     }
 }

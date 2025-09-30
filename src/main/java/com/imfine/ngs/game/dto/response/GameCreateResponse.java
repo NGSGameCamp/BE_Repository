@@ -4,6 +4,7 @@ import com.imfine.ngs.game.enums.GameStatusType;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Builder
@@ -17,4 +18,5 @@ public class GameCreateResponse {
     private String spec;
     private List<GameTagResponse> gameTagResponse;
     private List<EnvResponse> envResponse;
+    private LocalDateTime createAt;
 }
