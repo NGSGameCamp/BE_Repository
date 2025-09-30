@@ -3,11 +3,17 @@ package com.imfine.ngs.game.service;
 import com.imfine.ngs.game.dto.mapper.GameDetailMapper;
 import com.imfine.ngs.game.dto.response.GameDetailResponse;
 import com.imfine.ngs.game.entity.Game;
+import com.imfine.ngs.game.entity.discount.SingleGameDiscount;
+import com.imfine.ngs.game.entity.env.Env;
+import com.imfine.ngs.game.entity.env.LinkedEnv;
+import com.imfine.ngs.game.entity.env.util.LinkedEnvId;
 import com.imfine.ngs.game.entity.review.Review;
 import com.imfine.ngs.game.entity.tag.GameTag;
 import com.imfine.ngs.game.entity.tag.LinkedTag;
+import com.imfine.ngs.game.enums.EnvType;
 import com.imfine.ngs.game.enums.GameTagType;
 import com.imfine.ngs.game.repository.GameRepository;
+import com.imfine.ngs.user.entity.User;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +24,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
@@ -70,14 +79,19 @@ class GameServiceTest {
         assertThat(result.getId()).isEqualTo(gameId);
         assertThat(result.getName()).isEqualTo("테스트 게임");
         assertThat(result.getPrice()).isEqualTo(30000L);
-        assertThat(result.getTagNames()).containsExactlyInAnyOrder("액션", "RPG");
+        assertThat(result.getTags()).containsExactlyInAnyOrder("액션", "RPG");
         assertThat(result.getDescription()).isEqualTo("테스트 설명");
+        assertThat(result.getIntroduction()).isEqualTo("테스트 게임 소개");
         assertThat(result.getThumbnailUrl()).isEqualTo("http://example.com/image.jpg");
         assertThat(result.getSpec()).isEqualTo("최소 사양");
-        assertThat(result.getPublisher()).isNull();
         assertThat(result.getReviewCount()).isEqualTo(5);
         assertThat(result.getAverageScore()).isEqualTo(3.0);
-        assertThat(result.getMediaUrls()).isEmpty();
+        assertThat(result.getMediaUrls()).containsExactly("image1.jpg", "image2.jpg");
+        assertThat(result.getReleaseDate()).isEqualTo(LocalDate.of(2024, 1, 1));
+        assertThat(result.getDiscountRate()).isEqualTo(30);
+        assertThat(result.getPublisherId()).isEqualTo(100L);
+        assertThat(result.getPublisherName()).isEqualTo("테스트 배급사");
+        assertThat(result.getEnv()).containsExactlyInAnyOrder("Windows", "Mac", "Linux");
 
         // verify interactions
         verify(gameRepository, times(1)).findByIdWithDetails(gameId);
@@ -154,10 +168,16 @@ class GameServiceTest {
         setField(game, "name", "테스트 게임");
         setField(game, "price", 30000L);
         setField(game, "description", "테스트 설명");
+        setField(game, "introduction", "테스트 게임 소개");
         setField(game, "thumbnailUrl", "http://example.com/image.jpg");
         setField(game, "spec", "최소 사양");
         setField(game, "tags", createTestTags());
+        setField(game, "env", createTestEnvs());
         setField(game, "reviews", createTestReviews());
+        setField(game, "publisher", createTestPublisher());
+        setField(game, "discounts", createTestDiscounts());
+        setField(game, "mediaUrls", Arrays.asList("image1.jpg", "image2.jpg"));
+        setField(game, "createdAt", LocalDateTime.of(2024, 1, 1, 0, 0));
         return game;
     }
 
@@ -185,6 +205,39 @@ class GameServiceTest {
     }
 
     /**
+     * 테스트용 LinkedEnv Set 생성
+     */
+    private Set<LinkedEnv> createTestEnvs() {
+        Set<LinkedEnv> envs = new HashSet<>();
+
+        // Windows 환경
+        Env windowsEnv = new Env();
+        setField(windowsEnv, "id", 1L);
+        setField(windowsEnv, "envType", EnvType.WINDOWS);
+        LinkedEnv windowsLinkedEnv = new LinkedEnv();
+        setField(windowsLinkedEnv, "env", windowsEnv);
+        envs.add(windowsLinkedEnv);
+
+        // Mac 환경
+        Env macEnv = new Env();
+        setField(macEnv, "id", 2L);
+        setField(macEnv, "envType", EnvType.MAC);
+        LinkedEnv macLinkedEnv = new LinkedEnv();
+        setField(macLinkedEnv, "env", macEnv);
+        envs.add(macLinkedEnv);
+
+        // Linux 환경
+        Env linuxEnv = new Env();
+        setField(linuxEnv, "id", 3L);
+        setField(linuxEnv, "envType", EnvType.LINUX);
+        LinkedEnv linuxLinkedEnv = new LinkedEnv();
+        setField(linuxLinkedEnv, "env", linuxEnv);
+        envs.add(linuxLinkedEnv);
+
+        return envs;
+    }
+
+    /**
      * 테스트용 Review 리스트 생성
      */
     private List<Review> createTestReviews() {
@@ -202,6 +255,42 @@ class GameServiceTest {
     }
 
     /**
+     * 테스트용 Publisher (User) 생성
+     */
+    private User createTestPublisher() {
+        User publisher = new User();
+        setField(publisher, "id", 100L);
+        setField(publisher, "name", "테스트 배급사");
+        setField(publisher, "email", "publisher@test.com");
+        return publisher;
+    }
+
+    /**
+     * 테스트용 할인 리스트 생성
+     */
+    private List<SingleGameDiscount> createTestDiscounts() {
+        List<SingleGameDiscount> discounts = new ArrayList<>();
+
+        // 현재 유효한 할인
+        SingleGameDiscount activeDiscount = new SingleGameDiscount();
+        setField(activeDiscount, "id", 1L);
+        setField(activeDiscount, "discountRate", new BigDecimal("30"));
+        setField(activeDiscount, "createdAt", LocalDateTime.now().minusDays(1));
+        setField(activeDiscount, "expiresAt", LocalDateTime.now().plusDays(7));
+        discounts.add(activeDiscount);
+
+        // 만료된 할인
+        SingleGameDiscount expiredDiscount = new SingleGameDiscount();
+        setField(expiredDiscount, "id", 2L);
+        setField(expiredDiscount, "discountRate", new BigDecimal("50"));
+        setField(expiredDiscount, "createdAt", LocalDateTime.now().minusDays(10));
+        setField(expiredDiscount, "expiresAt", LocalDateTime.now().minusDays(1));
+        discounts.add(expiredDiscount);
+
+        return discounts;
+    }
+
+    /**
      * 예상 응답 DTO 생성
      */
     private GameDetailResponse createExpectedResponse() {
@@ -209,14 +298,19 @@ class GameServiceTest {
                 .id(1L)
                 .name("테스트 게임")
                 .price(30000L)
-                .tagNames(Set.of("액션", "RPG"))
+                .tags(Arrays.asList("액션", "RPG"))
                 .description("테스트 설명")
+                .introduction("테스트 게임 소개")
                 .thumbnailUrl("http://example.com/image.jpg")
                 .spec("최소 사양")
-                .publisher(null)
                 .reviewCount(5)
                 .averageScore(3.0)  // 평균: (1+2+3+4+5)/5 = 3.0
-                .mediaUrls(new HashSet<>())
+                .mediaUrls(Arrays.asList("image1.jpg", "image2.jpg"))
+                .releaseDate(LocalDate.of(2024, 1, 1))
+                .discountRate(30)  // 현재 유효한 할인율
+                .publisherId(100L)  // 배급사 ID
+                .publisherName("테스트 배급사")  // 배급사 이름
+                .env(Arrays.asList("Windows", "Mac", "Linux"))  // 게임 환경
                 .build();
     }
 

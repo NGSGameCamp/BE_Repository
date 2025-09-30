@@ -29,6 +29,8 @@ public interface GameRepository extends JpaRepository<Game, Long> {
             "LEFT JOIN FETCH g.tags t " +
             "LEFT JOIN FETCH t.gameTag " +
             "LEFT JOIN FETCH g.reviews " +
+            "LEFT JOIN FETCH g.publisher " +
+            "LEFT JOIN FETCH g.discounts " +
             "WHERE g.id = :id")
     Optional<Game> findByIdWithDetails(@Param("id") Long id);
 

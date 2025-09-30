@@ -31,4 +31,11 @@ public class LinkedEnv {
     @JoinColumn(name = "env_id")
     @ManyToOne
     private Env env;
+
+    // LinkedEnv.java에 추가
+    public String getEnvDescription() {
+        return env != null && env.getEnvType() != null
+                ? env.getEnvType().getDescription()
+                : null;
+    }
 }
