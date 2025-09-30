@@ -3,7 +3,9 @@ package com.imfine.ngs.game.dto.mapper;
 import com.imfine.ngs.game.dto.mapper.helper.GameMapperHelper;
 import com.imfine.ngs.game.dto.response.GameDetailResponse;
 import com.imfine.ngs.game.entity.Game;
+import com.imfine.ngs.game.entity.discount.SingleGameDiscount;
 import com.imfine.ngs.game.entity.env.LinkedEnv;
+import com.imfine.ngs.game.entity.review.Review;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -24,13 +26,16 @@ public class GameDetailMapper {
     private final GameMapperHelper helper;
 
     /**
-     * Game 엔티티를 GameDetailResponse DTO로 변환
+     * Game 엔티티를 GameDetailResponse DTO로 변환 (reviews, discounts 별도 전달)
      *
-     * @param game 변환할 Game 엔티티
+     * @param game      변환할 Game 엔티티
+     * @param reviews   게임의 리뷰 목록
+     * @param discounts 게임의 할인 목록
      * @return GameDetailResponse DTO
      */
-    public GameDetailResponse toDetailResponse(Game game) {
-
+    public GameDetailResponse toDetailResponse(Game game,
+                                               List<Review> reviews,
+                                               List<SingleGameDiscount> discounts) {
         if (game == null) {
             return null;
         }
@@ -44,13 +49,18 @@ public class GameDetailMapper {
                 .introduction(game.getIntroduction())
                 .thumbnailUrl(game.getThumbnailUrl())
                 .spec(game.getSpec())
-                .reviewCount(helper.calculateReviewCount(game.getReviews(), false))
-                .averageScore(helper.calculateAverageScore(game.getReviews(), false))
-                .mediaUrls(game.getMediaUrls() != null ? game.getMediaUrls() : new ArrayList<>())
-                .releaseDate(game.getCreatedAt() != null ? game.getCreatedAt().toLocalDate() : null)
-                .discountRate(helper.calculateCurrentDiscountRate(game.getDiscounts()))
-                .publisherId(game.getPublisher() != null ? game.getPublisher().getId() : null)
-                .publisherName(game.getPublisher() != null ? game.getPublisher().getName() : null)
+                // reviews와 discounts를 직접 파라미터로 받아서 처리
+                .reviewCount(helper.calculateReviewCount(reviews, false))
+                .averageScore(helper.calculateAverageScore(reviews, false))
+                .mediaUrls(game.getMediaUrls() != null ? game.getMediaUrls() : new
+                        ArrayList<>())
+                .releaseDate(game.getCreatedAt() != null ?
+                        game.getCreatedAt().toLocalDate() : null)
+                .discountRate(helper.calculateCurrentDiscountRate(discounts))
+                .publisherId(game.getPublisher() != null ? game.getPublisher().getId()
+                        : null)
+                .publisherName(game.getPublisher() != null ?
+                        game.getPublisher().getName() : null)
                 .env(extractEnvDescriptions(game.getEnv()))
                 .build();
     }
