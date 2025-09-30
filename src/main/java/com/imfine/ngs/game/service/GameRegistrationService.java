@@ -51,22 +51,11 @@ public class GameRegistrationService {
                 .build());
 
 
-        List<GameTag> gameTags = gameCreateRequest.getGameTagRequest().stream()
-                .map(tag -> gameTagService.findByTagType(tag.getGameTagType()))
-                .toList();
+        List<GameTag> gameTags = gameTagService.findByGameTagTypes(gameCreateRequest.getGameTagRequest());
+        linkedTagService.createLinkedTags(gameTags, saveGame);
 
-
-        List<LinkedTag> linkedTags = gameTags.stream()
-                .map(gameTag -> linkedTagService.createLinkedTag(gameTag, saveGame))
-                .toList();
-
-        List<Env> envs = gameCreateRequest.getEnvRequest().stream()
-                .map(env -> envService.findByEnvType(env.getEnvType()))
-                .toList();
-
-        List<LinkedEnv> linkedEnvs = envs.stream()
-                .map(env -> linkedEnvService.createLinkedEnv(env, saveGame))
-                .toList();
+        List<Env> envs = envService.findByEnvTypes(gameCreateRequest.getEnvRequest());
+        linkedEnvService.createLinkedEnvs(envs, saveGame);
 
         return saveGame;
     }
