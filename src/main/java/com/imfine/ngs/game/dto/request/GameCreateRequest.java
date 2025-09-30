@@ -1,11 +1,18 @@
 package com.imfine.ngs.game.dto.request;
 
+import com.imfine.ngs.game.entity.env.Env;
+import com.imfine.ngs.game.entity.env.LinkedEnv;
+import com.imfine.ngs.game.entity.notice.GameNotice;
+import com.imfine.ngs.game.entity.tag.GameTag;
+import com.imfine.ngs.game.entity.tag.LinkedTag;
 import com.imfine.ngs.game.enums.EnvType;
 import com.imfine.ngs.game.enums.GameStatusType;
 import com.imfine.ngs.game.enums.GameTagType;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -16,8 +23,6 @@ import java.util.Set;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class GameCreateRequest {
 
     @NotBlank(message = "게임 이름은 필수입니다")
@@ -29,14 +34,7 @@ public class GameCreateRequest {
     @Max(value = 1000000, message = "가격은 1,000,000원 이하여야 합니다")
     private Long price;
 
-    @NotEmpty(message = "최소 하나의 게임 태그를 선택해야 합니다")
-    private Set<GameTagType> tags;
-
-    @NotEmpty(message = "최소 하나의 환경을 선택해야 합니다")
-    private Set<EnvType> environments;
-
-    @Builder.Default
-    private GameStatusType gameStatus = GameStatusType.ACTIVE;
+    private GameStatusType gameStatus = GameStatusType.INACTIVE;
 
     @Size(max = 2000, message = "설명은 2000자를 초과할 수 없습니다")
     private String description;
@@ -44,4 +42,21 @@ public class GameCreateRequest {
     @Pattern(regexp = "^(https?://)?.+\\.(jpg|jpeg|png|gif|webp)$",
             message = "유효한 이미지 URL을 입력해주세요")
     private String thumbnailUrl;
+
+    private String spec;
+
+    private List<GameTagRequest> gameTagRequest;
+
+    private List<EnvRequest> envRequest;
+
+    @Builder
+    public GameCreateRequest(String name, Long price, String description, String thumbnailUrl, String spec, List<GameTagRequest> gameTagRequest, List<EnvRequest> envRequest) {
+        this.name = name;
+        this.price = price;
+        this.description = description;
+        this.thumbnailUrl = thumbnailUrl;
+        this.spec = spec;
+        this.gameTagRequest = gameTagRequest;
+        this.envRequest = envRequest;
+    }
 }

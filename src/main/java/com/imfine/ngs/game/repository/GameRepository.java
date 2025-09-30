@@ -1,5 +1,6 @@
 package com.imfine.ngs.game.repository;
 
+import com.imfine.ngs.game.dto.request.GameCreateRequest;
 import com.imfine.ngs.game.dto.response.GameDetailResponse;
 import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.enums.EnvType;
@@ -74,4 +75,7 @@ public interface GameRepository extends JpaRepository<Game, Long> {
 
     // 신작 게임 조회 (특정 날짜 이후 생성된 활성 게임)
     Page<Game> findByGameStatusAndCreatedAtAfter(GameStatusType gameStatus, LocalDateTime date, Pageable pageable);
+
+    // 게임 등록
+    Game save(GameCreateRequest gameCreateRequest);
 }

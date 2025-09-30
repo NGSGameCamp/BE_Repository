@@ -3,7 +3,9 @@ package com.imfine.ngs.game.entity.env;
 import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.entity.env.util.LinkedEnvId;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 /**
@@ -14,6 +16,7 @@ import lombok.Setter;
 @Getter
 @Table(name = "linked_env")
 @Entity
+@RequiredArgsConstructor
 public class LinkedEnv {
 
     // 복합키
@@ -31,4 +34,11 @@ public class LinkedEnv {
     @JoinColumn(name = "env_id")
     @ManyToOne
     private Env env;
+
+    @Builder
+    public LinkedEnv(Game game, Env env) {
+        this.id = new LinkedEnvId();
+        this.game = game;
+        this.env = env;
+    }
 }
