@@ -5,8 +5,13 @@ import com.imfine.ngs.user.dto.request.SignInRequest;
 import com.imfine.ngs.user.dto.request.SignUpRequest;
 import com.imfine.ngs.user.dto.request.UpdatePwdRequest;
 import com.imfine.ngs.user.dto.response.SignInResponse;
+import com.imfine.ngs.user.dto.response.WhoAmIResponse;
 import com.imfine.ngs.user.dto.response.EmailAvailabilityResponse;
 import com.imfine.ngs.user.service.AuthService;
+import com.imfine.ngs.user.repository.UserRepository;
+import com.imfine.ngs.user.entity.User;
+import com.imfine.ngs._global.error.exception.BusinessException;
+import com.imfine.ngs._global.error.model.ErrorCode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +28,8 @@ import jakarta.servlet.http.HttpServletResponse;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+  private final AuthService authService;
+  private final UserRepository userRepository;
 
     @Value("${jwt.cookie.same-site}")
     private String cookieSameSite;
@@ -74,6 +80,25 @@ public class AuthController {
         }
         authService.updatePasswordByUserId(principal.getUserId(), request.getOldPwd(), request.getNewPwd());
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<WhoAmIResponse> whoAmI(@AuthenticationPrincipal JwtUserPrincipal principal) {
+        Long userId = principal.getUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ENTITY_NOT_FOUND));
+
+        String role = user.getRole() != null ? user.getRole().getRole() : null;
+        WhoAmIResponse body = new WhoAmIResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                user.getNickname(),
+                user.getProfileUrl(),
+                role
+        );
+        return ResponseEntity.ok(body);
     }
 
 }
