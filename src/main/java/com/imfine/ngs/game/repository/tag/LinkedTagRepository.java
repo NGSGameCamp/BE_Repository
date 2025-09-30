@@ -1,5 +1,6 @@
 package com.imfine.ngs.game.repository.tag;
 
+import com.imfine.ngs.game.entity.tag.GameTag;
 import com.imfine.ngs.game.entity.tag.LinkedTag;
 import com.imfine.ngs.game.entity.tag.util.LinkedTagId;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,4 +15,5 @@ import java.util.List;
 public interface LinkedTagRepository extends JpaRepository<LinkedTag, LinkedTagId> {
 
     List<LinkedTag> findByGame_Id(Long gameId);
+    LinkedTag save(GameTag gameTag);
 }

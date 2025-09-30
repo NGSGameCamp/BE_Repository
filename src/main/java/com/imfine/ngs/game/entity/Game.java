@@ -2,6 +2,7 @@ package com.imfine.ngs.game.entity;
 
 import com.imfine.ngs.game.entity.bundle.BundleGameList;
 import com.imfine.ngs.game.entity.discount.SingleGameDiscount;
+import com.imfine.ngs.game.entity.env.Env;
 import com.imfine.ngs.game.entity.env.LinkedEnv;
 import com.imfine.ngs.game.entity.notice.GameNotice;
 import com.imfine.ngs.game.entity.review.Review;
@@ -25,8 +26,6 @@ import java.util.Set;
  */
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Entity
 public class Game {
 
@@ -74,5 +73,23 @@ public class Game {
     @OneToMany(mappedBy = "game")
     private List<GameNotice> notices = new ArrayList<>(); // 공지사항
 
+    @Builder
+    public Game(Long id, String name, Long price, Set<LinkedTag> tags, Set<LinkedEnv> env, String thumbnailUrl, GameStatusType gameStatus, String description, String spec, LocalDateTime createdAt, LocalDateTime updatedAt, Set<BundleGameList> bundles, List<SingleGameDiscount> discounts, List<Review> reviews, List<GameNotice> notices) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.tags = tags;
+        this.env = env;
+        this.thumbnailUrl = thumbnailUrl;
+        this.gameStatus = gameStatus;
+        this.description = description;
+        this.spec = spec;
+        this.bundles = bundles;
+        this.discounts = discounts;
+        this.reviews = reviews;
+        this.notices = notices;
+        this.updatedAt = updatedAt;
+        this.createdAt = createdAt;
+    }
 }
 
