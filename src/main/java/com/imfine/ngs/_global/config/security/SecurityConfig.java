@@ -13,11 +13,13 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
+import com.imfine.ngs.user.oauth.CookieAuthorizationRequestRepository;
 
 @EnableWebSecurity
 @org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity(prePostEnabled = true)
@@ -40,7 +42,8 @@ public class SecurityConfig {
     http
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .csrf(AbstractHttpConfigurer::disable)
-            .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
+            .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
     http
             /*
@@ -51,7 +54,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
 //                    .anyRequest().permitAll()
 //                    .anyRequest().authenticated()
-                      .requestMatchers("/api/auth/**", "/api/main, /login/oauth2/**").permitAll()
+                      .requestMatchers("/api/auth/**", "/api/main").permitAll()
+                      .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                       .requestMatchers(HttpMethod.GET, "/api/u/*", "/api/follow/following/*").permitAll()
                       .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // 스웨거 경로 추가
                       .anyRequest().authenticated()
@@ -60,6 +64,7 @@ public class SecurityConfig {
 
 
     http.oauth2Login(oauth -> oauth
+            .authorizationEndpoint(ep -> ep.authorizationRequestRepository(cookieAuthorizationRequestRepository()))
             .successHandler(oAuth2AuthenticationSuccessHandler)
             .failureHandler(oAuth2AuthenticationFailureHandler)
     );
@@ -72,5 +77,10 @@ public class SecurityConfig {
   @Profile({"test", "dev"})
   public WebSecurityCustomizer h2ConsoleCustomizer() {
     return web -> web.ignoring().requestMatchers("/h2-console/**");
+  }
+
+  @Bean
+  public CookieAuthorizationRequestRepository cookieAuthorizationRequestRepository() {
+    return new CookieAuthorizationRequestRepository();
   }
 }
