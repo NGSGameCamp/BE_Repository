@@ -25,7 +25,7 @@ import java.util.Set;
  * @author chan
  */
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor // TODO: 테스트 코드 리팩터링을 통해 해당 어노테이션도 제거할 수 있다.
 @Entity
 public class Game {
 

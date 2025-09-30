@@ -1,23 +1,19 @@
 package com.imfine.ngs.game.service;
 
-import com.imfine.ngs.game.dto.request.EnvRequest;
 import com.imfine.ngs.game.dto.request.GameCreateRequest;
-import com.imfine.ngs.game.dto.request.GameTagRequest;
 import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.entity.env.Env;
-import com.imfine.ngs.game.entity.env.LinkedEnv;
 import com.imfine.ngs.game.entity.tag.GameTag;
-import com.imfine.ngs.game.entity.tag.LinkedTag;
 import com.imfine.ngs.game.repository.GameRepository;
-import com.imfine.ngs.game.repository.tag.GameTagRepository;
-import com.imfine.ngs.game.repository.tag.LinkedTagRepository;
+import com.imfine.ngs.game.service.support.EnvService;
+import com.imfine.ngs.game.service.support.GameTagService;
+import com.imfine.ngs.game.service.support.LinkedEnvService;
+import com.imfine.ngs.game.service.support.LinkedTagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * 배급사(publisher)가 게임({@link com.imfine.ngs.game.entity.Game} 관리 서비스 클래스.
