@@ -20,4 +20,5 @@ public class GameCreateResponse {
     private List<GameTagResponse> gameTagResponse;
     private List<EnvResponse> envResponse;
     private LocalDateTime createAt;
+    private long publisherId;
 }

@@ -1,19 +1,10 @@
 package com.imfine.ngs.game.dto.request;
 
-import com.imfine.ngs.game.entity.env.Env;
-import com.imfine.ngs.game.entity.env.LinkedEnv;
-import com.imfine.ngs.game.entity.notice.GameNotice;
-import com.imfine.ngs.game.entity.tag.GameTag;
-import com.imfine.ngs.game.entity.tag.LinkedTag;
-import com.imfine.ngs.game.enums.EnvType;
 import com.imfine.ngs.game.enums.GameStatusType;
-import com.imfine.ngs.game.enums.GameTagType;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 
 /**
  * 게임 {@link com.imfine.ngs.game.entity.Game} 등록 요청 dto 클래스.
@@ -52,5 +43,7 @@ public class GameCreateRequest {
     private List<EnvRequest> envRequest;
 
     private String introduction;
+
+    private long publisherId;
 
 }
