@@ -8,6 +8,7 @@ import com.imfine.ngs.game.entity.notice.GameNotice;
 import com.imfine.ngs.game.entity.review.Review;
 import com.imfine.ngs.game.entity.tag.LinkedTag;
 import com.imfine.ngs.game.enums.GameStatusType;
+import com.imfine.ngs.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -20,10 +21,9 @@ import java.util.Set;
 
 /**
  * 게임({@link Game}) 엔티티 클래스.
- *
+ * TODO: 현재 배열이 Set일 필요가 없다.
  * @author chan
  */
-@Table(name = "games")
 @Getter
 @NoArgsConstructor
 @Entity
@@ -33,10 +33,17 @@ public class Game {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // 게임 식별 아이디
 
+    @ManyToOne
+    @JoinColumn(name = "publisher_id")
+    private User publisher; // 배급사
+
     private String name; // 게임 이름
     private Long price; // 게임 가격
-    private String description; // 게임 설명
+    private String description; // 게임 본문
+    private String introduction; // 게임 간단 설명
     private String spec; // 게임 사양
+
+    private List<String> mediaUrls; // 본문에 들어갈 화면
 
     @OneToMany(mappedBy = "game")
     private Set<LinkedTag> tags = new HashSet<>(); // 게임 태그(ex: 액션, RPG...etc)

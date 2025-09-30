@@ -35,10 +35,17 @@ public class LinkedEnv {
     @ManyToOne
     private Env env;
 
+    // LinkedEnv.java에 추가
+    public String getEnvDescription() {
+        return env != null && env.getEnvType() != null
+                ? env.getEnvType().getDescription()
+                : null;
+
     @Builder
     public LinkedEnv(Game game, Env env) {
         this.id = new LinkedEnvId();
         this.game = game;
         this.env = env;
+
     }
 }
