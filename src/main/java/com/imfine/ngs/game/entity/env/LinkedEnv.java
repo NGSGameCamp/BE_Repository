@@ -40,12 +40,12 @@ public class LinkedEnv {
         return env != null && env.getEnvType() != null
                 ? env.getEnvType().getDescription()
                 : null;
+    }
 
     @Builder
     public LinkedEnv(Game game, Env env) {
         this.id = new LinkedEnvId();
         this.game = game;
         this.env = env;
-
     }
 }

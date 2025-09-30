@@ -7,6 +7,8 @@ import com.imfine.ngs.game.repository.tag.LinkedTagRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class LinkedTagService {
@@ -19,4 +21,12 @@ public class LinkedTagService {
                 .build());
     }
 
+    public void createLinkedTags(List<GameTag> gameTags, Game game) {
+        gameTags.forEach(tag -> linkedTagRepository.save(
+                LinkedTag.builder()
+                .game(game)
+                .gameTag(tag)
+                .build())
+        );
+    }
 }
