@@ -29,39 +29,39 @@ public class UserLibraryService {
 
     public List<UserLibraryResponse> getUserLibrary(Long userId) {
         List<Order> orders = orderRepository.findByUserId(userId);
-        log.info("[DEBUG] 1. Total orders for userId {}: {}", userId, orders.size());
+        log.debug("[DEBUG] 1. Total orders for userId {}: {}", userId, orders.size());
 
         // 대상 상태의 주문만 필터링 후, 게임 ID 집합 추출 (중복 제거)
         Set<Long> gameIds = orders.stream()
-                .peek(o -> log.info("[DEBUG] 2. Order {} status: {}", o.getOrderId(), o.getStatus()))
+                .peek(o -> log.debug("[DEBUG] 2. Order {} status: {}", o.getOrderId(), o.getStatus()))
                 .filter(o -> o.getStatus() == OrderStatus.PURCHASED_CONFIRMED
                         || o.getStatus() == OrderStatus.REFUND_REQUESTED)
-                .peek(o -> log.info("[DEBUG] 3. After filter - order {}", o.getOrderId()))
+                .peek(o -> log.debug("[DEBUG] 3. After filter - order {}", o.getOrderId()))
                 .flatMap(o -> o.getOrderDetails().stream())
-                .peek(od -> log.info("[DEBUG] 4. OrderDetail game: {}", od.getGame() != null ? od.getGame().getId() : "null"))
+                .peek(od -> log.debug("[DEBUG] 4. OrderDetail game: {}", od.getGame() != null ? od.getGame().getId() : "null"))
                 .map(od -> od.getGame() != null ? od.getGame().getId() : null)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        log.info("[DEBUG] 5. Total gameIds: {}", gameIds.size());
-        log.info("[DEBUG] 5-1. GameIds: {}", gameIds);
+        log.debug("[DEBUG] 5. Total gameIds: {}", gameIds.size());
+        log.debug("[DEBUG] 5-1. GameIds: {}", gameIds);
 
         // 활성 게임만 조회
         List<Game> games = gameIds.stream()
-                .peek(id -> log.info("[DEBUG] 6-1. Searching for game ID: {} with status: {}", id, GameStatusType.ACTIVE))
+                .peek(id -> log.debug("[DEBUG] 6-1. Searching for game ID: {} with status: {}", id, GameStatusType.ACTIVE))
                 .map(id -> gameRepository.findByIdAndGameStatus(id, GameStatusType.ACTIVE))
-                .peek(opt -> log.info("[DEBUG] 6-2. Game found: {}, Game: {}", opt.isPresent(), opt.orElse(null)))
+                .peek(opt -> log.debug("[DEBUG] 6-2. Game found: {}, Game: {}", opt.isPresent(), opt.orElse(null)))
                 .flatMap(Optional::stream)
-                .collect(Collectors.toList());
+                .toList();
 
-        log.info("[DEBUG] 7. Final games size: {}", games.size());
+        log.debug("[DEBUG] 7. Final games size: {}", games.size());
 
         // Game → UserLibraryResponse 변환
         List<UserLibraryResponse> result = games.stream()
                 .map(this::toUserLibraryResponse)
                 .collect(Collectors.toList());
 
-        log.info("[DEBUG] 8. Final result size: {}", result.size());
+        log.debug("[DEBUG] 8. Final result size: {}", result.size());
 
         return result;
     }
