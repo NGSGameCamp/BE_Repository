@@ -3,6 +3,8 @@ package com.imfine.ngs.game.repository;
 import com.imfine.ngs.game.dto.request.GameCreateRequest;
 import com.imfine.ngs.game.dto.response.GameDetailResponse;
 import com.imfine.ngs.game.entity.Game;
+import com.imfine.ngs.game.entity.discount.SingleGameDiscount;
+import com.imfine.ngs.game.entity.review.Review;
 import com.imfine.ngs.game.enums.EnvType;
 import com.imfine.ngs.game.enums.GameStatusType;
 import com.imfine.ngs.game.enums.GameTagType;
@@ -26,14 +28,29 @@ import java.util.Optional;
 public interface GameRepository extends JpaRepository<Game, Long> {
 
     // 기존 findGameDetailById 제거하고 새 메서드 추가
+    // TODO: [fix-149] 부분적 n + 1 문제와 카데시안 곱 문제가 남아있다.
     @Query("SELECT DISTINCT g FROM Game g " +
             "LEFT JOIN FETCH g.tags t " +
             "LEFT JOIN FETCH t.gameTag " +
-            "LEFT JOIN FETCH g.reviews " +
+            "LEFT JOIN FETCH g.env e " +
+            "LEFT JOIN FETCH e.env " +
             "LEFT JOIN FETCH g.publisher " +
-            "LEFT JOIN FETCH g.discounts " +
             "WHERE g.id = :id")
     Optional<Game> findByIdWithDetails(@Param("id") Long id);
+
+    // reviews 별도 조회 메서드 추가
+    @Query("SELECT r FROM Review r " +
+            "WHERE r.game.id = :gameId " +
+            "AND r.isDeleted = false " +
+            "ORDER BY r.createdAt DESC")
+    List<Review> findActiveReviewsByGameId(@Param("gameId") Long gameId);
+
+    // discounts 별도 조회 메서드 추가
+    @Query("SELECT d FROM SingleGameDiscount d " +
+            "WHERE d.game.id = :gameId " +
+            "AND (d.expiresAt IS NULL OR d.expiresAt > CURRENT_TIMESTAMP) " +
+            "ORDER BY d.discountRate DESC")
+    List<SingleGameDiscount> findActiveDiscountsByGameId(@Param("gameId") Long gameId);
 
     /*
         === 활성화 여부로 게임 조회 가능

@@ -45,7 +45,7 @@ public class Game {
     private String introduction; // 게임 간단 설명
     private String spec; // 게임 사양
 
-    private List<String> mediaUrls; // 본문에 들어갈 화면
+//    private List<String> mediaUrls; // 본문에 들어갈 화면
 
     @OneToMany(mappedBy = "game")
     private Set<LinkedTag> tags = new HashSet<>(); // 게임 태그(ex: 액션, RPG...etc)

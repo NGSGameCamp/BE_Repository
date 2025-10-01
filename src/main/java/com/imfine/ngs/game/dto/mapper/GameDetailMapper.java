@@ -29,12 +29,16 @@ import java.util.stream.Collectors;
 public class GameDetailMapper {
 
     /**
-     * Game 엔티티를 GameDetailResponse DTO로 변환
+     * Game 엔티티를 GameDetailResponse DTO로 변환 (reviews, discounts 별도 전달)
      *
-     * @param game 변환할 Game 엔티티
+     * @param game      변환할 Game 엔티티
+     * @param reviews   게임의 리뷰 목록
+     * @param discounts 게임의 할인 목록
      * @return GameDetailResponse DTO
      */
-    public GameDetailResponse toDetailResponse(Game game) {
+    public GameDetailResponse toDetailResponse(Game game,
+                                               List<Review> reviews,
+                                               List<SingleGameDiscount> discounts) {
         if (game == null) {
             return null;
         }
@@ -48,11 +52,11 @@ public class GameDetailMapper {
                 .introduction(game.getIntroduction())
                 .thumbnailUrl(game.getThumbnailUrl())
                 .spec(game.getSpec())
-                .reviewCount(calculateReviewCount(game.getReviews()))
-                .averageScore(calculateAverageScore(game.getReviews()))
-                .mediaUrls(game.getMediaUrls() != null ? game.getMediaUrls() : new ArrayList<>())
+                .reviewCount(calculateReviewCount(reviews))
+                .averageScore(calculateAverageScore(reviews))
+//                .mediaUrls(game.getMediaUrls() != null ? game.getMediaUrls() : new ArrayList<>())
                 .releaseDate(game.getCreatedAt() != null ? game.getCreatedAt().toLocalDate() : null)
-                .discountRate(calculateCurrentDiscountRate(game.getDiscounts()))
+                .discountRate(calculateCurrentDiscountRate(discounts))
                 .publisherId(game.getPublisher() != null ? game.getPublisher().getId() : null)
                 .publisherName(game.getPublisher() != null ? game.getPublisher().getName() : null)
                 .env(extractEnvDescriptions(game.getEnv()))
