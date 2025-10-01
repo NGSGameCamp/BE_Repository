@@ -1,22 +1,16 @@
 package com.imfine.ngs.game.repository;
 
 import com.imfine.ngs.game.dto.request.GameCreateRequest;
-import com.imfine.ngs.game.dto.response.GameDetailResponse;
 import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.entity.discount.SingleGameDiscount;
 import com.imfine.ngs.game.entity.review.Review;
-import com.imfine.ngs.game.enums.EnvType;
 import com.imfine.ngs.game.enums.GameStatusType;
-import com.imfine.ngs.game.enums.GameTagType;
-import org.hibernate.metamodel.mapping.WhereRestrictable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,10 +47,9 @@ public interface GameRepository extends JpaRepository<Game, Long> {
     List<SingleGameDiscount> findActiveDiscountsByGameId(@Param("gameId") Long gameId);
 
 
-
     @Query("SELECT g.id FROM Game g " +
             "LEFT JOIN g.reviews r " +
-            "WHERE g.gameStatus = :status " +
+            "WHERE g.gameStatus.statusType = :status " +
             "AND (r.isDeleted = false OR r.isDeleted IS NULL) " +
             "GROUP BY g.id " +
             "HAVING COUNT(r) >= :minReviews " +
@@ -71,17 +64,17 @@ public interface GameRepository extends JpaRepository<Game, Long> {
 
 
     @Query("SELECT DISTINCT g FROM Game g " +
-     "LEFT JOIN FETCH g.publisher " +
-     "LEFT JOIN FETCH g.tags t " +
-     "LEFT JOIN FETCH t.gameTag " +
-     "LEFT JOIN FETCH g.discounts " +
-     "WHERE g.id IN :ids")
-     List<Game> findGamesWithDetailsByIds(@Param("ids") List<Long> ids);
+            "LEFT JOIN FETCH g.publisher " +
+            "LEFT JOIN FETCH g.tags t " +
+            "LEFT JOIN FETCH t.gameTag " +
+            "LEFT JOIN FETCH g.discounts " +
+            "WHERE g.id IN :ids")
+    List<Game> findGamesWithDetailsByIds(@Param("ids") List<Long> ids);
 
 
-     // 단일 게임 조회 (활성 상태만)
-    @Query("SELECT g FROM Game g WHERE g.id = :id AND g.gameStatus = :status")
-    Optional<Game> findByIdAndGameStatus(@Param("id") Long id, @Param("status") GameStatusType status);
+    // 단일 게임 조회 (활성 상태만)
+    @Query("SELECT g FROM Game g WHERE g.id = :id AND g.gameStatus.statusType = :statusType")
+    Optional<Game> findByIdAndGameStatus(@Param("id") Long id, @Param("statusType") GameStatusType statusType);
 
     // 게임 등록
     Game save(GameCreateRequest gameCreateRequest);

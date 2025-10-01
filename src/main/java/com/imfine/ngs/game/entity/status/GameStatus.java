@@ -27,5 +27,4 @@ public class GameStatus {
 
     @Enumerated(EnumType.STRING)
     private GameStatusType statusType;
-
 }

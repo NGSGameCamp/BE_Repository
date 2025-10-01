@@ -6,6 +6,7 @@ import com.imfine.ngs.game.entity.env.Env;
 import com.imfine.ngs.game.entity.env.LinkedEnv;
 import com.imfine.ngs.game.entity.notice.GameNotice;
 import com.imfine.ngs.game.entity.review.Review;
+import com.imfine.ngs.game.entity.status.GameStatus;
 import com.imfine.ngs.game.entity.tag.LinkedTag;
 import com.imfine.ngs.game.enums.GameStatusType;
 import com.imfine.ngs.user.entity.User;
@@ -61,7 +62,9 @@ public class Game {
 
     private String thumbnailUrl; // 썸네일 이미지 URL
 
-    private GameStatusType gameStatus; // gameStatus
+    @ManyToOne
+    @JoinColumn(name = "game_status_id")
+    private GameStatus gameStatus; // gameStatus
 
     @CreatedDate
     private LocalDateTime createdAt; // 게임 등록 날짜
@@ -82,7 +85,7 @@ public class Game {
     private List<GameNotice> notices = new ArrayList<>(); // 공지사항
 
     @Builder
-    public Game(Long id, String name, Long price, Set<LinkedTag> tags, Set<LinkedEnv> env, String thumbnailUrl, GameStatusType gameStatus, String description, String spec, LocalDateTime createdAt, LocalDateTime updatedAt, Set<BundleGameList> bundles, List<SingleGameDiscount> discounts, List<Review> reviews, List<GameNotice> notices) {
+    public Game(Long id, String name, Long price, Set<LinkedTag> tags, Set<LinkedEnv> env, String thumbnailUrl, GameStatus gameStatus, String description, String spec, LocalDateTime createdAt, LocalDateTime updatedAt, Set<BundleGameList> bundles, List<SingleGameDiscount> discounts, List<Review> reviews, List<GameNotice> notices) {
         this.id = id;
         this.name = name;
         this.price = price;
