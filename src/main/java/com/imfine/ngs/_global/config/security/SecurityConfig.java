@@ -54,10 +54,12 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
 //                    .anyRequest().permitAll()
 //                    .anyRequest().authenticated()
-                      .requestMatchers("/api/auth/**", "/api/main").permitAll()
+                      .requestMatchers("/api/auth/**", "/api/games/**").permitAll()
                       .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                       .requestMatchers(HttpMethod.GET, "/api/u/*", "/api/follow/following/*").permitAll()
                       .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // 스웨거 경로 추가
+                      .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                      .requestMatchers("/api/publisher/**").hasAnyRole("PUBLISHER", "ADMIN")
                       .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
