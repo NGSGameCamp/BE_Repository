@@ -6,6 +6,7 @@ import com.imfine.ngs.game.entity.env.Env;
 import com.imfine.ngs.game.entity.env.LinkedEnv;
 import com.imfine.ngs.game.entity.notice.GameNotice;
 import com.imfine.ngs.game.entity.review.Review;
+import com.imfine.ngs.game.entity.status.GameStatus;
 import com.imfine.ngs.game.entity.tag.LinkedTag;
 import com.imfine.ngs.game.enums.GameStatusType;
 import com.imfine.ngs.user.entity.User;
@@ -63,7 +64,9 @@ public class Game {
 
     private String thumbnailUrl; // 썸네일 이미지 URL
 
-    private GameStatusType gameStatus; // gameStatus
+    @ManyToOne
+    @JoinColumn(name = "game_status_id")
+    private GameStatus gameStatus; // gameStatus
 
     @CreatedDate
     private LocalDateTime createdAt; // 게임 등록 날짜

@@ -1,6 +1,7 @@
 package com.imfine.ngs.game.tag;
 
 import com.imfine.ngs.game.entity.Game;
+import com.imfine.ngs.game.entity.status.GameStatus;
 import com.imfine.ngs.game.entity.tag.GameTag;
 import com.imfine.ngs.game.entity.tag.LinkedTag;
 import com.imfine.ngs.game.entity.tag.util.LinkedTagId;
@@ -47,7 +48,7 @@ class LinkedTagRepositoryTest {
         game = Game.builder()
                 .name("테스트 게임")
                 .price(10000L)
-                .gameStatus(GameStatusType.ACTIVE)
+                .gameStatus(GameStatus.builder().statusType(GameStatusType.ACTIVE).build())
                 .build();
         game = gameRepository.save(game);
 
@@ -108,10 +109,10 @@ class LinkedTagRepositoryTest {
         assertThat(linkedTags)
                 .extracting(lt -> lt.getGameTag().getTagType())
                 .containsExactlyInAnyOrder(
-                    GameTagType.ACTION,
-                    GameTagType.RPG,
-                    GameTagType.STRATEGY,
-                    GameTagType.PUZZLE
+                        GameTagType.ACTION,
+                        GameTagType.RPG,
+                        GameTagType.STRATEGY,
+                        GameTagType.PUZZLE
                 );
     }
 
