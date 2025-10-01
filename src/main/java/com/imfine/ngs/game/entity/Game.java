@@ -27,7 +27,9 @@ import java.util.Set;
  */
 @Getter
 @NoArgsConstructor // TODO: 테스트 코드 리팩터링을 통해 해당 어노테이션도 제거할 수 있다.
+@AllArgsConstructor
 @Entity
+@Builder
 public class Game {
 
     @Id
@@ -80,24 +82,5 @@ public class Game {
 
     @OneToMany(mappedBy = "game")
     private List<GameNotice> notices = new ArrayList<>(); // 공지사항
-
-    @Builder
-    public Game(Long id, String name, Long price, Set<LinkedTag> tags, Set<LinkedEnv> env, String thumbnailUrl, GameStatusType gameStatus, String description, String spec, LocalDateTime createdAt, LocalDateTime updatedAt, Set<BundleGameList> bundles, List<SingleGameDiscount> discounts, List<Review> reviews, List<GameNotice> notices) {
-        this.id = id;
-        this.name = name;
-        this.price = price;
-        this.tags = tags;
-        this.env = env;
-        this.thumbnailUrl = thumbnailUrl;
-        this.gameStatus = gameStatus;
-        this.description = description;
-        this.spec = spec;
-        this.bundles = bundles;
-        this.discounts = discounts;
-        this.reviews = reviews;
-        this.notices = notices;
-        this.updatedAt = updatedAt;
-        this.createdAt = createdAt;
-    }
 }
 

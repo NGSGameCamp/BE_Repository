@@ -22,19 +22,20 @@ public class DefaultUserDataInitializer {
     public ApplicationRunner initDefaultUserData() {
         return args -> {
             userRoleRepository.findByRole("USER").orElseGet(() ->
-                    userRoleRepository.save(UserRole.builder()
-                            .role("USER")
-                            .description("Default user role")
-                            .build())
+                    userRoleRepository.save(new UserRole(null, "USER", "Default user role"))
+            );
+
+            userRoleRepository.findByRole("PUBLISHER").orElseGet(() ->
+                    userRoleRepository.save(new UserRole(null, "PUBLISHER", "Publisher role"))
+            );
+
+            userRoleRepository.findByRole("ADMIN").orElseGet(() ->
+                    userRoleRepository.save(new UserRole(null, "ADMIN", "Admin role"))
             );
 
             userStatusRepository.findByName("ACTIVE").orElseGet(() ->
-                    userStatusRepository.save(UserStatus.builder()
-                            .name("ACTIVE")
-                            .description("Active user status")
-                            .build())
+                    userStatusRepository.save(new UserStatus(null, "ACTIVE", "Active user status"))
             );
         };
     }
 }
-

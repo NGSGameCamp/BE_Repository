@@ -1,6 +1,5 @@
 package com.imfine.ngs.game.dto.response;
 
-import com.imfine.ngs.game.enums.GameTagType;
 import lombok.*;
 
 /**
@@ -14,8 +13,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class GameTagResponse {
+    private String gameTagType;
 
-    private GameTagType tagType;
-    private String name;
-    private String description;
 }
