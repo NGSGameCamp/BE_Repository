@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 public class CommunityCommentResponse {
+  private Long id;
   private Long parentId;
 
   private CommunityUser user;
