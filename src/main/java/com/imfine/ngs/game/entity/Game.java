@@ -22,10 +22,11 @@ import java.util.Set;
 /**
  * 게임({@link Game}) 엔티티 클래스.
  * TODO: 현재 배열이 Set일 필요가 없다.
+ *
  * @author chan
  */
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor // TODO: 테스트 코드 리팩터링을 통해 해당 어노테이션도 제거할 수 있다.
 @AllArgsConstructor
 @Entity
 @Builder
@@ -45,6 +46,13 @@ public class Game {
     private String introduction; // 게임 간단 설명
     private String spec; // 게임 사양
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "game_media_urls",
+            joinColumns = @JoinColumn(name = "game_id")
+    )
+    @Column(name = "url")
+    @OrderColumn(name = "url_order")
     private List<String> mediaUrls; // 본문에 들어갈 화면
 
     @OneToMany(mappedBy = "game")
