@@ -130,6 +130,7 @@ public class CommunityMapper {
   // TODO: CommunityComment -> CommunityCommentResponse
   public CommunityCommentResponse toCommentResponse(CommunityComment comment) {
     return CommunityCommentResponse.builder()
+            .id(comment.getId())
             .parentId(comment.getParentId())
             .user(getAuthorOrThrow(comment.getAuthorId()))
             .content(comment.getContent())

@@ -84,7 +84,7 @@ public class CommunityCommentController {
   @GetMapping("/comment/user/{userId}")
   public ResponseEntity<Page<CommunityCommentResponse>> getCommentsByAuthorId(
           @PathVariable Long userId,
-          @RequestParam(value = "size", defaultValue = "0") int page,
+          @RequestParam(value = "page", defaultValue = "0") int page,
           @RequestParam(value = "size", defaultValue = "100") int size
   ) {
     try {

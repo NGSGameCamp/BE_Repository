@@ -54,7 +54,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
 //                    .anyRequest().permitAll()
 //                    .anyRequest().authenticated()
-                      .requestMatchers("/api/auth/**", "/api/games/**").permitAll()
+                      .requestMatchers("/api/auth/**", "/api/games/**", "/api/community/**", "/api/follow/**").permitAll()
                       .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                       .requestMatchers(HttpMethod.GET, "/api/u/*", "/api/follow/following/*").permitAll()
                       .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // 스웨거 경로 추가
