@@ -22,6 +22,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Value;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.imfine.ngs.user.oauth.CookieAuthorizationRequestRepository;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -99,6 +101,34 @@ public class AuthController {
                 role
         );
         return ResponseEntity.ok(body);
+    }
+
+    @PostMapping("/signout")
+    public ResponseEntity<Void> signOut(HttpServletResponse response) {
+        // Clear security context (stateless app but good hygiene)
+        SecurityContextHolder.clearContext();
+
+        // Expire ACCESS_TOKEN cookie
+        StringBuilder cookie = new StringBuilder();
+        cookie.append("ACCESS_TOKEN=");
+        cookie.append("; Path=/");
+        cookie.append("; Max-Age=0");
+        cookie.append("; HttpOnly");
+        if (cookieSameSite != null && !cookieSameSite.isBlank()) {
+            cookie.append("; SameSite=").append(cookieSameSite);
+        }
+        if (cookieSecure) cookie.append("; Secure");
+        response.addHeader("Set-Cookie", cookie.toString());
+
+        // Clear any OAuth2 authorization cookies to avoid stale state
+        CookieAuthorizationRequestRepository.clearAuthorizationCookies(response);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/signout")
+    public ResponseEntity<Void> signOutGet(HttpServletResponse response) {
+        return signOut(response);
     }
 
 }
