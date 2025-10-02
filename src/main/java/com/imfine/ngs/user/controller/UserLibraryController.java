@@ -1,7 +1,7 @@
 package com.imfine.ngs.user.controller;
 
 import com.imfine.ngs._global.config.security.jwt.JwtUserPrincipal;
-import com.imfine.ngs.game.entity.Game;
+import com.imfine.ngs.user.dto.response.UserLibraryResponse;
 import com.imfine.ngs.user.service.UserLibraryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,7 +21,7 @@ public class UserLibraryController {
 
     @GetMapping("/library")
     @PreAuthorize("isAuthenticated()")
-    public List<Game> getUserLibrary(@AuthenticationPrincipal JwtUserPrincipal principal) {
+    public List<UserLibraryResponse> getUserLibrary(@AuthenticationPrincipal JwtUserPrincipal principal) {
         Long userId = principal.getUserId();
         return userLibraryService.getUserLibrary(userId);
     }
