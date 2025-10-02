@@ -47,17 +47,17 @@ public class GameController {
         return gameService.getGameDetail(id);
     }
 
-    @Operation(
-            summary = "게임 추천 조회 (인기순으로 조회합니다.)",
-            description = "게임 인기순으로 조회합니다. 기본으로 5개를 조회합니다."
-    )
-    @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/popular")
-    public Page<GameCardResponse> getReCommand(
-            @PageableDefault(size = 10) Pageable pageable,
-            @RequestParam(required = false) Integer minReviews,
-            @RequestParam(required = false) Double minAverageScore) {
-
-        return gameService.getPopular(pageable, minReviews, minAverageScore);
-    }
+//    @Operation(
+//            summary = "게임 추천 조회 (인기순으로 조회합니다.)",
+//            description = "게임 인기순으로 조회합니다. 기본으로 5개를 조회합니다."
+//    )
+//    @ResponseStatus(HttpStatus.OK)
+//    @GetMapping("/popular")
+//    public Page<GameCardResponse> getReCommand(
+//            @PageableDefault(size = 10) Pageable pageable,
+//            @RequestParam(required = false) Integer minReviews,
+//            @RequestParam(required = false) Double minAverageScore) {
+//
+//        return gameService.getPopular(pageable, minReviews, minAverageScore);
+//    }
 }
