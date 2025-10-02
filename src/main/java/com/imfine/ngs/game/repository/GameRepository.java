@@ -20,8 +20,7 @@ import java.util.Optional;
  * @author chan
  */
 public interface GameRepository extends JpaRepository<Game, Long> {
-
-    // 기존 쿼리 수정 - reviews와 discounts 제외
+  
     // TODO: [fix-149] 부분적 n + 1 문제와 카데시안 곱 문제가 남아있다.
     @Query("SELECT DISTINCT g FROM Game g " +
             "LEFT JOIN FETCH g.tags t " +
@@ -46,6 +45,13 @@ public interface GameRepository extends JpaRepository<Game, Long> {
             "ORDER BY d.discountRate DESC")
     List<SingleGameDiscount> findActiveDiscountsByGameId(@Param("gameId") Long gameId);
 
+    /*
+        === 활성화 여부로 게임 조회 가능
+     */
+    // 전체 활성 게임 조회 (동적 정렬 메서드)
+    @Query("SELECT g FROM Game g WHERE g.gameStatus = :status")
+    Page<Game> findAllActive(@Param("status") GameStatusType status, Pageable pageable);
+
 
     @Query("SELECT g.id FROM Game g " +
             "LEFT JOIN g.reviews r " +
@@ -61,16 +67,6 @@ public interface GameRepository extends JpaRepository<Game, Long> {
             @Param("minScore") double minScore,
             Pageable pageable
     );
-
-
-    @Query("SELECT DISTINCT g FROM Game g " +
-            "LEFT JOIN FETCH g.publisher " +
-            "LEFT JOIN FETCH g.tags t " +
-            "LEFT JOIN FETCH t.gameTag " +
-            "LEFT JOIN FETCH g.discounts " +
-            "WHERE g.id IN :ids")
-    List<Game> findGamesWithDetailsByIds(@Param("ids") List<Long> ids);
-
 
     // 단일 게임 조회 (활성 상태만)
     @Query("SELECT g FROM Game g WHERE g.id = :id AND g.gameStatus.statusType = :statusType")

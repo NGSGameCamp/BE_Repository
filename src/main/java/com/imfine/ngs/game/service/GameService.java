@@ -7,11 +7,6 @@ import com.imfine.ngs.game.dto.response.GameDetailResponse;
 import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.entity.discount.SingleGameDiscount;
 import com.imfine.ngs.game.entity.review.Review;
-import com.imfine.ngs.game.enums.GameStatusType;
-import com.imfine.ngs.game.repository.GameRepository;
-import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.LifecycleState;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -36,7 +31,7 @@ public class GameService {
 
     /**
      * 게임 상세 정보를 조회합니다.
-     *
+     * TODO: review / discounts 로직 분리
      * @param id 조회할 게임의 ID
      * @return GameDetailResponse 게임 상세 정보
      */
@@ -52,11 +47,7 @@ public class GameService {
         List<SingleGameDiscount> discounts = gameRepository.findActiveDiscountsByGameId(id);
 
         // 변환하여 반환한다.
-        var returnGame = gameDetailMapper.toDetailResponse(detailGame, reviews, discounts);
-
-        System.out.println(returnGame.toString());
-
-        return returnGame;
+        return gameDetailMapper.toDetailResponse(detailGame, reviews, discounts);
     }
 
     /**
