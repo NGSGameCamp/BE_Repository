@@ -70,7 +70,7 @@ public class GameRegistrationService {
         return GameCreateResponse.builder()
                 .name(saveGame.getName())
                 .price(saveGame.getPrice())
-                .gameStatus(saveGame.getGameStatus())
+                .gameStatus(saveGame.getGameStatus().getStatusType())
                 .description(saveGame.getDescription())
                 .thumbnailUrl(saveGame.getThumbnailUrl())
                 .spec(saveGame.getSpec())

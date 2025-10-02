@@ -75,4 +75,5 @@ public interface GameRepository extends JpaRepository<Game, Long> {
     // 게임 등록
     Game save(GameCreateRequest gameCreateRequest);
 
+//  List<Game> findGamesBy(List<Long> content);
 }
