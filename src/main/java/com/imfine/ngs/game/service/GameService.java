@@ -4,6 +4,7 @@ import com.imfine.ngs.game.dto.mapper.GameCardMapper;
 import com.imfine.ngs.game.dto.mapper.GameDetailMapper;
 import com.imfine.ngs.game.dto.response.GameCardResponse;
 import com.imfine.ngs.game.dto.response.GameDetailResponse;
+import com.imfine.ngs.game.dto.response.page.GamePageResponse;
 import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.entity.discount.SingleGameDiscount;
 import com.imfine.ngs.game.entity.review.Review;
@@ -37,6 +38,7 @@ public class GameService {
     /**
      * 게임 상세 정보를 조회합니다.
      * TODO: review / discounts 로직 분리
+     *
      * @param id 조회할 게임의 ID
      * @return GameDetailResponse 게임 상세 정보
      */
@@ -55,43 +57,26 @@ public class GameService {
         return gameDetailMapper.toDetailResponse(detailGame, reviews, discounts);
     }
 
-//    /**
-//     * 게임 추천 정보(게임 인기순) 조회.
-//     *
-//     * @param pageable 페이징 처리
-//     * @return 게임 간단 정보
-//     */
-//    public Page<GameCardResponse> getPopular(Pageable pageable, Integer minReviews, Double minAverageScore) {
-//
-//        // 파라미터 기본값 설정
-//        long reviewValues = minReviews != null ? minReviews.longValue() : 3L; // 리뷰 개수
-//        double averageScoreValues = minAverageScore != null ? minAverageScore : 3.5; // 평균 평점
-//
-//        // 1단계: 조건에 맞는 게임 ID들 조회
-//        Page<Long> gameIdPage = gameRepository.findPopularGameIds(
-//                GameStatusType.ACTIVE,
-//                reviewValues,
-//                averageScoreValues,
-//                pageable
-//        );
-//
-//        // 2단계: ID가 없으면 빈 페이지 반환
-//        if (!gameIdPage.hasContent()) {
-//            return Page.empty(pageable);
-//        }
-//
-//        // 3단계: ID로 게임 상세 정보 조회
-//        List<Game> games = gameRepository.findGamesWithDetailsById(gameIdPage.getContent());
-//
-//        // 4단계: Page 객체 재구성
-//        Page<Game> popularGames = new PageImpl<>(
-//                games,
-//                pageable,
-//                gameIdPage.getTotalElements()
-//        );
-//
-//        // 5단계: GameCardResponse로 변환하여 반환
-//        return popularGames.map(gameCardMapper::toCardResponse);
-//    }
+    // 추천 게임 조회
+    public GamePageResponse getRecommendGame(Pageable pageable) {
+
+        // 엔티티 조회
+        Page<Game> recommendGames = gameRepository.findRecommendedGame(GameStatusType.ACTIVE, pageable);
+
+        // Page<Game> - > GameCardResponse
+        List<GameCardResponse> gameList = recommendGames.getContent()
+                .stream()
+                .map(gameCardMapper::toCardResponse)
+                .toList();
+
+        return GamePageResponse.<GameCardResponse>builder()
+                .content(gameList)
+                .pageNumber(recommendGames.getNumber())
+                .pageSize(recommendGames.getSize())
+                .totalElements(recommendGames.getTotalElements())
+                .totalPages(recommendGames.getTotalPages())
+                .last(recommendGames.isLast())
+                .build();
+    }
 
 }

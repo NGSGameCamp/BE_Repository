@@ -1,13 +1,12 @@
 package com.imfine.ngs.game.controller;
 
-import com.imfine.ngs.game.dto.response.GameCardResponse;
 import com.imfine.ngs.game.dto.response.GameDetailResponse;
+import com.imfine.ngs.game.dto.response.page.GamePageResponse;
 import com.imfine.ngs.game.service.GameService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.validator.internal.constraintvalidators.bv.size.SizeValidatorForArray;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -47,17 +46,16 @@ public class GameController {
         return gameService.getGameDetail(id);
     }
 
-//    @Operation(
-//            summary = "게임 추천 조회 (인기순으로 조회합니다.)",
-//            description = "게임 인기순으로 조회합니다. 기본으로 5개를 조회합니다."
-//    )
-//    @ResponseStatus(HttpStatus.OK)
-//    @GetMapping("/popular")
-//    public Page<GameCardResponse> getReCommand(
-//            @PageableDefault(size = 10) Pageable pageable,
-//            @RequestParam(required = false) Integer minReviews,
-//            @RequestParam(required = false) Double minAverageScore) {
-//
-//        return gameService.getPopular(pageable, minReviews, minAverageScore);
-//    }
+    @Operation(
+            summary = "추천 게임 목록 조회",
+            description = "평점과 리뷰 수를 기준으로 추천 게임 목록을 조회합니다. (기본 5개)"
+    )
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/recommend")
+    public GamePageResponse getRecommendGame(@PageableDefault(size = 5) Pageable pageable) {
+
+        // 서비스 호출
+        return gameService.getRecommendGame(pageable);
+    }
+
 }

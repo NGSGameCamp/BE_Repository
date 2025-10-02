@@ -3,7 +3,6 @@ package com.imfine.ngs.game.dto.request;
 import com.imfine.ngs.game.entity.env.Env;
 import com.imfine.ngs.game.entity.env.LinkedEnv;
 import com.imfine.ngs.game.entity.notice.GameNotice;
-import com.imfine.ngs.game.entity.status.GameStatus;
 import com.imfine.ngs.game.entity.tag.GameTag;
 import com.imfine.ngs.game.entity.tag.LinkedTag;
 import com.imfine.ngs.game.enums.EnvType;
@@ -34,7 +33,7 @@ public class GameCreateRequest {
     @Max(value = 1000000, message = "가격은 1,000,000원 이하여야 합니다")
     private Long price;
 
-    private GameStatus gameStatus = GameStatus.builder().statusType(GameStatusType.ACTIVE).build();
+    private GameStatusType gameStatusType;
 
     @Size(max = 2000, message = "설명은 2000자를 초과할 수 없습니다")
     private String description;

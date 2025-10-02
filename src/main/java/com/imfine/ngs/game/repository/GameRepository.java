@@ -45,6 +45,19 @@ public interface GameRepository extends JpaRepository<Game, Long> {
             "ORDER BY d.discountRate DESC")
     List<SingleGameDiscount> findActiveDiscountsByGameId(@Param("gameId") Long gameId);
 
+    // 평점과 리뷰로 게임 조회 (평점 3.5 이상, 리뷰 50개 이상)
+    @Query("SELECT DISTINCT g FROM Game g " +
+            "LEFT JOIN FETCH g.publisher " +
+            "WHERE g.gameStatus = :status " +
+            "  AND (SELECT AVG(r.score) FROM Review r WHERE r.game = g AND r.isDeleted = false) >= 3.5 " +
+            "  AND (SELECT COUNT(r) FROM Review r WHERE r.game = g AND r.isDeleted = false) >= 50 " +
+            "ORDER BY " +
+            "  (SELECT AVG(r.score) FROM Review r WHERE r.game = g AND r.isDeleted = false) DESC NULLS LAST, " +
+            "  (SELECT COUNT(r) FROM Review r WHERE r.game = g AND r.isDeleted = false) DESC, " +
+            "  g.createdAt DESC")
+    Page<Game> findRecommendedGame(@Param("status") GameStatusType status, Pageable pageable);
+
+
     // 단일 게임 조회 (활성 상태만)
     @Query("SELECT g FROM Game g WHERE g.id = :id AND g.gameStatus = :status")
     Optional<Game> findByIdAndGameStatus(@Param("id") Long id, @Param("status") GameStatusType status);

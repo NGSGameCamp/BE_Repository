@@ -6,7 +6,6 @@ import com.imfine.ngs.game.entity.env.Env;
 import com.imfine.ngs.game.entity.env.LinkedEnv;
 import com.imfine.ngs.game.entity.notice.GameNotice;
 import com.imfine.ngs.game.entity.review.Review;
-import com.imfine.ngs.game.entity.status.GameStatus;
 import com.imfine.ngs.game.entity.tag.LinkedTag;
 import com.imfine.ngs.game.enums.GameStatusType;
 import com.imfine.ngs.user.entity.User;
