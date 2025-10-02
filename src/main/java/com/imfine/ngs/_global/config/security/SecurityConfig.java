@@ -56,7 +56,7 @@ public class SecurityConfig {
 //                    .anyRequest().authenticated()
                       .requestMatchers("/api/auth/**", "/api/games/**", "/api/community/**", "/api/follow/**").permitAll()
                       .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
-                      .requestMatchers(HttpMethod.GET, "/api/u/*", "/api/follow/following/*").permitAll()
+                      .requestMatchers(HttpMethod.GET, "/api/follow/following/*").permitAll()
                       .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // 스웨거 경로 추가
                       .requestMatchers("/api/admin/**").hasRole("ADMIN")
                       .requestMatchers("/api/publisher/**").hasAnyRole("PUBLISHER", "ADMIN")
