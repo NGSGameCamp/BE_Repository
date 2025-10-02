@@ -57,5 +57,4 @@ public class GameController {
         // 서비스 호출
         return gameService.getRecommendGame(pageable);
     }
-
 }

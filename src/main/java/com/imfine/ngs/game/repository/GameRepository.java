@@ -5,6 +5,7 @@ import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.entity.discount.SingleGameDiscount;
 import com.imfine.ngs.game.entity.review.Review;
 import com.imfine.ngs.game.enums.GameStatusType;
+import com.imfine.ngs.game.enums.GameTagType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -64,6 +65,22 @@ public interface GameRepository extends JpaRepository<Game, Long> {
 
     // 게임 등록
     Game save(GameCreateRequest gameCreateRequest);
+
+    // 태그로 게임 조회 (모든 태그를 포함하는 게임만 조회)
+    @Query("SELECT DISTINCT g FROM Game g " +
+            "JOIN g.tags lt " +
+            "JOIN lt.gameTag gt " +
+            "WHERE g.gameStatus = :status " +
+            "  AND gt.tagType IN :tagTypes " +
+            "GROUP BY g.id " +
+            "HAVING COUNT(DISTINCT gt.tagType) = :tagCount " +
+            "ORDER BY g.createdAt DESC")
+    Page<Game> findByTagsAndStatus(
+            @Param("tagTypes") List<GameTagType> tagTypes,
+            @Param("tagCount") long tagCount,
+            @Param("status") GameStatusType status,
+            Pageable pageable
+    );
 
 //  List<Game> findGamesBy(List<Long> content);
 }
