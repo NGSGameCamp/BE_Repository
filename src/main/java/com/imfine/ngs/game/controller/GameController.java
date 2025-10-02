@@ -1,7 +1,7 @@
 package com.imfine.ngs.game.controller;
 
+import com.imfine.ngs.game.dto.response.GameCardResponse;
 import com.imfine.ngs.game.dto.response.GameDetailResponse;
-import com.imfine.ngs.game.dto.response.page.GamePageResponse;
 import com.imfine.ngs.game.service.GameService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -52,10 +52,9 @@ public class GameController {
     )
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/recommend")
-    public GamePageResponse getRecommendGame(@PageableDefault(size = 5) Pageable pageable) {
+    public Page<GameCardResponse> getRecommendGame(@PageableDefault(size = 5) Pageable pageable) {
 
         // 서비스 호출
         return gameService.getRecommendGame(pageable);
     }
-
 }
