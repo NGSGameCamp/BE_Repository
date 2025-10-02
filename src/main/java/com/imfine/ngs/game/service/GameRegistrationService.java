@@ -38,16 +38,16 @@ public class GameRegistrationService {
 
     // 게임 등록
     public GameCreateResponse createGame(GameCreateRequest gameCreateRequest, long userId) {
-        if(gameCreateRequest == null) {
+        if (gameCreateRequest == null) {
             throw new IllegalArgumentException("Data is null");
         }
 
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 userId: " + userId));
 
-        Game saveGame = gameRepository.save( Game.builder()
+        Game saveGame = gameRepository.save(Game.builder()
                 .name(gameCreateRequest.getName())
                 .price(gameCreateRequest.getPrice())
-                .gameStatus(gameCreateRequest.getGameStatus().getStatusType())
+                .gameStatus(gameCreateRequest.getGameStatusType())
                 .description(gameCreateRequest.getDescription())
                 .thumbnailUrl(gameCreateRequest.getThumbnailUrl())
                 .spec(gameCreateRequest.getSpec())
