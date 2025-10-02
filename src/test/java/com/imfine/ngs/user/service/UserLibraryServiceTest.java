@@ -8,6 +8,7 @@ import com.imfine.ngs.order.entity.Order;
 import com.imfine.ngs.order.entity.OrderDetails;
 import com.imfine.ngs.order.entity.OrderStatus;
 import com.imfine.ngs.order.repository.OrderRepository;
+import com.imfine.ngs.user.dto.response.UserLibraryResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,12 +40,9 @@ class UserLibraryServiceTest {
     void getUserLibrary_filtersByStatus_andReturnsActiveDistinctGames() {
         Long userId = 42L;
 
-        GameStatus activeStatus = GameStatus.builder().statusType(GameStatusType.ACTIVE).build();
-        GameStatus inactiveStatus = GameStatus.builder().statusType(GameStatusType.INACTIVE).build();
-
-        Game g1 = Game.builder().id(1L).name("G1").price(1000L).gameStatus(activeStatus).build();
-        Game g2 = Game.builder().id(2L).name("G2").price(2000L).gameStatus(activeStatus).build();
-        Game g3 = Game.builder().id(3L).name("G3").price(3000L).gameStatus(inactiveStatus).build();
+        Game g1 = Game.builder().id(1L).name("G1").price(1000L).gameStatus(GameStatusType.ACTIVE).build();
+        Game g2 = Game.builder().id(2L).name("G2").price(2000L).gameStatus(GameStatusType.ACTIVE).build();
+        Game g3 = Game.builder().id(3L).name("G3").price(3000L).gameStatus(GameStatusType.INACTIVE).build();
 
         Order o1 = new Order(userId);
         o1.setStatus(OrderStatus.PURCHASED_CONFIRMED);
@@ -64,9 +62,9 @@ class UserLibraryServiceTest {
         when(gameRepository.findByIdAndGameStatus(1L, GameStatusType.ACTIVE)).thenReturn(Optional.of(g1));
         when(gameRepository.findByIdAndGameStatus(2L, GameStatusType.ACTIVE)).thenReturn(Optional.of(g2));
 
-        List<Game> result = userLibraryService.getUserLibrary(userId);
+        List<UserLibraryResponse> result = userLibraryService.getUserLibrary(userId);
 
         assertThat(result).hasSize(2);
-        assertThat(result.stream().map(Game::getId).toList()).containsExactlyInAnyOrder(1L, 2L);
+        assertThat(result.stream().map(UserLibraryResponse::getId).toList()).containsExactlyInAnyOrder(1L, 2L);
     }
 }

@@ -7,6 +7,7 @@ import com.imfine.ngs.support.entity.Support;
 import com.imfine.ngs.support.entity.SupportCategory;
 import com.imfine.ngs.support.service.SupportCategoryService;
 import com.imfine.ngs.support.service.SupportService;
+import com.imfine.ngs.user.dto.response.UserLibraryResponse;
 import com.imfine.ngs.user.service.UserLibraryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +38,7 @@ public class SupportController {
     }
 
     @GetMapping("{category}")
-    public ResponseEntity<List<Game>> getGameList(@AuthenticationPrincipal JwtUserPrincipal principal, @PathVariable String category) {
+    public ResponseEntity<List<UserLibraryResponse>> getGameList(@AuthenticationPrincipal JwtUserPrincipal principal, @PathVariable String category) {
         long userId = principal.getUserId();
 
         return ResponseEntity.ok(userLibraryService.getUserLibrary(userId));
