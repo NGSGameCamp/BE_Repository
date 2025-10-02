@@ -45,32 +45,9 @@ public interface GameRepository extends JpaRepository<Game, Long> {
             "ORDER BY d.discountRate DESC")
     List<SingleGameDiscount> findActiveDiscountsByGameId(@Param("gameId") Long gameId);
 
-    /*
-        === 활성화 여부로 게임 조회 가능
-     */
-    // 전체 활성 게임 조회 (동적 정렬 메서드)
-    @Query("SELECT g FROM Game g WHERE g.gameStatus = :status")
-    Page<Game> findAllActive(@Param("status") GameStatusType status, Pageable pageable);
-
-
-    @Query("SELECT g.id FROM Game g " +
-            "LEFT JOIN g.reviews r " +
-            "WHERE g.gameStatus.statusType = :status " +
-            "AND (r.isDeleted = false OR r.isDeleted IS NULL) " +
-            "GROUP BY g.id " +
-            "HAVING COUNT(r) >= :minReviews " +
-            "AND AVG(CAST(r.score AS double)) >= :minScore " +
-            "ORDER BY AVG(CAST(r.score AS double)) DESC")
-    Page<Long> findPopularGameIds(
-            @Param("status") GameStatusType status,
-            @Param("minReviews") long minReviews,
-            @Param("minScore") double minScore,
-            Pageable pageable
-    );
-
     // 단일 게임 조회 (활성 상태만)
-    @Query("SELECT g FROM Game g WHERE g.id = :id AND g.gameStatus.statusType = :statusType")
-    Optional<Game> findByIdAndGameStatus(@Param("id") Long id, @Param("statusType") GameStatusType statusType);
+    @Query("SELECT g FROM Game g WHERE g.id = :id AND g.gameStatus = :status")
+    Optional<Game> findByIdAndGameStatus(@Param("id") Long id, @Param("status") GameStatusType status);
 
     // 게임 등록
     Game save(GameCreateRequest gameCreateRequest);

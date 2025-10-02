@@ -57,9 +57,7 @@ public class Game {
 
     private String thumbnailUrl; // 썸네일 이미지 URL
 
-    @ManyToOne
-    @JoinColumn(name = "game_status_id")
-    private GameStatus gameStatus; // gameStatus
+    private GameStatusType gameStatus; // gameStatus
 
     @CreatedDate
     private LocalDateTime createdAt; // 게임 등록 날짜
