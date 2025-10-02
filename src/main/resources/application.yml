@@ -93,3 +93,9 @@ firebase:
 
 config:
     path: ${FIREBASE_PATH}
+
+# logging configuration
+logging:
+  level:
+    com.imfine.ngs: DEBUG
+    org.springframework.security: DEBUG

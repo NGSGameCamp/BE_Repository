@@ -47,7 +47,7 @@ public class GameRegistrationService {
         Game saveGame = gameRepository.save( Game.builder()
                 .name(gameCreateRequest.getName())
                 .price(gameCreateRequest.getPrice())
-                .gameStatus(gameCreateRequest.getGameStatus())
+                .gameStatus(gameCreateRequest.getGameStatus().getStatusType())
                 .description(gameCreateRequest.getDescription())
                 .thumbnailUrl(gameCreateRequest.getThumbnailUrl())
                 .spec(gameCreateRequest.getSpec())

@@ -49,18 +49,13 @@ public class GameDetailMapper {
                 .introduction(game.getIntroduction())
                 .thumbnailUrl(game.getThumbnailUrl())
                 .spec(game.getSpec())
-                // reviews와 discounts를 직접 파라미터로 받아서 처리
-                .reviewCount(helper.calculateReviewCount(reviews, false))
-                .averageScore(helper.calculateAverageScore(reviews, false))
-                .mediaUrls(game.getMediaUrls() != null ? game.getMediaUrls() : new
-                        ArrayList<>())
-                .releaseDate(game.getCreatedAt() != null ?
-                        game.getCreatedAt().toLocalDate() : null)
+                .reviewCount(helper.calculateReviewCount(reviews, true))
+                .averageScore(helper.calculateAverageScore(reviews, true))
+//                .mediaUrls(game.getMediaUrls() != null ? game.getMediaUrls() : new ArrayList<>())
+                .releaseDate(game.getCreatedAt() != null ? game.getCreatedAt().toLocalDate() : null)
                 .discountRate(helper.calculateCurrentDiscountRate(discounts))
-                .publisherId(game.getPublisher() != null ? game.getPublisher().getId()
-                        : null)
-                .publisherName(game.getPublisher() != null ?
-                        game.getPublisher().getName() : null)
+                .publisherId(game.getPublisher() != null ? game.getPublisher().getId() : null)
+                .publisherName(game.getPublisher() != null ? game.getPublisher().getName() : null)
                 .env(extractEnvDescriptions(game.getEnv()))
                 .build();
     }

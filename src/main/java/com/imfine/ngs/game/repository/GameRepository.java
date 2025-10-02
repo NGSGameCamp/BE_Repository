@@ -20,8 +20,7 @@ import java.util.Optional;
  * @author chan
  */
 public interface GameRepository extends JpaRepository<Game, Long> {
-
-    // 기존 쿼리 수정 - reviews와 discounts 제외
+  
     // TODO: [fix-149] 부분적 n + 1 문제와 카데시안 곱 문제가 남아있다.
     @Query("SELECT DISTINCT g FROM Game g " +
             "LEFT JOIN FETCH g.tags t " +
@@ -46,37 +45,12 @@ public interface GameRepository extends JpaRepository<Game, Long> {
             "ORDER BY d.discountRate DESC")
     List<SingleGameDiscount> findActiveDiscountsByGameId(@Param("gameId") Long gameId);
 
-
-    @Query("SELECT g.id FROM Game g " +
-            "LEFT JOIN g.reviews r " +
-            "WHERE g.gameStatus.statusType = :status " +
-            "AND (r.isDeleted = false OR r.isDeleted IS NULL) " +
-            "GROUP BY g.id " +
-            "HAVING COUNT(r) >= :minReviews " +
-            "AND AVG(CAST(r.score AS double)) >= :minScore " +
-            "ORDER BY AVG(CAST(r.score AS double)) DESC")
-    Page<Long> findPopularGameIds(
-            @Param("status") GameStatusType status,
-            @Param("minReviews") long minReviews,
-            @Param("minScore") double minScore,
-            Pageable pageable
-    );
-
-
-    @Query("SELECT DISTINCT g FROM Game g " +
-            "LEFT JOIN FETCH g.publisher " +
-            "LEFT JOIN FETCH g.tags t " +
-            "LEFT JOIN FETCH t.gameTag " +
-            "LEFT JOIN FETCH g.discounts " +
-            "WHERE g.id IN :ids")
-    List<Game> findGamesWithDetailsByIds(@Param("ids") List<Long> ids);
-
-
     // 단일 게임 조회 (활성 상태만)
-    @Query("SELECT g FROM Game g WHERE g.id = :id AND g.gameStatus.statusType = :statusType")
-    Optional<Game> findByIdAndGameStatus(@Param("id") Long id, @Param("statusType") GameStatusType statusType);
+    @Query("SELECT g FROM Game g WHERE g.id = :id AND g.gameStatus = :status")
+    Optional<Game> findByIdAndGameStatus(@Param("id") Long id, @Param("status") GameStatusType status);
 
     // 게임 등록
     Game save(GameCreateRequest gameCreateRequest);
 
+//  List<Game> findGamesBy(List<Long> content);
 }

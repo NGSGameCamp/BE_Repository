@@ -11,6 +11,7 @@ import com.imfine.ngs.community.dto.response.CommunityBoardResponse;
 import com.imfine.ngs.community.entity.CommunityBoard;
 import com.imfine.ngs.community.service.CommunityBoardService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Null;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -57,10 +58,10 @@ public class CommunityBoardController {
   @GetMapping("/board/all")
   public ResponseEntity<Page<CommunityBoardResponse>> getBoards(
           @AuthenticationPrincipal JwtUserPrincipal principal,
-          @RequestParam int page,
-          @RequestParam int size
+          @RequestParam(defaultValue = "0") int page,
+          @RequestParam(defaultValue = "20") int size
   ) {
-    CommunityUser user = mapper.getCommunityUserOrThrow(principal);
+    CommunityUser user = mapper.getCommunityUserOrAnonymous(principal);
     Pageable pageable = PageRequest.of(page, size);
 
     try {
