@@ -1,6 +1,5 @@
-package com.imfine.ngs.game.service;
+package com.imfine.ngs.game.service.support;
 
-import com.imfine.ngs.game.dto.request.GameCreateRequest;
 import com.imfine.ngs.game.dto.request.GameTagRequest;
 import com.imfine.ngs.game.entity.tag.GameTag;
 import com.imfine.ngs.game.enums.GameTagType;
