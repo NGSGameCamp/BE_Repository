@@ -3,6 +3,7 @@ package com.imfine.ngs.community.dto;
 import com.imfine.ngs.community.entity.CommunityTag;
 import com.imfine.ngs.community.enums.SearchType;
 import lombok.Builder;
+import lombok.Getter;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -12,6 +13,7 @@ import java.util.List;
 
 import static com.imfine.ngs.community.Constants.DEFAULT_PAGE_SIZE;
 
+@Getter
 @Builder
 public class CommunityPostSearchForm {
   @Builder.Default

@@ -1,5 +1,8 @@
 package com.imfine.ngs.order.controller;
 
+import com.imfine.ngs.order.dto.OrderDetailsResponseDto;
+import com.imfine.ngs.order.dto.OrderResponseDto;
+import com.imfine.ngs.order.dto.mapper.OrderMapper;
 import com.imfine.ngs.order.entity.Order;
 import com.imfine.ngs.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +15,7 @@ import java.util.List;
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
 public class OrderController {
-
+    private final OrderMapper mapper;
     private final OrderService orderService;
 
     // TODO: 실제 userId는 SecurityContextHolder에서 가져오도록 수정 필요
@@ -21,30 +24,35 @@ public class OrderController {
     }
 
     @GetMapping("/cart")
-    public ResponseEntity<Order> getCart() {
+    public ResponseEntity<OrderResponseDto> getCart() {
         Long userId = getCurrentUserId();
         Order cart = orderService.getOrCreateCart(userId);
-        return ResponseEntity.ok(cart);
+        return ResponseEntity.ok(mapper.toOrderResponseDto(cart));
     }
 
     @PostMapping("/cart/add")
-    public ResponseEntity<Order> addGameToCart(@RequestParam Long gameId) {
+    public ResponseEntity<OrderResponseDto> addGameToCart(@RequestParam Long gameId) {
         Long userId = getCurrentUserId();
         Order updatedCart = orderService.addGameToCart(userId, gameId);
-        return ResponseEntity.ok(updatedCart);
+        return ResponseEntity.ok(mapper.toOrderResponseDto(updatedCart));
     }
 
     @DeleteMapping("/cart/remove/{gameId}")
-    public ResponseEntity<Order> removeGameFromCart(@PathVariable Long gameId) {
+    public ResponseEntity<OrderResponseDto> removeGameFromCart(@PathVariable Long gameId) {
         Long userId = getCurrentUserId();
         Order updatedCart = orderService.removeGameFromCart(userId, gameId);
-        return ResponseEntity.ok(updatedCart);
+        return ResponseEntity.ok(mapper.toOrderResponseDto(updatedCart));
     }
 
     @GetMapping
-    public ResponseEntity<List<Order>> getMyOrders() {
+    public ResponseEntity<List<OrderResponseDto>> getMyOrders() {
         Long userId = getCurrentUserId();
         List<Order> orders = orderService.getOrdersByUserId(userId);
-        return ResponseEntity.ok(orders);
+        return ResponseEntity.ok(
+                orders
+                        .stream()
+                        .map(mapper::toOrderResponseDto)
+                        .toList()
+        );
     }
 }
