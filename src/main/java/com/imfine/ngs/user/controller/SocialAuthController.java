@@ -12,11 +12,8 @@ public class SocialAuthController {
 
     @GetMapping("/login/{provider}")
     public ResponseEntity<Void> redirectToProvider(@PathVariable String provider) {
-        String url = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/oauth2/authorization/")
-                .path(provider)
-                .build()
-                .toUriString();
-        return ResponseEntity.status(302).header("Location", url).build();
+        // Use a relative redirect to the backend's OAuth2 authorization endpoint
+        String location = "/oauth2/authorization/" + provider;
+        return ResponseEntity.status(302).header("Location", location).build();
     }
 }

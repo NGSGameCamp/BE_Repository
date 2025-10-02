@@ -1,6 +1,7 @@
 package com.imfine.ngs.user.oauth;
 
 import com.imfine.ngs._global.config.security.jwt.JwtUtil;
+import com.imfine.ngs.user.oauth.CookieAuthorizationRequestRepository;
 import com.imfine.ngs.user.entity.User;
 import com.imfine.ngs.user.service.SocialService;
 import jakarta.servlet.ServletException;
@@ -34,6 +35,9 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
     @Value("${jwt.cookie.max-age-seconds}")
     private long cookieMaxAgeSeconds;
+
+    @Value("${app.oauth2.redirect-url}")
+    private String oauth2RedirectUrl;
 
     private static String nvl(String s, String d) { return (s == null || s.isBlank()) ? d : s; }
 
@@ -80,18 +84,26 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         }
 
         if (email == null || email.isBlank()) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Email not provided by provider: " + provider);
+            // Provider (e.g., Kakao) may not return email depending on consent/scope.
+            // Redirect back to frontend with a clear error instead of falling back to /login.
+            CookieAuthorizationRequestRepository.clearAuthorizationCookies(response);
+            String redirect = oauth2RedirectUrl + (oauth2RedirectUrl.contains("?") ? "&" : "?") +
+                    "error=" + java.net.URLEncoder.encode("email_not_provided_" + provider, java.nio.charset.StandardCharsets.UTF_8);
+            response.setStatus(HttpServletResponse.SC_FOUND);
+            response.setHeader("Location", redirect);
             return;
         }
         if (name == null || name.isBlank()) {
             name = email.split("@")[0];
         }
 
-        User user = socialService.upsertSocialUser(provider, email, name);
-        String role = user.getRole() != null ? user.getRole().getRole() : null;
-        String token = jwtUtil.generateToken(user.getId(), role);
+        var upsert = socialService.upsertSocialUserWithRole(provider, email, name);
+        String token = jwtUtil.generateToken(upsert.getUserId(), upsert.getRole());
         setAuthCookie(response, token);
-        String redirect = successRedirectBase();
+        // Clean authorization request cookies to avoid stale state on next login
+        CookieAuthorizationRequestRepository.clearAuthorizationCookies(response);
+
+        String redirect = oauth2RedirectUrl;
         response.setStatus(HttpServletResponse.SC_FOUND);
         response.setHeader("Location", redirect);
     }
@@ -110,6 +122,6 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     }
 
     private String successRedirectBase() {
-        return System.getenv().getOrDefault("OAUTH2_REDIRECT_URL", "http://localhost:3000/");
+        return System.getenv().getOrDefault("OAUTH2_REDIRECT_URL", "http://localhost:3000/auth/callback");
     }
 }

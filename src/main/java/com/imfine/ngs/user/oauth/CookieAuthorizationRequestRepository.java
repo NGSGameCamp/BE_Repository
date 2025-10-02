@@ -41,7 +41,11 @@ public class CookieAuthorizationRequestRepository implements AuthorizationReques
 
     @Override
     public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request,HttpServletResponse response) {
-        return loadAuthorizationRequest(request);
+        OAuth2AuthorizationRequest authRequest = loadAuthorizationRequest(request);
+        // Clear cookies after loading
+        deleteCookie(request, response, OAUTH2_AUTH_REQUEST_COOKIE_NAME);
+        deleteCookie(request, response, REDIRECT_URI_PARAM_COOKIE_NAME);
+        return authRequest;
     }
 
     // Utility methods
@@ -70,6 +74,18 @@ public class CookieAuthorizationRequestRepository implements AuthorizationReques
         response.addCookie(cookie);
     }
 
+    public static void clearAuthorizationCookies(HttpServletResponse response) {
+        Cookie auth = new Cookie(OAUTH2_AUTH_REQUEST_COOKIE_NAME, "");
+        auth.setPath("/");
+        auth.setMaxAge(0);
+        response.addCookie(auth);
+
+        Cookie redirect = new Cookie(REDIRECT_URI_PARAM_COOKIE_NAME, "");
+        redirect.setPath("/");
+        redirect.setMaxAge(0);
+        response.addCookie(redirect);
+    }
+
     private String serialize(OAuth2AuthorizationRequest request) {
         byte[] bytes = SerializationUtils.serialize(request);
         return Base64.getUrlEncoder().encodeToString(bytes);
@@ -80,4 +96,3 @@ public class CookieAuthorizationRequestRepository implements AuthorizationReques
         return (OAuth2AuthorizationRequest) SerializationUtils.deserialize(bytes);
     }
 }
-
