@@ -1,4 +1,4 @@
-package com.imfine.ngs.game.service;
+package com.imfine.ngs.game.service.support;
 
 import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.entity.env.Env;
