@@ -1,9 +1,8 @@
-package com.imfine.ngs.game.service;
+package com.imfine.ngs.game.service.support;
 
 import com.imfine.ngs.game.dto.request.EnvRequest;
 import com.imfine.ngs.game.entity.env.Env;
 import com.imfine.ngs.game.enums.EnvType;
-import com.imfine.ngs.game.repository.GameRepository;
 import com.imfine.ngs.game.repository.env.EnvRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

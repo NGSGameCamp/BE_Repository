@@ -8,6 +8,10 @@ import com.imfine.ngs.game.entity.Game;
 import com.imfine.ngs.game.entity.env.Env;
 import com.imfine.ngs.game.entity.tag.GameTag;
 import com.imfine.ngs.game.repository.GameRepository;
+import com.imfine.ngs.game.service.support.EnvService;
+import com.imfine.ngs.game.service.support.GameTagService;
+import com.imfine.ngs.game.service.support.LinkedEnvService;
+import com.imfine.ngs.game.service.support.LinkedTagService;
 import com.imfine.ngs.user.entity.User;
 import com.imfine.ngs.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +47,7 @@ public class GameRegistrationService {
         Game saveGame = gameRepository.save( Game.builder()
                 .name(gameCreateRequest.getName())
                 .price(gameCreateRequest.getPrice())
-                .gameStatus(gameCreateRequest.getGameStatus())
+                .gameStatus(gameCreateRequest.getGameStatus().getStatusType())
                 .description(gameCreateRequest.getDescription())
                 .thumbnailUrl(gameCreateRequest.getThumbnailUrl())
                 .spec(gameCreateRequest.getSpec())

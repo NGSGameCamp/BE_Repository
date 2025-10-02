@@ -6,6 +6,7 @@ import com.imfine.ngs.game.entity.env.Env;
 import com.imfine.ngs.game.entity.env.LinkedEnv;
 import com.imfine.ngs.game.entity.notice.GameNotice;
 import com.imfine.ngs.game.entity.review.Review;
+import com.imfine.ngs.game.entity.status.GameStatus;
 import com.imfine.ngs.game.entity.tag.LinkedTag;
 import com.imfine.ngs.game.enums.GameStatusType;
 import com.imfine.ngs.user.entity.User;
@@ -22,10 +23,11 @@ import java.util.Set;
 /**
  * 게임({@link Game}) 엔티티 클래스.
  * TODO: 현재 배열이 Set일 필요가 없다.
+ *
  * @author chan
  */
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor // TODO: 테스트 코드 리팩터링을 통해 해당 어노테이션도 제거할 수 있다.
 @AllArgsConstructor
 @Entity
 @Builder
@@ -45,7 +47,7 @@ public class Game {
     private String introduction; // 게임 간단 설명
     private String spec; // 게임 사양
 
-    private List<String> mediaUrls; // 본문에 들어갈 화면
+//    private List<String> mediaUrls; // 본문에 들어갈 화면
 
     @OneToMany(mappedBy = "game")
     private Set<LinkedTag> tags = new HashSet<>(); // 게임 태그(ex: 액션, RPG...etc)

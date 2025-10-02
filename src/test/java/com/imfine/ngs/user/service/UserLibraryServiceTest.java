@@ -1,6 +1,7 @@
 package com.imfine.ngs.user.service;
 
 import com.imfine.ngs.game.entity.Game;
+import com.imfine.ngs.game.entity.status.GameStatus;
 import com.imfine.ngs.game.repository.GameRepository;
 import com.imfine.ngs.game.enums.GameStatusType;
 import com.imfine.ngs.order.entity.Order;
@@ -38,9 +39,12 @@ class UserLibraryServiceTest {
     void getUserLibrary_filtersByStatus_andReturnsActiveDistinctGames() {
         Long userId = 42L;
 
-        Game g1 = Game.builder().id(1L).name("G1").price(1000L).gameStatus(GameStatusType.ACTIVE).build();
-        Game g2 = Game.builder().id(2L).name("G2").price(2000L).gameStatus(GameStatusType.ACTIVE).build();
-        Game g3 = Game.builder().id(3L).name("G3").price(3000L).gameStatus(GameStatusType.INACTIVE).build();
+        GameStatus activeStatus = GameStatus.builder().statusType(GameStatusType.ACTIVE).build();
+        GameStatus inactiveStatus = GameStatus.builder().statusType(GameStatusType.INACTIVE).build();
+
+        Game g1 = Game.builder().id(1L).name("G1").price(1000L).gameStatus(activeStatus).build();
+        Game g2 = Game.builder().id(2L).name("G2").price(2000L).gameStatus(activeStatus).build();
+        Game g3 = Game.builder().id(3L).name("G3").price(3000L).gameStatus(inactiveStatus).build();
 
         Order o1 = new Order(userId);
         o1.setStatus(OrderStatus.PURCHASED_CONFIRMED);
