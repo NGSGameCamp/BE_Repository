@@ -13,8 +13,11 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
+
 /**
  * {@link com.imfine.ngs.game.entity.Game} 컨트롤러 클래스.
+ * TODO: api를 보다 명확하게 하기 위해서 /api/games/search 로 변경하는 건 어떨까?
  *
  * @author chan
  */
@@ -56,5 +59,19 @@ public class GameController {
 
         // 서비스 호출
         return gameService.getRecommendGame(pageable);
+    }
+
+    @Operation(
+            summary = "게임 이름 검색",
+            description = "게임 이름으로 게임을 검색합니다. 부분 일치 검색을 지원하며, 대소문자를 구분하지 않습니다. (기본 5개)"
+    )
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/title")
+    public Page<GameCardResponse> getSearchByGameTitle(
+            @Parameter(description = "검색할 게임 이름", required = true, example = "Minecraft")
+            @RequestParam String gameTitle,
+            @PageableDefault(size = 5) Pageable pageable) {
+
+        return gameService.getSearchByTitle(gameTitle, pageable);
     }
 }
