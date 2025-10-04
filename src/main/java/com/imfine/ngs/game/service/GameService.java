@@ -66,7 +66,7 @@ public class GameService {
     }
 
     // 게임 태그로 검색
-    public Page<GameCardResponse> findByGameTags(@RequestParam List<String> tagCode, Pageable pageable) {
+    public Page<GameCardResponse> getGameTags(@RequestParam List<String> tagCode, Pageable pageable) {
 
         // 태그 코드를 GameTagType으로 변환
         List<GameTagType> gameTagTypes = tagCode.stream()
@@ -82,6 +82,30 @@ public class GameService {
         );
 
         // dto로 변환
+        return gameList.map(gameCardMapper::toCardResponse);
+    }
+
+    /**
+     * 게임 이름으로 검색합니다.
+     *
+     * @param gameTitle 검색할 게임 이름
+     * @param pageable 페이징 정보
+     * @return Page<GameCardResponse> 검색된 게임 목록
+     */
+    public Page<GameCardResponse> getSearchByTitle(String gameTitle, Pageable pageable) {
+
+        // 검색 입력 검증 - 빈 값이면 빈 페이지 반환
+        if (gameTitle == null || gameTitle.trim().isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        // repository에서 게임 조회 (ACTIVE 상태만)
+        Page<Game> gameList = gameRepository.findByGameTitle(
+                gameTitle.trim(),
+                GameStatusType.ACTIVE,
+                pageable
+        );
+
         return gameList.map(gameCardMapper::toCardResponse);
     }
 }
