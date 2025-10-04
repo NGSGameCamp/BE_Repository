@@ -98,5 +98,22 @@ public interface GameRepository extends JpaRepository<Game, Long> {
             Pageable pageable
     );
 
+    // 모든 게임 가격 오름차순 조회
+    @Query("SELECT DISTINCT g FROM Game g WHERE g.gameStatus = 0 ORDER BY g.price ASC")
+    Page<Game> findAllByPriceOrder(Pageable pageable);
+
+    // 가격 범위로 게임 조회
+    @Query("SELECT DISTINCT g FROM Game g " +
+            "WHERE g.gameStatus = :status " +
+            "  AND g.price >= :minPrice " +
+            "  AND g.price <= :maxPrice " +
+            "ORDER BY g.price ASC")
+    Page<Game> findByPriceRange(
+            @Param("minPrice") Integer minPrice,
+            @Param("maxPrice") Integer maxPrice,
+            @Param("status") GameStatusType status,
+            Pageable pageable
+    );
+
 //  List<Game> findGamesBy(List<Long> content);
 }
