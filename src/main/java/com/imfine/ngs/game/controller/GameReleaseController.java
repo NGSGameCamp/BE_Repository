@@ -3,6 +3,7 @@ package com.imfine.ngs.game.controller;
 import com.imfine.ngs.game.dto.response.GameCardResponse;
 import com.imfine.ngs.game.service.GameReleasedService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
  *
  * @author chan
  */
+@Tag(name = "Game", description = "게임 관련 API")
 @RequiredArgsConstructor
 @RequestMapping("/api/games/release")
 @RestController

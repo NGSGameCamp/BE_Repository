@@ -303,11 +303,38 @@ SELECT
         WHEN 13 THEN '평범한 게임입니다.'
         ELSE '그저 그래요.'
     END AS content,
-    -- 평점 분포: 5점(30%), 4점(40%), 3점(30%)
+    -- 게임별 평점 분포 다양화 (평균 평점: 2.0 ~ 4.9)
     CASE
-        WHEN MOD(combo.n, 10) < 3 THEN 5
-        WHEN MOD(combo.n, 10) < 7 THEN 4
-        ELSE 3 + MOD(combo.n, 2)
+        -- 게임 ID % 10 = 0: 낮은 평점 (평균 ~2.0)
+        WHEN MOD(combo.game_id, 10) = 0 THEN
+            CASE WHEN MOD(combo.n, 10) < 7 THEN 2 WHEN MOD(combo.n, 10) < 9 THEN 1 ELSE 3 END
+        -- 게임 ID % 10 = 1: 보통-낮음 평점 (평균 ~2.8)
+        WHEN MOD(combo.game_id, 10) = 1 THEN
+            CASE WHEN MOD(combo.n, 10) < 5 THEN 3 WHEN MOD(combo.n, 10) < 8 THEN 2 ELSE 4 END
+        -- 게임 ID % 10 = 2: 보통 평점 (평균 ~3.5)
+        WHEN MOD(combo.game_id, 10) = 2 THEN
+            CASE WHEN MOD(combo.n, 10) < 5 THEN 4 WHEN MOD(combo.n, 10) < 8 THEN 3 ELSE 5 END
+        -- 게임 ID % 10 = 3: 좋음 평점 (평균 ~4.0)
+        WHEN MOD(combo.game_id, 10) = 3 THEN
+            CASE WHEN MOD(combo.n, 10) < 3 THEN 3 WHEN MOD(combo.n, 10) < 7 THEN 4 ELSE 5 END
+        -- 게임 ID % 10 = 4: 우수 평점 (평균 ~4.3)
+        WHEN MOD(combo.game_id, 10) = 4 THEN
+            CASE WHEN MOD(combo.n, 10) < 2 THEN 3 WHEN MOD(combo.n, 10) < 5 THEN 4 ELSE 5 END
+        -- 게임 ID % 10 = 5: 매우 우수 평점 (평균 ~4.5)
+        WHEN MOD(combo.game_id, 10) = 5 THEN
+            CASE WHEN MOD(combo.n, 10) < 1 THEN 3 WHEN MOD(combo.n, 10) < 4 THEN 4 ELSE 5 END
+        -- 게임 ID % 10 = 6: 훌륭함 평점 (평균 ~4.7)
+        WHEN MOD(combo.game_id, 10) = 6 THEN
+            CASE WHEN MOD(combo.n, 10) < 2 THEN 4 ELSE 5 END
+        -- 게임 ID % 10 = 7: 최고 평점 (평균 ~4.9)
+        WHEN MOD(combo.game_id, 10) = 7 THEN
+            CASE WHEN MOD(combo.n, 10) < 1 THEN 4 ELSE 5 END
+        -- 게임 ID % 10 = 8: 중간-높음 평점 (평균 ~3.8)
+        WHEN MOD(combo.game_id, 10) = 8 THEN
+            CASE WHEN MOD(combo.n, 10) < 4 THEN 4 WHEN MOD(combo.n, 10) < 7 THEN 3 ELSE 5 END
+        -- 게임 ID % 10 = 9: 혼합 평점 (평균 ~3.2)
+        ELSE
+            CASE WHEN MOD(combo.n, 10) < 4 THEN 3 WHEN MOD(combo.n, 10) < 6 THEN 4 WHEN MOD(combo.n, 10) < 8 THEN 2 ELSE 5 END
     END AS score,
     false,
     DATE_SUB(NOW(), INTERVAL MOD(combo.n * 11, 730) DAY),
