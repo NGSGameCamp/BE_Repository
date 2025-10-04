@@ -23,7 +23,7 @@ public class GameTagController {
     public Page<GameCardResponse> getGameTags(@RequestParam List<String> tagCodes, Pageable pageable) {
 
         // 서비스 호출
-        return gameService.findByGameTags(tagCodes, pageable);
+        return gameService.getGameTags(tagCodes, pageable);
     }
 
 }
