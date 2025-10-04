@@ -66,7 +66,7 @@ public class GameService {
     }
 
     // 게임 태그로 검색
-    public Page<GameCardResponse> findByGameTags(@RequestParam List<String> tagCode, Pageable pageable) {
+    public Page<GameCardResponse> getGameTags(@RequestParam List<String> tagCode, Pageable pageable) {
 
         // 태그 코드를 GameTagType으로 변환
         List<GameTagType> gameTagTypes = tagCode.stream()
