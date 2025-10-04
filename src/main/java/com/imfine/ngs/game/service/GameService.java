@@ -62,15 +62,10 @@ public class GameService {
         // 엔티티 조회
         Page<Game> recommendGames = gameRepository.findRecommendedGame(GameStatusType.ACTIVE, pageable);
 
-        // Page<Game> - > GameCardResponse
-        List<GameCardResponse> gameList = recommendGames.getContent()
-                .stream()
-                .map(gameCardMapper::toCardResponse)
-                .toList();
-
         return recommendGames.map(gameCardMapper::toCardResponse);
     }
 
+    // 게임 태그로 검색
     public Page<GameCardResponse> findByGameTags(@RequestParam List<String> tagCode, Pageable pageable) {
 
         // 태그 코드를 GameTagType으로 변환

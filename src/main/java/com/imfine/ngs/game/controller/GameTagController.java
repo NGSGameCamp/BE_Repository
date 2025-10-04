@@ -20,10 +20,10 @@ public class GameTagController {
     // 게임 태그 여러개 조회
     @ResponseStatus(HttpStatus.OK)
     @GetMapping
-    public Page<GameCardResponse> getGameTags(@RequestParam List<String> tags, Pageable pageable) {
+    public Page<GameCardResponse> getGameTags(@RequestParam List<String> tagCodes, Pageable pageable) {
 
         // 서비스 호출
-        return gameService.findByGameTags(tags, pageable);
+        return gameService.findByGameTags(tagCodes, pageable);
     }
 
 }

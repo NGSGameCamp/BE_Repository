@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,7 +22,7 @@ import java.util.Optional;
  * @author chan
  */
 public interface GameRepository extends JpaRepository<Game, Long> {
-  
+
     // TODO: [fix-149] 부분적 n + 1 문제와 카데시안 곱 문제가 남아있다.
     @Query("SELECT DISTINCT g FROM Game g " +
             "LEFT JOIN FETCH g.tags t " +
@@ -79,6 +80,21 @@ public interface GameRepository extends JpaRepository<Game, Long> {
             @Param("tagTypes") List<GameTagType> tagTypes,
             @Param("tagCount") long tagCount,
             @Param("status") GameStatusType status,
+            Pageable pageable
+    );
+
+    @Query("SELECT distinct g from Game g " +
+            "where g.gameStatus = 0 " +
+            "order by g.createdAt DESC")
+    Page<Game> findAllRelease(Pageable pageable);
+
+    // 특정 날짜 이후에 출시된 게임 조회
+    @Query("SELECT DISTINCT g FROM Game g " +
+            "WHERE g.gameStatus = 0 " +
+            "  AND g.createdAt >= :startDate " +
+            "ORDER BY g.createdAt DESC")
+    Page<Game> findReleasedAfter(
+            @Param("startDate") LocalDateTime startDate,
             Pageable pageable
     );
 
