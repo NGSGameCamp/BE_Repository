@@ -1,6 +1,9 @@
 spring:
   application:
     name: NGS
+  threads:
+    virtual:
+      enabled: true # Virtual Thread 전역 활성화
   config:
     import: optional:file:.env[.properties] # .env import
   security:
@@ -61,7 +64,7 @@ spring:
 
 # cors setting
 cors:
-  allowed-origins: https://localhost:3000, http://localhost:3000, http://localhost:5173
+  allowed-origins: https://localhost:3000, http://localhost:3000, http://localhost:5173, http://localhost:3002
   allowed-methods:
     - GET
     - POST

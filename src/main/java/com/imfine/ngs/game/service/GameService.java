@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 /**
@@ -40,6 +42,7 @@ public class GameService {
     private final GameRepository gameRepository;
     private final GameDetailMapper gameDetailMapper;
     private final GameCardMapper gameCardMapper;
+    private final Executor gameQueryExecutor;
 
     /**
      * 게임 상세 정보를 조회합니다.
@@ -49,18 +52,36 @@ public class GameService {
      * @return GameDetailResponse 게임 상세 정보
      */
     public GameDetailResponse getGameDetail(Long id) {
-        // DB에서 상세 정보를 조회한다.
+        log.debug("Starting getGameDetail on thread: {}", Thread.currentThread());
+
+        // 게임 기본 정보 조회
         Game detailGame = gameRepository.findByIdWithDetails(id)
-                .orElseThrow(() -> new EntityNotFoundException("Game not found " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Game not found" + id));
 
-        // review 별도 조회
-        List<Review> reviews = gameRepository.findActiveReviewsByGameId(id);
+        // review 별도 조회 -> 스레드 처리
+        CompletableFuture<List<Review>> reviews =
+                CompletableFuture.supplyAsync(() -> {
+                    log.debug("Getting reviews on Thread: {}", Thread.currentThread());
+                    return gameRepository.findActiveReviewsByGameId(id);
+                }, gameQueryExecutor);
 
-        // discounts 별도 조회
-        List<SingleGameDiscount> discounts = gameRepository.findActiveDiscountsByGameId(id);
+        // discounts 별도 조회 -> 스레드 처리
+        CompletableFuture<List<SingleGameDiscount>> discounts =
+                CompletableFuture.supplyAsync(() -> {
+                    log.debug("Getting discounts on Thread: {}", Thread.currentThread());
+                    return gameRepository.findActiveDiscountsByGameId(id);
+                }, gameQueryExecutor);
 
+        // 두 작업이 모두 완료될 때까지 대기
+        CompletableFuture.allOf(reviews, discounts).join();
+
+        // 결과 가져오기 (이미 완료됨, 즉시 반환)
+        List<Review> reviewList = reviews.join();
+        List<SingleGameDiscount> singleGameDiscountList = discounts.join();
+
+        log.debug("Ending getGameDetail on thread: {}", Thread.currentThread());
         // 변환하여 반환한다.
-        return gameDetailMapper.toDetailResponse(detailGame, reviews, discounts);
+        return gameDetailMapper.toDetailResponse(detailGame, reviewList, singleGameDiscountList);
     }
 
     // 추천 게임 조회
