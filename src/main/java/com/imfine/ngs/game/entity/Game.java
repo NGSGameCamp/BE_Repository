@@ -29,6 +29,13 @@ import java.util.Set;
 @NoArgsConstructor // TODO: 테스트 코드 리팩터링을 통해 해당 어노테이션도 제거할 수 있다.
 @AllArgsConstructor
 @Entity
+@Table(name = "game", indexes = {
+    @Index(name = "idx_game_status", columnList = "game_status"),
+    @Index(name = "idx_game_price", columnList = "price"),
+    @Index(name = "idx_game_created_at", columnList = "created_at"),
+    @Index(name = "idx_game_name", columnList = "name"),
+    @Index(name = "idx_game_status_price", columnList = "game_status, price")
+})
 @Builder
 public class Game {
 
