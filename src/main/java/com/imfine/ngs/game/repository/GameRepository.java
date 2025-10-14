@@ -163,5 +163,53 @@ public interface GameRepository extends JpaRepository<Game, Long>, GameRepositor
             @Param("status") GameStatusType status
     );
 
+    /**
+     * 우선순위 검색 최적화: DB에서 태그 매칭 점수 계산 및 정렬 수행
+     *
+     * @param tagTypes 검색할 태그 타입 리스트 (ENUM 값)
+     * @param status 게임 상태
+     * @param name 게임 이름 (선택적)
+     * @param minPrice 최소 가격 (선택적)
+     * @param maxPrice 최대 가격 (선택적)
+     * @param pageable 페이징 정보
+     * @return 태그 매칭 점수순으로 정렬된 게임 페이지
+     */
+    @Query(value = """
+        SELECT g.*, COUNT(DISTINCT gt.tag_type) as match_score
+        FROM game g
+        INNER JOIN linked_tag lt ON g.id = lt.game_id
+        INNER JOIN game_tag gt ON lt.tag_id = gt.id
+        WHERE g.game_status = :status
+          AND gt.tag_type IN :tagTypes
+          AND (:name IS NULL OR LOWER(g.name) LIKE LOWER(CONCAT('%', :name, '%')))
+          AND (:minPrice IS NULL OR g.price >= :minPrice)
+          AND (:maxPrice IS NULL OR g.price <= :maxPrice)
+        GROUP BY g.id
+        HAVING match_score > 0
+        ORDER BY match_score DESC, g.created_at DESC
+        """,
+        countQuery = """
+        SELECT COUNT(DISTINCT g.id)
+        FROM game g
+        INNER JOIN linked_tag lt ON g.id = lt.game_id
+        INNER JOIN game_tag gt ON lt.tag_id = gt.id
+        WHERE g.game_status = :status
+          AND gt.tag_type IN :tagTypes
+          AND (:name IS NULL OR LOWER(g.name) LIKE LOWER(CONCAT('%', :name, '%')))
+          AND (:minPrice IS NULL OR g.price >= :minPrice)
+          AND (:maxPrice IS NULL OR g.price <= :maxPrice)
+        GROUP BY g.id
+        HAVING COUNT(DISTINCT gt.tag_type) > 0
+        """,
+        nativeQuery = true)
+    Page<Game> searchGamesWithPriorityOptimized(
+            @Param("tagTypes") List<String> tagTypes,
+            @Param("status") int status,
+            @Param("name") String name,
+            @Param("minPrice") Long minPrice,
+            @Param("maxPrice") Long maxPrice,
+            Pageable pageable
+    );
+
 //  List<Game> findGamesBy(List<Long> content);
 }

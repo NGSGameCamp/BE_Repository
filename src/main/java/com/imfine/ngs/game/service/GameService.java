@@ -12,20 +12,16 @@ import com.imfine.ngs.game.enums.GameStatusType;
 import com.imfine.ngs.game.enums.GameTagType;
 import com.imfine.ngs.game.repository.GameRepository;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 /**
  * {@link com.imfine.ngs.game.entity.Game} 비즈니스 클래스.
@@ -40,6 +36,7 @@ public class GameService {
     private final GameRepository gameRepository;
     private final GameDetailMapper gameDetailMapper;
     private final GameCardMapper gameCardMapper;
+    private final Executor gameQueryExecutor;
 
     /**
      * 게임 상세 정보를 조회합니다.
@@ -49,18 +46,36 @@ public class GameService {
      * @return GameDetailResponse 게임 상세 정보
      */
     public GameDetailResponse getGameDetail(Long id) {
-        // DB에서 상세 정보를 조회한다.
+        log.debug("Starting getGameDetail on thread: {}", Thread.currentThread());
+
+        // 게임 기본 정보 조회
         Game detailGame = gameRepository.findByIdWithDetails(id)
-                .orElseThrow(() -> new EntityNotFoundException("Game not found " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Game not found" + id));
 
-        // review 별도 조회
-        List<Review> reviews = gameRepository.findActiveReviewsByGameId(id);
+        // review 별도 조회 -> 스레드 처리
+        CompletableFuture<List<Review>> reviews =
+                CompletableFuture.supplyAsync(() -> {
+                    log.debug("Getting reviews on Thread: {}", Thread.currentThread());
+                    return gameRepository.findActiveReviewsByGameId(id);
+                }, gameQueryExecutor);
 
-        // discounts 별도 조회
-        List<SingleGameDiscount> discounts = gameRepository.findActiveDiscountsByGameId(id);
+        // discounts 별도 조회 -> 스레드 처리
+        CompletableFuture<List<SingleGameDiscount>> discounts =
+                CompletableFuture.supplyAsync(() -> {
+                    log.debug("Getting discounts on Thread: {}", Thread.currentThread());
+                    return gameRepository.findActiveDiscountsByGameId(id);
+                }, gameQueryExecutor);
 
+        // 두 작업이 모두 완료될 때까지 대기
+        CompletableFuture.allOf(reviews, discounts).join();
+
+        // 결과 가져오기 (이미 완료됨, 즉시 반환)
+        List<Review> reviewList = reviews.join();
+        List<SingleGameDiscount> singleGameDiscountList = discounts.join();
+
+        log.debug("Ending getGameDetail on thread: {}", Thread.currentThread());
         // 변환하여 반환한다.
-        return gameDetailMapper.toDetailResponse(detailGame, reviews, discounts);
+        return gameDetailMapper.toDetailResponse(detailGame, reviewList, singleGameDiscountList);
     }
 
     // 추천 게임 조회
@@ -120,6 +135,7 @@ public class GameService {
 
     /**
      * 우선순위 정렬: 태그 일치 개수가 많을수록 상위 노출
+     * DB에서 직접 점수 계산 및 정렬 수행 (최적화)
      */
     private Page<GameCardResponse> searchGamesWithPriority(
             GameSearchRequest request, Pageable pageable) {
@@ -127,87 +143,25 @@ public class GameService {
         List<GameTagType> searchTags = request.getTags();
         log.debug("🔍 Priority Search - Tags: {}", searchTags);
 
-        // 1. 기본 필터 조건으로 후보 게임 조회 (태그는 OR 조건)
-        List<Game> candidateGames = gameRepository.findCandidateGamesForPrioritySearch(
+        // 태그의 문자열 값으로 변환 (DB ENUM과 매칭)
+        List<String> tagNames = searchTags.stream()
+                .map(Enum::name)
+                .toList();
+
+        // DB에서 직접 태그 매칭 점수 계산 및 정렬 수행
+        Page<Game> games = gameRepository.searchGamesWithPriorityOptimized(
+                tagNames,
+                GameStatusType.ACTIVE.ordinal(),
                 request.getName(),
                 request.getMinPrice(),
                 request.getMaxPrice(),
-                searchTags,
-                GameStatusType.ACTIVE
+                pageable
         );
 
-        log.debug("📦 Total Candidates: {}", candidateGames.size());
+        log.debug("✅ Found {} games with priority search", games.getTotalElements());
 
-        // 2. 각 게임의 태그 일치도 계산 및 정렬
-        List<GameWithScore> scoredGames = candidateGames.stream()
-                .map(game -> {
-                    // 게임의 태그와 검색 태그의 교집합 개수 계산
-                    long matchCount = game.getTags().stream()
-                            .map(linkedTag -> linkedTag.getGameTag().getTagType())
-                            .filter(searchTags::contains)
-                            .count();
-
-                    log.debug("Game: {} | Tags: {} | Match Score: {} | Created: {}",
-                            game.getName(),
-                            game.getTags().stream()
-                                    .map(lt -> lt.getGameTag().getTagType())
-                                    .collect(Collectors.toList()),
-                            matchCount,
-                            game.getCreatedAt());
-
-                    return new GameWithScore(game, matchCount);
-                })
-                .filter(gs -> {
-                    // 최소 1개 이상 일치하는 게임만 포함
-                    boolean hasMatch = gs.getMatchScore() > 0;
-                    if (!hasMatch) {
-                        log.debug("❌ Filtered out: {} (score: 0)", gs.getGame().getName());
-                    }
-                    return hasMatch;
-                })
-                .sorted(Comparator
-                        .comparing(GameWithScore::getMatchScore).reversed() // 1순위: 태그 일치도 (내림차순)
-                        .thenComparing(gs -> gs.getGame().getCreatedAt(), Comparator.reverseOrder()) // 2순위: 최신순
-                        .thenComparing(gs -> gs.getGame().getName()) // 3순위: 이름 (오름차순)
-                )
-                .collect(Collectors.toList());
-
-        log.debug("✅ After Priority Filtering: {} games", scoredGames.size());
-
-        // 상위 10개 로그 출력
-        for (int i = 0; i < Math.min(10, scoredGames.size()); i++) {
-            GameWithScore gs = scoredGames.get(i);
-            log.debug("  {}. {} - Score: {} | Created: {}",
-                    i + 1,
-                    gs.getGame().getName(),
-                    gs.getMatchScore(),
-                    gs.getGame().getCreatedAt());
-        }
-
-        // 3. 페이징 처리
-        int totalElements = scoredGames.size();
-        int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), totalElements);
-
-        if (start >= totalElements) {
-            return new PageImpl<>(Collections.emptyList(), pageable, totalElements);
-        }
-
-        List<GameCardResponse> pageContent = scoredGames.subList(start, end).stream()
-                .map(gs -> gameCardMapper.toCardResponse(gs.getGame()))
-                .collect(Collectors.toList());
-
-        return new PageImpl<>(pageContent, pageable, totalElements);
-    }
-
-    /**
-     * 게임 일치도 계산을 위한 내부 클래스
-     */
-    @Getter
-    @AllArgsConstructor
-    private static class GameWithScore {
-        private Game game;
-        private long matchScore; // 태그 일치 개수
+        // DTO 변환만 수행
+        return games.map(gameCardMapper::toCardResponse);
     }
 
     /**
